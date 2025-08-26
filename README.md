@@ -40,7 +40,6 @@ Cada apunte será **etiquetado por asignatura y tema específico** (unidad, mód
 - **Base de Datos Metadatos**: MongoDB 
 - **Base de Datos de Contenido Académico**: MinIO 
 
----
 
 ---
 

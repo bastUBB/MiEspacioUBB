@@ -1,13 +1,15 @@
 import { Router } from 'express';
 import userRoutes from "./user.routes.js";
 import authRoutes from "./auth.routes.js"
-import perfilUser from "./perfilUser.routes.js";
+import asignaturaRoutes from "./asignatura.routes.js"
+import perfilAcademicoRoutes from "./perfilAcademico.routes.js"
 
 const router = Router();
 
 router
     .use("/auth", authRoutes)
-    .use("/perfilUser", perfilUser)
-    .use("/users", userRoutes);
+    .use("/users", userRoutes)
+    .use("/asignaturas", asignaturaRoutes)
+    .use("/perfilAcademico", perfilAcademicoRoutes);
 
 export default router;

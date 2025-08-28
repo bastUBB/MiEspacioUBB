@@ -86,7 +86,7 @@ export async function updateUserService(query, body) {
         }
 
         const userUpdated = await User.findOneAndUpdate(
-            userExistQuery._id,
+            { _id: userExistQuery._id },
             body,
             { new: true }
         );

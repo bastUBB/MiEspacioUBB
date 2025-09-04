@@ -11,7 +11,7 @@ import {
 } from "../validations/perfilAcademico.validation.js";
 import { handleSuccess, handleErrorClient, handleErrorServer } from '../handlers/responseHandlers.js';
 
-export async function createPerfilAcademicoController(req, res) {
+export async function createPerfilAcademico(req, res) {
     try {
         const { value: valueCreate, error: errorCreate } = perfilAcademicoCreateValidation.validate(req.body);
 
@@ -27,7 +27,7 @@ export async function createPerfilAcademicoController(req, res) {
     }
 }
 
-export async function getPerfilAcademicoController(req, res) {
+export async function getPerfilAcademico(req, res) {
     try {
         const { value: valueQuery, error: errorQuery } = perfilAcademicoQueryValidation.validate(req.query);
 
@@ -43,7 +43,7 @@ export async function getPerfilAcademicoController(req, res) {
     }
 }
 
-export async function updatePerfilAcademicoController(req, res) {
+export async function updatePerfilAcademico(req, res) {
     try {
         const { value: valueQuery, error: errorQuery } = perfilAcademicoQueryValidation.validate(req.query);
 
@@ -63,7 +63,7 @@ export async function updatePerfilAcademicoController(req, res) {
     }
 }
 
-export async function deletePerfilAcademicoController(req, res) {
+export async function deletePerfilAcademico(req, res) {
     try {
         const { value: valueQuery, error: errorQuery } = perfilAcademicoQueryValidation.validate(req.query);
 

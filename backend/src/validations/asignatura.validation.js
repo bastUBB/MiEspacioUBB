@@ -119,11 +119,31 @@ export const asignaturaCreateValidation = joi.object({
             'any.only': 'El área debe ser una cadena de texto y una de las siguientes palabras: Área Form. Integral Profesional, Área Ciencias Básicas, Área Ciencias de la Ingeniería, Área Ingeniería de Software y Base de Datos, Área de Sistemas Computacionales, Área de Gestión Informática o Una de las áreas anteriores',
             'any.required': 'El área es obligatoria',
         }),
+    unidades: joi.array()
+        .items(
+            joi.string()
+                .min(1)
+                .max(50)
+                .strict()
+                .pattern(/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s0-9,-]+$/)
+                .messages({
+                    'string.empty': 'La unidad debe tener al menos 1 caracter',
+                    'string.base': 'La unidad debe ser una cadena de texto',
+                    'string.min': 'La unidad debe tener al menos 1 caracter',
+                    'string.max': 'La unidad no puede tener más de 50 caracteres',
+                    'string.pattern.base': 'La unidad solo puede contener letras, números, espacios, comas y guiones',
+                }),
+        )
+        .min(1)
+        .messages({
+            'array.base': 'Las unidades deben ser un arreglo',
+            'array.min': 'Debe tener como mínimo 1 unidad',
+        }),
 })
     .unknown(false)
     .messages({
         'object.unknown': 'No se permiten propiedades adicionales en el cuerpo de la solicitud',
-        'object.missing': 'Debe proporcionar todos los campos obligatorios: nombre, créditos, prerrequisitos, semestre, ámbito y área',
+        'object.missing': 'Debe proporcionar todos los campos obligatorios: nombre, créditos, prerrequisitos, semestre, ámbito, área y unidades',
     });
 
 export const asignaturaUpdateValidation = joi.object({

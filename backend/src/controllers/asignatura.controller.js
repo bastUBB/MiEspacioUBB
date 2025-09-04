@@ -3,9 +3,10 @@ import {
     getAsignaturaService,
     getAllAsignaturasService,
     updateAsignaturaService,
-    deleteAsignaturaService
-} from "../services/asignaturas.service.js";
-import { asignaturaQueryValidation, asignaturaCreateValidation, asignaturaUpdateValidation } from "../validations/asignaturas.validation.js";
+    deleteAsignaturaService,
+    getUnidadesAsignaturaService
+} from "../services/asignatura.service.js";
+import { asignaturaQueryValidation, asignaturaCreateValidation, asignaturaUpdateValidation } from "../validations/asignatura.validation.js";
 import { handleSuccess, handleErrorClient, handleErrorServer } from "../handlers/responseHandlers.js";
 
 export async function createAsignatura(req, res) {
@@ -87,6 +88,22 @@ export async function deleteAsignatura(req, res) {
         if (errorDeletedAsignatura) return handleErrorClient(res, 404, "Asignatura no encontrada", errorDeletedAsignatura);
 
         handleSuccess(res, 200, "Asignatura eliminada con éxito", deletedAsignatura);
+    } catch (error) {
+        handleErrorServer(res, 500, error.message);
+    }
+}
+
+export async function getUnidadesAsignatura(req, res) {
+    try {
+        const { value: valueQuery, error: errorQuery } = asignaturaQueryValidation.validate(req.query);
+
+        if (errorQuery) return handleErrorClient(res, 400, "Error de validación", errorQuery.message);
+
+        const [unidades, errorUnidades] = await getUnidadesAsignaturaService(valueQuery);
+
+        if (errorUnidades) return handleErrorClient(res, 404, "Asignatura no encontrada", errorUnidades);
+
+        handleSuccess(res, 200, "Unidades encontradas", unidades);
     } catch (error) {
         handleErrorServer(res, 500, error.message);
     }

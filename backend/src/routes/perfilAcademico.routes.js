@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authenticateJWT, authorizeRoles } from "../middlewares/auth.middleware.js";
 import {
     createPerfilAcademico,
-    getPerfilAcademicoByUser,
+    getPerfilAcademico,
     updatePerfilAcademico,
     deletePerfilAcademico
 } from '../controllers/perfilAcademico.controller.js';
@@ -11,9 +11,11 @@ const router = Router();
 
 router.use(authenticateJWT);
 
+//TODO: Asegurarme que solo se puedan efectuar peticiones a sus propios perfiles
+
 router
     .post("/", authorizeRoles("admin", "docente", "ayudante", "estudiante"), createPerfilAcademico)
-    .get("/detail", authorizeRoles("admin", "docente", "ayudante", "estudiante"), getPerfilAcademicoByUser)
+    .get("/detail", authorizeRoles("admin", "docente", "ayudante", "estudiante"), getPerfilAcademico)
     .patch("/detail", authorizeRoles("admin", "docente", "ayudante", "estudiante"), updatePerfilAcademico)
     .delete("/detail", authorizeRoles("admin", "docente", "ayudante", "estudiante"), deletePerfilAcademico);
 

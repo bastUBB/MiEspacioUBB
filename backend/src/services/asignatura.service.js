@@ -1,5 +1,4 @@
-import { exist } from "joi";
-import Asignatura from "../models/asignaturas.model.js"
+import Asignatura from "../models/asignatura.model.js"
 
 export async function createAsignaturaService(dataAsignatura) {
     try {
@@ -113,6 +112,21 @@ export async function deleteAsignaturaService(query) {
         return [deletedAsignatura, null];
     }catch(error){ 
         console.error('Error al eliminar la asignatura:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function getUnidadesAsignaturaService(query) {
+    try {
+        const { codigo: codigoQuery } = query;
+
+        const existingAsignatura = await Asignatura.findOne({ codigo: codigoQuery });
+
+        if (!existingAsignatura) return [null, 'Asignatura no encontrada'];
+
+        return [existingAsignatura.unidades, null];
+    } catch (error) {
+        console.error('Error al obtener las unidades de la asignatura:', error);
         return [null, 'Error interno del servidor'];
     }
 }

@@ -18,18 +18,18 @@ const perfilAcademicoSchema = mongoose.Schema({
         cast: false
     },
     //TODO: Ver si es mejor dejar las notas como un modelo aparte
-    notasRecientes: [{
-        asignatura: {
-            type: String,
-            required: true,
-            cast: false
-        },
-        nota: {
-            type: number,
-            required: true,
-            cast: false
-        }
-    }],
+    // notasRecientes: [{
+    //     asignatura: {
+    //         type: String,
+    //         required: true,
+    //         cast: false
+    //     },
+    //     nota: {
+    //         type: Number,
+    //         required: true,
+    //         cast: false
+    //     }
+    // }],
     tipoApuntesPreferido: {
         type: String,
         required: true,

@@ -54,7 +54,6 @@ export const perfilAcademicoCreateValidation = joi.object({
         .required()
         .min(1)
         .max(55)
-        .trim()
         .messages({
             'array.base': 'Las asignaturas de interés deben ser un arreglo',
             'array.min': 'Debe haber al menos una asignatura de interés',
@@ -74,6 +73,7 @@ export const perfilAcademicoCreateValidation = joi.object({
         }),
     tiposApuntesPreferido: joi.string()
         .required()
+        .trim()
         .valid('Textual', 'Gráfico', 'Escrito', 'Sin preferencia')
         .messages({
             'string.empty': 'El tipo de apuntes preferido no puede estar vacío',
@@ -117,7 +117,6 @@ export const perfilAcademicoUpdateValidation = joi.object({
         )
         .min(1)
         .max(55)
-        .trim()
         .messages({
             'array.base': 'Las asignaturas de interés deben ser un arreglo',
             'array.min': 'Debe haber al menos una asignatura de interés',
@@ -133,6 +132,7 @@ export const perfilAcademicoUpdateValidation = joi.object({
         }),
     tiposApuntesPreferido: joi.string()
         .valid('Textual', 'Gráfico', 'Escrito', 'Sin preferencia')
+        .trim()
         .messages({
             'string.base': 'El tipo de apuntes preferido debe ser una cadena de texto',
             'any.only': 'El tipo de apuntes preferido debe ser "Textual", "Gráfico", "Escrito" o "Sin preferencia"',

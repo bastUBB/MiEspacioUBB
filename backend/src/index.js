@@ -1,7 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import { connectDB } from './config/db.js';
+import { connectDB } from './config/configDb.js';
+import { initializeMinIO } from './config/configMinio.js';
 // import { initialSetup } from './config/initialSetup.js';
 import indexRoutes from './routes/index.routes.js';
 
@@ -25,7 +26,12 @@ app.use("/api", indexRoutes); // Rutas de la API
 //     .then(() => console.log('Initial setup completed'))
 //     .catch(err => console.error('Error during initial setup:', err));
 
-app.listen(url.port, () => {
-  connectDB();
-  console.log(`Backend corriendo en: ${BACKEND_URL}`);
+app.listen(url.port, async () => {
+  try {
+    await connectDB();
+    await initializeMinIO();
+  } catch (error) {
+    console.error('Error inicializando servicios:', error);
+    process.exit(1);
+  }
 });

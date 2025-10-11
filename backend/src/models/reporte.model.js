@@ -19,7 +19,6 @@ const reporteSchema = new mongoose.Schema({
     estado: {
         type: String,
         required: true,
-        // enum: ['Pendiente', 'En Progreso', 'Resuelto'],
         cast: false
     },
     resolucion: {

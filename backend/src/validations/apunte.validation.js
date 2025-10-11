@@ -1,9 +1,6 @@
 import joi from 'joi';
-import moment from "moment";
+import { diaActual } from '../helpers/ayudasVarias.helper.js';
 
-const hoy = moment().format("DD-MM-YYYY");
-
-//TODO: Se considerán parámetros por los cuales el usuario puede buscar apuntes (verificar en un futuro)
 export const apunteQueryValidation = joi.object({
     nombre: joi.string()
         .required()
@@ -42,6 +39,46 @@ export const apunteCreateValidation = joi.object({
             'string.pattern.base': 'El nombre del apunte solo puede contener letras y espacios',
             'any.required': 'El nombre del apunte es obligatorio',
         }),
+    autorSubida: joi.string()
+        .required()
+        .min(15)
+        .max(50)
+        .trim()
+        .pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
+        .messages({
+            "string.base": "El nombre completo debe ser de tipo string.",
+            "string.empty": "El nombre completo no puede estar vacío.",
+            "string.min": "El nombre completo debe tener como mínimo 15 caracteres.",
+            "string.max": "El nombre completo debe tener como máximo 50 caracteres.",
+            "string.pattern.base": "El nombre completo solo puede contener letras y espacios.",
+            "any.required": "El nombre completo es obligatorio.",
+        }),
+    autores: joi.array()
+        .required()
+        .items(
+            joi.string()
+                .min(15)
+                .max(50)
+                .trim()
+                .pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
+                .messages({
+                    "string.base": "El nombre completo debe ser de tipo string.",
+                    "string.empty": "El nombre completo no puede estar vacío.",
+                    "string.min": "El nombre completo debe tener como mínimo 15 caracteres.",
+                    "string.max": "El nombre completo debe tener como máximo 50 caracteres.",
+                    "string.pattern.base": "El nombre completo solo puede contener letras y espacios.",
+                    "any.required": "El nombre completo es obligatorio.",
+                }),
+        )
+        .min(1)
+        .max(10)
+        .messages({
+            'array.empty': 'El campo autores no puede estar vacío',
+            'array.base': 'Los autores deben ser un arreglo',
+            'array.min': 'Debe haber al menos un autor',
+            'array.max': 'Debe haber como máximo 10 autores',
+            'any.required': 'El campo autores es obligatorio',
+        }),
     descripcion: joi.string()
         .required()
         .strict()
@@ -73,12 +110,12 @@ export const apunteCreateValidation = joi.object({
         .required()
         .strict()
         .pattern(/^([0-2][0-9]|3[0-1])-(0[1-9]|1[0-2])-\d{4}$/)
-        .valid(hoy)
+        .valid(diaActual)
         .messages({
             "string.empty": "La fecha no puede estar vacía.",
             "string.base": "La fecha debe ser de tipo string.",
             "string.pattern.base": "La fecha debe tener el formato DD-MM-AAAA.",
-            "any.only": `La fecha debe ser exactamente hoy: ${hoy}.`,
+            "any.only": `La fecha debe ser exactamente hoy: ${diaActual}.`,
             "any.required": "La fecha es obligatoria."
         }),
     tipoApunte: joi.string()
@@ -94,7 +131,7 @@ export const apunteCreateValidation = joi.object({
     .unknown(false)
     .messages({
         'object.unknown': 'No se permiten propiedades adicionales en el cuerpo de la solicitud',
-        'object.missing': 'Debe proporcionar todos los campos obligatorios: nombre, descripción, asignatura, fechaSubida y tipoApunte',
+        'object.missing': 'Debe proporcionar todos los campos obligatorios: nombre, autorSubida, autores, descripcion, asignatura, fechaSubida y tipoApunte',
     });
 
 export const apunteUpdateValidation = joi.object({
@@ -134,11 +171,11 @@ export const apunteUpdateValidation = joi.object({
     fechaSubida: joi.string()
         .strict()
         .pattern(/^([0-2][0-9]|3[0-1])-(0[1-9]|1[0-2])-\d{4}$/)
-        .valid(hoy)
+        .valid(diaActual)
         .messages({
             "string.base": "La fecha debe ser de tipo string.",
             "string.pattern.base": "La fecha debe tener el formato DD-MM-AAAA.",
-            "any.only": `La fecha debe ser exactamente hoy: ${hoy}.`,
+            "any.only": `La fecha debe ser exactamente hoy: ${diaActual}.`,
         }),
     tipoApunte: joi.string()
         .valid("Manuscrito", "Texto", "Gráfico/Esquemático", "Mixto", "Otro")

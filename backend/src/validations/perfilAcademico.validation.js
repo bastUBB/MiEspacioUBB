@@ -1,4 +1,5 @@
 import joi from "joi";
+import { isValidObjectId } from "../helpers/customIdMongo.helper.js";
 
 export const perfilAcademicoQueryValidation = joi.object({
     rutUser: joi.string()
@@ -16,7 +17,7 @@ export const perfilAcademicoQueryValidation = joi.object({
     .unknown(false)
     .messages({
         'object.unknown': 'No se permiten propiedades adicionales en la consulta',
-        'object.missing': 'Debe proporcionar al menos uno de los campos: rut',
+        'object.missing': 'Debe proporcionar al menos uno de los campos: rutUser',
     });
 
 export const perfilAcademicoCreateValidation = joi.object({
@@ -130,17 +131,54 @@ export const perfilAcademicoUpdateValidation = joi.object({
             'number.min': 'El semestre actual debe ser al menos 1',
             'number.max': 'El semestre actual no puede ser más de 10',
         }),
+    apuntesSubidos: joi.number()
+        .default(0)
+        .min(0)
+        .messages({
+            'number.base': 'El número de apuntes subidos debe ser un número',
+            'number.min': 'El número de apuntes subidos no puede ser negativo',
+        }),
+    apuntesDescargados: joi.number()
+        .default(0)
+        .min(0)
+        .messages({
+            'number.base': 'El número de apuntes descargados debe ser un número',
+            'number.min': 'El número de apuntes descargados no puede ser negativo',
+        }),
+    reputacion: joi.number()
+        .default(0)
+        .min(0)
+        .messages({
+            'number.base': 'La reputación debe ser un número',
+            'number.min': 'La reputación no puede ser negativa',
+        }),
     tiposApuntesPreferido: joi.string()
-        .valid('Textual', 'Gráfico', 'Escrito', 'Sin preferencia')
         .trim()
+        //TODO: Pensar bien los tipos de apuntes válidos
+        .valid('Textual', 'Gráfico', 'Escrito', 'Sin preferencia')
         .messages({
             'string.base': 'El tipo de apuntes preferido debe ser una cadena de texto',
             'any.only': 'El tipo de apuntes preferido debe ser "Textual", "Gráfico", "Escrito" o "Sin preferencia"',
+        }),
+    apuntesIDs: joi.array()
+        .items(
+            joi.string()
+                .trim()
+                .custom(isValidObjectId, "validación de ObjectId")
+                .messages({
+                    "string.base": "El ID del apunte debe ser una cadena.",
+                    "any.invalid": "El ID del apunte no es un ObjectId válido de MongoDB.",
+                })
+        )
+        .min(1)
+        .messages({
+            "array.base": "Los IDs de los apuntes deben enviarse como un arreglo.",
+            "array.min": "Debe incluir al menos un ID de apunte.",
         })
 })
-    .or("rutUser", "asignaturasInteres", "semestreActual", "tiposApuntesPreferido")
+    .or("rutUser", "asignaturasInteres", "semestreActual", "apuntesSubidos", "apuntesDescargados", "reputacion", "tiposApuntesPreferido", "apuntesIDs")
     .unknown(false)
     .messages({
         'object.unknown': 'No se permiten propiedades adicionales en el cuerpo de la solicitud',
-        'object.missing': 'Debe proporcionar al menos uno de los campos: rutUser, asignaturasInteres, semestreActual o tiposApuntesPreferido',
+        'object.missing': 'Debe proporcionar al menos uno de los campos: rutUser, asignaturasInteres, semestreActual, apuntesSubidos, apuntesDescargados, reputacion, tiposApuntesPreferido o apuntesIDs',
     });

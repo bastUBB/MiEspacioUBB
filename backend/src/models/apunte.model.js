@@ -6,6 +6,15 @@ const apunteSchema = new mongoose.Schema({
         required: true,
         cast: false
     },
+    autorSubida: {
+        type: String,
+        required: true,
+        cast: false
+    },
+    autores: [{
+        type: String,
+        cast: false
+    }],
     descripcion: {
         type: String,
         required: true,
@@ -34,10 +43,16 @@ const apunteSchema = new mongoose.Schema({
         type: Number,
         cast: false
     },
-    //TODO: Añadir cuando se implemente MinIO
-    // archivo: {
-        
-    // }
+    archivoEnlazado: {
+        bucket: {
+            type: String,
+            required: true,
+        },
+        objectName: {
+            type: String,
+            required: true,
+        },
+    }
 }, {
     timestamps: true,
     versionKey: false,

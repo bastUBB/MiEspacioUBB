@@ -10,7 +10,7 @@ import {
 
 const router = Router();
 
-router.use(authenticateJWT);
+// router.use(authenticateJWT);
 
 router
     .post("/", createUser)

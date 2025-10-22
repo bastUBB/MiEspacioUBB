@@ -1,9 +1,9 @@
-import { useContext } from "react";
 import { Navigate } from "react-router-dom";
-import { UserContextProvider } from "../context/userContextProvider.jsx";
+import { useContext } from "react";
+import { UserContext } from "../context/userContextProvider.jsx";
 
 export default function ProtectedRoute({ children }) {
-    const { user, loading } = useContext(UserContextProvider);
+    const { user, loading } = useContext(UserContext);
 
     if (loading) {
         return (

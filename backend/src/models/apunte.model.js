@@ -54,7 +54,6 @@ const apunteSchema = new mongoose.Schema({
         },
     }
 }, {
-    timestamps: true,
     versionKey: false,
     strict: true
 });

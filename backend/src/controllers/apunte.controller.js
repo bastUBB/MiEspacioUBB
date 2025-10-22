@@ -1,44 +1,32 @@
 import { 
-    uploadFileService, 
-    downloadFileService, 
-    deleteFileService, 
-    getSignedUrlService 
-} from '../services/file.service.js';
+    createApunteService,
+} from '../services/apunte.service.js';
 import Apunte from '../models/apunte.model.js';
 import { apunteCreateValidation } from '../validations/apunte.validation.js';
-import { handleSuccess, handleErrorClient, handleErrorServer } from '../handlers/responseHandlers.js';
-//TODO: Aqui deberia de llamar al controlador de MinIO y middleware de validacion de archivos
+import { handleSuccess, handleErrorClient, handleErrorServer, handleMulterError } from '../handlers/responseHandlers.js';
 
-export async function createApunteController(req, res) {
+export async function createApunte(req, res) {
     try {
-        const { value: valueCreate, error: errorCreate } = apunteCreateValidation.validate(req.body);
+        const { value: valueBody, error: errorBody } = apunteCreateValidation.validate(req.body);
 
-        if (errorCreate) return handleErrorClient(res, 400, "Error de validacion", errorCreate.message);
+        if (errorBody) return handleErrorClient(res, 400, 'Datos de entrada inválidos', errorBody.message);
 
-        // const { archivo: archivoUploaded , error: errorArchivo } = 
-
-        if (!req.file) return handleError(res, 400, 'Es necesario subir un archivo para el apunte');
+        if (!req.file) return handleErrorClient(res, 400, 'No se proporcionó ningún archivo');
         
+        const [nuevoApunte, createError] = await createApunteService(valueBody, req.file);
 
-        // Subir archivo a MinIO
-        const [fileInfo, fileError] = await uploadFileService(req.file);
-        if (fileError) {
-            return handleError(res, 400, fileError);
-        }
-
-        // Crear el apunte con la información del archivo
-        const nuevoApunte = new Apunte({
-            ...value,
-            archivo: fileInfo
-        });
-
-        // Guardar en la base de datos
-        await nuevoApunte.save();
-
+        if (createError) return handleErrorServer(res, 500, 'Error al crear apunte', createError);
+    
         return handleSuccess(res, 201, 'Apunte creado exitosamente', nuevoApunte);
     } catch (error) {
         console.error('Error al crear apunte:', error);
-        return handleError(res, 500, 'Error interno del servidor');
+        
+        // Manejar errores específicos de Multer
+        if (error.code === 'LIMIT_FILE_SIZE') {
+            return handleMulterError(res, error);
+        }
+        
+        return handleErrorServer(res, 500, 'Error interno del servidor');
     }
 }
 

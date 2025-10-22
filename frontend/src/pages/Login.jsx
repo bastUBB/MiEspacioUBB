@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { UserContext } from '../context/userContext';
+import { UserContext } from '../context/userContextProvider';
 import { useState, useContext } from 'react';
 
 // Importar assets
@@ -20,23 +20,40 @@ export default function Login() {
         const { email, password } = data;
         try {
             const { data: response } = await axios.post('api/auth/login', { email, password });
-            if (response.error) {
-                toast.error(response.error);
-            } else {
+            
+            // Verificar la estructura de la respuesta
+            console.log('Respuesta del login:', response);
+            
+            if (response.status === "Client error" || response.error) {
+                toast.error(response.message || response.error);
+            } else if (response.status === "Success" && response.data) {
+                // El backend devuelve los datos en response.data
+                const { user, token } = response.data;
+                
                 // Guardar en localStorage
-                localStorage.setItem('token', response.token);
-                localStorage.setItem('userData', JSON.stringify(response.user));
+                localStorage.setItem('token', token);
+                localStorage.setItem('userData', JSON.stringify(user));
 
                 // Actualizar el contexto
-                setUser(response.user);
+                setUser(user);
 
                 setData({ email: "", password: "" });
+                toast.success('Login exitoso');
 
-                navigate('/');
+                // Esperar un momento antes de navegar para asegurar que el contexto se actualice
+                setTimeout(() => {
+                    navigate('/setup-profile');
+                }, 100);
+            } else {
+                toast.error('Estructura de respuesta inesperada');
             }
         } catch (error) {
             console.error("Login error:", error);
-            toast.error("Error al iniciar sesión");
+            if (error.response?.data?.message) {
+                toast.error(error.response.data.message);
+            } else {
+                toast.error("Error al iniciar sesión");
+            }
         }
     };
 
@@ -52,7 +69,9 @@ export default function Login() {
 
             <div className="relative w-full h-full flex justify-center items-center z-20">
                 {/* Cuadro de login */}
-                <div className="bg-gradient-to-b from-[#0c549c] to-[#b4ecff] p-4 h-[470px] rounded shadow-[0_0_25px_rgba(0,191,255,0.9)]">
+                <div className="bg-[#0c549c] bg-opacity-100 p-4 h-[470px] rounded shadow-[0_0_10px_rgba(0,191,255,0.9)]" style={{
+                    background: 'linear-gradient(to bottom, #8FD4FF 1%, #0090D9 100%)'
+                }}>
                     <img
                         src={escudoUbb}
                         alt="Escudo UBB"

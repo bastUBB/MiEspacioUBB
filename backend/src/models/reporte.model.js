@@ -27,7 +27,6 @@ const reporteSchema = new mongoose.Schema({
         cast: false
     }
 }, {
-    timestamps: true,
     versionKey: false,
     strict: true
 });

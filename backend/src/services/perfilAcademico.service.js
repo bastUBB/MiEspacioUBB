@@ -5,19 +5,29 @@ import Apunte from "../models/apunte.model.js";
 
 export async function createPerfilAcademicoService(dataPerfilAcademico) {
     try {
-        const { rutUser, asignaturasInteres } = dataPerfilAcademico;
+        const { rutUser, asignaturasCursantes, asignaturasInteres, informeCurricular } = dataPerfilAcademico;
 
         const userExist = await User.findOne({ rut: rutUser });
 
         if (!userExist) return [null, 'No existe un usuario con el RUT proporcionado'];
 
+        const asignaturasCursantesExist = await Asignatura.find({ nombre: { $in: asignaturasCursantes } });
+
+        if (!asignaturasCursantesExist || asignaturasCursantesExist.length === 0) return [null, 'No existen asignaturas con los nombres proporcionados'];
+
         const asignaturasInteresExist = await Asignatura.find({ nombre: { $in: asignaturasInteres } });
 
         if (!asignaturasInteresExist || asignaturasInteresExist.length === 0) return [null, 'No existen asignaturas con los nombres proporcionados'];
 
+        //acceder a las asignaturas del informe curricular y verificar que existen
+        for (const informe of informeCurricular) {
+            const asignaturasInformeCurricular = await Asignatura.findOne({ nombre: informe.asignatura });
+
+            if (!asignaturasInformeCurricular) return [null, `No existe la asignatura ${informe.asignatura} en el informe curricular`];
+        }
+
         const newPerfilAcademico = new perfilAcademico({
-            rutUser,
-            asignaturasInteres: asignaturasInteresExist.map(asignatura => asignatura.nombre)
+            ...dataPerfilAcademico,
         });
 
         await newPerfilAcademico.save();
@@ -104,6 +114,25 @@ export async function deletePerfilAcademicoService(query) {
         return [perfilDeleted, null];
     } catch (error) {
         console.error('Error al eliminar el perfil académico:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function poseePerfilAcademicoService(query) {
+    try {
+        const { rutUser } = query;
+
+        const userExist = await User.findOne({ rut: rutUser });
+
+        if (!userExist) return [null, 'No existe un usuario con el RUT proporcionado'];
+
+        const perfil = await perfilAcademico.findOne({ rutUser });
+
+        if (!perfil) return [null, 'No existe un perfil académico para los datos proporcionados'];
+
+        return [perfil, null];
+    } catch (error) {
+        console.error('Error al obtener el perfil académico:', error);
         return [null, 'Error interno del servidor'];
     }
 }

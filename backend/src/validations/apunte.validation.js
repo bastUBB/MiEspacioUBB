@@ -95,6 +95,7 @@ export const apunteCreateValidation = joi.object({
     asignatura: joi.string()
         .required()
         .min(3)
+        .trim()
         .max(50)
         .strict()
         .pattern(/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/)

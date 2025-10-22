@@ -1,9 +1,22 @@
 import axios from 'axios'
 import Login from './pages/Login'
 import ProtectedRoute from './components/protectedRoute'
+import RedireccionRol from './components/redireccionRol.jsx'
+
+// Layouts por rol
+import EstudianteLayout from './layouts/estudianteLayout.jsx'
+import AdminLayout from './layouts/adminLayout.jsx'
+import DocenteLayout from './layouts/docenteLayout.jsx'
+import AyudanteLayout from './layouts/ayudanteLayout.jsx'
+
+// Páginas
+import InicioPerfilAcademicoEstudiante from './pages/perfilAcademicoEstudiante.jsx'
+import SubirApunteForm from './pages/estudiante/subirApunteForm.jsx'
+
 import { Toaster } from 'react-hot-toast'
 import { UserContextProvider } from './context/userContextProvider.jsx'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { RoleProtectedRoute, UnauthorizedPage } from './components/roleProtectedRoute.jsx'
+import { Routes, Route, useLocation } from 'react-router-dom'
 
 const API_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:5500'
 axios.defaults.baseURL = API_URL
@@ -26,34 +39,76 @@ axios.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401 || error.response?.status === 403) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('userData');
-      window.location.href = '/login';
+      if (error.response?.data?.message?.includes('Token') ||
+        error.response?.data?.message?.includes('inválido') ||
+        error.response?.data?.message?.includes('expirado')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userData');
+      }
     }
     return Promise.reject(error);
   }
 );
 
 function App() {
-  // const location = useLocation()
-  // const hideNavbar = location.pathname === "/login" || location.pathname === "/register"
+  const location = useLocation()
+  const hideNavbar = location.pathname === "/login" || location.pathname === "/register"
 
   return (
     <div className="w-screen h-screen overflow-hidden">
       <UserContextProvider>
-        {/* TODO: Import Navbar component */}
-        {/* {!hideNavbar && <Navbar />} */}
+        {!hideNavbar}
         <Toaster position="bottom-right" toastOptions={{ duration: 2000 }} />
         <Routes>
-          {/* Ruta principal redirige a login */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          {/* Rutas login */}
+
           <Route path="/login" element={<Login />} />
-          {/* Ruta de prueba temporal */}
-          {/* Catch-all route para rutas no encontradas */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          {/* En un futuro irá el register */}
+
+          <Route path="/" element={
+            <ProtectedRoute>
+              <RedireccionRol />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin" element={
+            <RoleProtectedRoute allowedRoles={['admin']}>
+              <AdminLayout />
+            </RoleProtectedRoute>
+          }>
+            <Route index element={<div>Home Admin - Crear tu página aquí</div>} />
+            {/* Agrega más rutas del admin aquí */}
+          </Route>
+
+
+          <Route path="/docente" element={
+            <RoleProtectedRoute allowedRoles={['docente', 'admin']}>
+              <DocenteLayout />
+            </RoleProtectedRoute>
+          }>
+            <Route index element={<div>Home Docente - Crear tu página aquí</div>} />
+          </Route>
+
+          <Route path="/ayudante" element={
+            <RoleProtectedRoute allowedRoles={['ayudante', 'admin']}>
+              <AyudanteLayout />
+            </RoleProtectedRoute>
+          }>
+            <Route index element={<div>Home Ayudante - Crear tu página aquí</div>} />
+          </Route>
+
+          <Route path="/estudiante" element={
+            <RoleProtectedRoute allowedRoles={['estudiante', 'admin']}>
+              <EstudianteLayout />
+            </RoleProtectedRoute>
+          }>
+            <Route index element={<InicioPerfilAcademicoEstudiante />} />
+            <Route path="perfil-academico" element={<InicioPerfilAcademicoEstudiante />} />
+            <Route path="subir-apunte" element={<SubirApunteForm />} />
+          </Route>
+
+          <Route path="/unauthorized" element={<UnauthorizedPage />} />
         </Routes>
-    </UserContextProvider>
+      </UserContextProvider>
     </div>
   )
 }

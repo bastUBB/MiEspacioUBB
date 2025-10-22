@@ -5,9 +5,10 @@ export const diaActual = moment().format("DD-MM-YYYY");
 
 export const fechaActual = moment().format("DD-MM-YYYY-HH:mm");
 
-export function generarNombreArchivoForMinIO(metadata) {
-    const extension = path.extname(metadata.nombreOriginal);
-    const nombreSinExtension = path.basename(metadata.nombreOriginal, extension);
-    return `${nombreSinExtension}-${metadata.autorSubida}-${metadata.fechaActual}.${extension}`;
-}
+export function generarNombreArchivoForMinIO(metadataArchivo, body, abreviacionAsignatura) {
+    const extension = path.extname(metadataArchivo.originalname);
 
+    const nombreSinExtension = path.basename(metadataArchivo.originalname, extension);
+
+    return `${abreviacionAsignatura}-${nombreSinExtension}-${body.autorSubida}-${diaActual}${extension}`;
+}

@@ -35,7 +35,7 @@ export const perfilAcademicoCreateValidation = joi.object({
             "string.pattern.base": "Formato rut inválido, debe ser xx.xxx.xxx-x o xxxxxxxx-x.",
             "any.required": "El rut es obligatorio.",
         }),
-    asignaturasInteres: joi.array()
+    asignaturasCursantes: joi.array()
         .items(
             joi.string()
                 .required()
@@ -61,25 +61,103 @@ export const perfilAcademicoCreateValidation = joi.object({
             'array.max': 'No puede haber más de 55 asignaturas de interés',
             'array.required': 'Las asignaturas de interés son obligatorias',
         }),
-    semestreActual: joi.number()
+    informeCurricular: joi.array()
+        .items(
+            joi.object({
+                asignatura: joi.string()
+                    .required()
+                    .min(10)
+                    .max(50)
+                    .strict()
+                    .trim()
+                    .pattern(/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s\.\-\d\,]+$/)
+                    .messages({
+                        'string.empty': 'El nombre de la asignatura no puede estar vacío',
+                        'string.base': 'El nombre de la asignatura debe ser una cadena de texto',
+                        'string.min': 'El nombre de la asignatura debe tener al menos 10 caracteres',
+                        'string.max': 'El nombre de la asignatura no puede tener más de 50 caracteres',
+                        'string.pattern.base': 'El nombre de la asignatura solo puede contener letras, números, puntos, guiones, comas y espacios',
+                    }),
+                evaluaciones: joi.array()
+                    .items(
+                        joi.object({
+                            tipoEvaluacion: joi.string()
+                                .trim()
+                                .messages({
+                                    'string.base': 'El tipo de evaluación debe ser una cadena de texto',
+                                }),
+                            nota: joi.number()
+                                .min(1)
+                                .max(7)
+                                .messages({
+                                    'number.base': 'La nota debe ser un número',
+                                    'number.min': 'La nota debe ser al menos 1',
+                                    'number.max': 'La nota no puede ser más de 7',
+                                }),
+                            porcentaje: joi.number()
+                                .min(0)
+                                .max(100)
+                                .messages({
+                                    'number.base': 'El porcentaje debe ser un número',
+                                    'number.min': 'El porcentaje debe ser al menos 0',
+                                    'number.max': 'El porcentaje no puede ser más de 100',
+                                }),
+                        })
+                    )
+                    .messages({
+                        'array.base': 'Las evaluaciones deben ser un arreglo',
+                    }),
+                ordenComplejidad: joi.number()
+                    .min(1)
+                    .max(10)
+                    .messages({
+                        'number.base': 'El orden de complejidad debe ser un número',
+                        'number.min': 'El orden de complejidad debe ser al menos 1',
+                        'number.max': 'El orden de complejidad no puede ser más de 10',
+                    }),
+            })
+                .xor('evaluaciones', 'ordenComplejidad')
+                .messages({
+                    'object.xor': 'Debe incluir solo "evaluaciones" u "ordenComplejidad", pero no ambos.',
+                })
+        )
         .required()
         .min(1)
-        .max(10)
         .messages({
-            'number.base': 'El semestre actual debe ser un número',
-            'number.empty': 'El semestre actual no puede estar vacío',
-            'number.min': 'El semestre actual debe ser al menos 1',
-            'number.max': 'El semestre actual no puede ser más de 10',
-            'any.required': 'El semestre actual es obligatorio',
+            'array.base': 'El informe curricular debe ser un arreglo',
+            'array.min': 'Debe haber al menos un informe curricular',
+            'array.required': 'El informe curricular es obligatorio',
+        }),
+    asignaturasInteres: joi.array()
+        .items(
+            joi.string()
+                .required()
+                .min(10)
+                .max(50)
+                .strict()
+                .trim()
+                .pattern(/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s\.\-\d\,]+$/)
+                .messages({
+                    'string.empty': 'El nombre de la asignatura no puede estar vacío',
+                    'string.base': 'El nombre de la asignatura debe ser una cadena de texto',
+                    'string.min': 'El nombre de la asignatura debe tener al menos 10 caracteres',
+                    'string.max': 'El nombre de la asignatura no puede tener más de 50 caracteres',
+                    'string.pattern.base': 'El nombre de la asignatura solo puede contener letras, números, puntos, guiones, comas y espacios',
+                }),
+        )
+        .max(55)
+        .messages({
+            'array.base': 'Las asignaturas de interés deben ser un arreglo',
+            'array.max': 'No puede haber más de 55 asignaturas de interés',
         }),
     tiposApuntesPreferido: joi.string()
         .required()
         .trim()
-        .valid('Textual', 'Gráfico', 'Escrito', 'Sin preferencia')
+        .valid('Resumenes conceptuales', 'Casos prácticos', 'Mapas mentales', 'Ejercicios resueltos', 'Formularios', 'Diagramas y Esquemas')
         .messages({
             'string.empty': 'El tipo de apuntes preferido no puede estar vacío',
             'string.base': 'El tipo de apuntes preferido debe ser una cadena de texto',
-            'any.only': 'El tipo de apuntes preferido debe ser "Textual", "Gráfico", "Escrito" o "Sin preferencia"',
+            'any.only': 'El tipo de apuntes preferido debe ser "Resumenes conceptuales", "Casos prácticos", "Mapas mentales", "Ejercicios resueltos", "Formularios" o "Diagramas y Esquemas"',
             'any.required': 'El tipo de apuntes preferido es obligatorio',
         })
 })

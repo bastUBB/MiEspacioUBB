@@ -6,7 +6,8 @@ import {
     getAllAsignaturas,
     getUnidadesAsignatura,
     updateAsignatura,
-    deleteAsignatura
+    deleteAsignatura,
+    getAsignaturasSemestreActual
 } from "../controllers/asignatura.controller.js";   
     
 const router = Router();
@@ -18,6 +19,7 @@ router
     .get("/detail", authorizeRoles("admin", "docente", "ayudante", "estudiante"), getAsignatura)
     .get("/", authorizeRoles("admin", "docente", "ayudante", "estudiante"), getAllAsignaturas)
     .get("/unidades/detail", authorizeRoles("admin", "docente", "ayudante", "estudiante"), getUnidadesAsignatura)
+    .get("/semestreActual/detail", authorizeRoles("admin", "docente", "ayudante", "estudiante"), getAsignaturasSemestreActual)
     .put("/detail", authorizeRoles("admin", "docente"), updateAsignatura)
     .delete("/detail", authorizeRoles("admin", "docente"), deleteAsignatura);
 

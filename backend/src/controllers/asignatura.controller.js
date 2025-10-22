@@ -4,9 +4,11 @@ import {
     getAllAsignaturasService,
     updateAsignaturaService,
     deleteAsignaturaService,
-    getUnidadesAsignaturaService
+    getUnidadesAsignaturaService,
+    getAsignaturasSemestreActualService
 } from "../services/asignatura.service.js";
-import { asignaturaQueryValidation, asignaturaCreateValidation, asignaturaUpdateValidation } from "../validations/asignatura.validation.js";
+import { asignaturaQueryValidation, asignaturaCreateValidation, asignaturaUpdateValidation, 
+    asignaturaSemestreActualValidation } from "../validations/asignatura.validation.js";
 import { handleSuccess, handleErrorClient, handleErrorServer } from "../handlers/responseHandlers.js";
 
 export async function createAsignatura(req, res) {
@@ -104,6 +106,23 @@ export async function getUnidadesAsignatura(req, res) {
         if (errorUnidades) return handleErrorClient(res, 404, "Asignatura no encontrada", errorUnidades);
 
         handleSuccess(res, 200, "Unidades encontradas", unidades);
+    } catch (error) {
+        handleErrorServer(res, 500, error.message);
+    }
+}
+
+export async function getAsignaturasSemestreActual(req, res) {
+    try {
+        const { value: valueQuery, error: errorQuery } = asignaturaSemestreActualValidation.validate(req.query);
+
+        if (errorQuery) return handleErrorClient(res, 400, "Error de validación", errorQuery.message);
+
+        const [asignaturas, errorAsignaturas] = await getAsignaturasSemestreActualService(valueQuery);
+
+        if (errorAsignaturas) return handleErrorClient(res, 404, "No hay asignaturas para el semestre actual", errorAsignaturas);
+
+        handleSuccess(res, 200, "Asignaturas encontradas", asignaturas);
+
     } catch (error) {
         handleErrorServer(res, 500, error.message);
     }

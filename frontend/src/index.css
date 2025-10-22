@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* Configuración de tema personalizado para Tailwind CSS v4 */
+@theme {
+  --color-ubb-blue: #0c549c;
+  --color-ubb-light-blue: #b4ecff;
+  --color-ubb-orange: #FBB13C;
+  --color-ubb-dark-blue: #115397;
+}
+
 /* Reset básico para asegurar que los estilos funcionen correctamente */
 * {
   box-sizing: border-box;

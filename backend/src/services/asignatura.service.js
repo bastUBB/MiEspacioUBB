@@ -130,3 +130,18 @@ export async function getUnidadesAsignaturaService(query) {
         return [null, 'Error interno del servidor'];
     }
 }
+
+export async function getAsignaturasSemestreActualService(query) {
+    try {
+        const { semestreActual } = query;
+
+        const asignaturas = await Asignatura.find({ semestre: semestreActual });
+
+        if (!asignaturas || asignaturas.length === 0) return [null, 'No hay asignaturas para el semestre actual'];
+
+        return [asignaturas, null];
+    } catch (error) {
+        console.error('Error al obtener las asignaturas del semestre actual:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}

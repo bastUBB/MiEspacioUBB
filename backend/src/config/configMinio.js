@@ -1,3 +1,4 @@
+import { MAX } from 'uuid';
 import {
   MINIO_ENDPOINT,
   MINIO_PORT,
@@ -37,6 +38,7 @@ export const BUCKETS = {
   APUNTES_FIS_NEWT: `${MINIO_BUCKET_NAME}-apuntes-fis-newt`,
   APUNTES_ESTR_DATS: `${MINIO_BUCKET_NAME}-apuntes-estr-dats`,
   APUNTES_ING_I: `${MINIO_BUCKET_NAME}-apuntes-ing-i`,
+  APUNTES_ADMIN_GEN: `${MINIO_BUCKET_NAME}-apuntes-admin-gen`,
   APUNTES_CALC_VV: `${MINIO_BUCKET_NAME}-apuntes-calc-vv`,
   APUNTES_EDO: `${MINIO_BUCKET_NAME}-apuntes-edo`,
   APUNTES_ELECTRO: `${MINIO_BUCKET_NAME}-apuntes-electro`,
@@ -47,6 +49,7 @@ export const BUCKETS = {
   APUNTES_FUND_CC: `${MINIO_BUCKET_NAME}-apuntes-fund-cc`,
   APUNTES_TEO_SIST: `${MINIO_BUCKET_NAME}-apuntes-teo-sist`,
   APUNTES_INGLES_III: `${MINIO_BUCKET_NAME}-apuntes-ingles-iii`,
+  APUNTES_GEST_CONT: `${MINIO_BUCKET_NAME}-apuntes-gest-cont`,
   APUNTES_ESTADIST: `${MINIO_BUCKET_NAME}-apuntes-estadist`,
   APUNTES_ECONOMIA: `${MINIO_BUCKET_NAME}-apuntes-economia`,
   APUNTES_ADA: `${MINIO_BUCKET_NAME}-apuntes-ada`,
@@ -69,15 +72,34 @@ export const BUCKETS = {
   APUNTES_SEG_INF: `${MINIO_BUCKET_NAME}-apuntes-seg-inf`,
 };
 
-// Configuración de archivos
 export const FILE_CONFIG = {
-  MAX_FILE_SIZE: 15 * 1024 * 1024, // 15MB
-  ALLOWED_DOCUMENT_TYPES: [
-    'application/pdf',                                                                      // .pdf
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',              // .docx
-    'text/plain'                                                                            // .txt
-  ],
+  MAX_FILE_SIZE: 20 * 1024 * 1024, // 20MB
+
   SIGNED_URL_EXPIRY: parseInt(SIGNED_URL_EXPIRY) || 3600, // 1 hora por defecto
+
+  MAX_FILE_REQUEST: 1,
+
+  ALLOWED_DOCUMENT_TYPES: [
+    'application/pdf',                                                          // PDF
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
+    'text/plain'                                                                // TXT
+  ],
+
+  ALLOWED_EXTENSIONS: ['.pdf', '.docx', '.txt'],
+
+  // Mapeo de MIME types a extensiones (para referencia)
+  MIME_TO_EXTENSION: {
+    'application/pdf': '.pdf',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+    'text/plain': '.txt'
+  },
+
+  // Mapeo de extensiones a MIME types (para validación cruzada)
+  EXTENSION_TO_MIME: {
+    '.pdf': 'application/pdf',
+    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    '.txt': 'text/plain'
+  },
 };
 
 // Borrar buckets
@@ -97,21 +119,15 @@ export const FILE_CONFIG = {
 // Función para inicializar MinIO y crear buckets
 export async function initializeMinIO() {
   try {
-    // Verificar conexión
     await minioClient.listBuckets();
     console.log('[MINIO] Conexión a MinIO establecida correctamente');
-
-    // Crear todos los buckets definidos en BUCKETS automáticamente
     const bucketsToCreate = Object.values(BUCKETS);
-
     for (const bucketName of bucketsToCreate) {
       try {
         const exists = await minioClient.bucketExists(bucketName);
         if (!exists) {
           await minioClient.makeBucket(bucketName, 'us-east-1');
           console.log(`[MINIO] Bucket creado: ${bucketName}`);
-
-          // Configurar política de acceso público para tiles públicos
           if (bucketName.includes('tiles-public')) {
             const publicPolicy = {
               Version: '2012-10-17',
@@ -124,7 +140,6 @@ export async function initializeMinIO() {
                 }
               ]
             };
-
             await minioClient.setBucketPolicy(bucketName, JSON.stringify(publicPolicy));
             console.log(`[MINIO] Política pública configurada para: ${bucketName}`);
           }

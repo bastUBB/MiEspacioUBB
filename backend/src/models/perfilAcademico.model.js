@@ -7,23 +7,46 @@ const perfilAcademicoSchema = mongoose.Schema({
         unique: true,
         cast: false
     },
-    //TODO: Las asignaturas de interes serán: Asignaturas del semestre actual del usuario + (opcional) Asignaturas de interes
+    asignaturasCursantes: [{
+        type: String,
+        cast: false,
+        required: true
+    }],
+    informeCurricular: [{
+        asignatura: {
+            type: String,
+            required: true,
+            cast: false
+        },
+        evaluaciones: [{
+            tipoEvaluacion: {
+                type: String,
+                cast: false
+            },
+            nota: {
+                type: Number,
+                cast: false
+            },
+            porcentaje: {
+                type: Number,
+                cast: false
+            }
+        }],
+        ordenComplejidad: {
+            type: Number,
+            cast: false
+        }
+    }],
     asignaturasInteres: [{
         type: String,
         cast: false,
         required: true
     }],
-    semestreActual: {
-        type: Number,
-        required: true,
-        cast: false
-    },
     tipoApuntesPreferido: {
         type: String,
         required: true,
         cast: false
     },
-    //TODO: Ver si es mejor dejar las notas como un modelo aparte
     apuntesSubidos: {
         type: Number,
         cast: false
@@ -48,7 +71,6 @@ const perfilAcademicoSchema = mongoose.Schema({
         unique: true
     }]
 }, {
-    timestamps: true,
     versionKey: false,
     strict: true
 });

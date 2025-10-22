@@ -234,3 +234,24 @@ export const asignaturaUpdateValidation = joi.object({
         'object.unknown': 'No se permiten propiedades adicionales en el cuerpo de la solicitud',
         'object.missing': 'Debe proporcionar al menos uno de los campos: nombre, codigo, creditos, prerrequisitos, semestre, ambito o area',
     });
+
+export const asignaturaSemestreActualValidation = joi.object({
+    semestreActual: joi.number()
+        .required()
+        .min(1)
+        .max(10)
+        .integer()
+        .messages({
+            'number.empty': 'El semestre no puede estar vacío',
+            'number.base': 'El semestre debe ser un número',
+            'number.min': 'El semestre debe ser al menos 1',
+            'number.max': 'La carrera solo contempla hasta 10 semestres',
+            'number.integer': 'El semestre debe ser un número entero',
+            'any.required': 'El semestre es obligatorio',
+        }),
+})
+    .unknown(false)
+    .messages({
+        'object.unknown': 'No se permiten propiedades adicionales',
+        'object.missing': 'Debe proporcionar el campo semestre',
+    });

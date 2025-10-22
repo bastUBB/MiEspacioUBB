@@ -4,7 +4,8 @@ import {
     createPerfilAcademico,
     getPerfilAcademico,
     updatePerfilAcademico,
-    deletePerfilAcademico
+    deletePerfilAcademico,
+    poseePerfilAcademico
 } from '../controllers/perfilAcademico.controller.js';
 
 const router = Router();
@@ -16,6 +17,7 @@ router.use(authenticateJWT);
 router
     .post("/", authorizeRoles("admin", "docente", "ayudante", "estudiante"), createPerfilAcademico)
     .get("/detail", authorizeRoles("admin", "docente", "ayudante", "estudiante"), getPerfilAcademico)
+    .get("/poseePFA", authorizeRoles("admin", "docente", "ayudante", "estudiante"), poseePerfilAcademico)
     .patch("/detail", authorizeRoles("admin", "docente", "ayudante", "estudiante"), updatePerfilAcademico)
     .delete("/detail", authorizeRoles("admin", "docente", "ayudante", "estudiante"), deletePerfilAcademico);
 

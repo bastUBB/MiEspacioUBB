@@ -2,7 +2,8 @@ import {
     createPerfilAcademicoService,
     getPerfilAcademicoService,
     updatePerfilAcademicoService,
-    deletePerfilAcademicoService
+    deletePerfilAcademicoService,
+    poseePerfilAcademicoService
 } from "../services/perfilAcademico.service.js";
 import {
     perfilAcademicoQueryValidation,
@@ -74,6 +75,22 @@ export async function deletePerfilAcademico(req, res) {
         if (errorPerfilAcademicoDeleted) return handleErrorServer(res, 400, "Error al eliminar el perfil academico", errorPerfilAcademicoDeleted);
 
         return handleSuccess(res, 200, "Perfil academico eliminado con éxito", perfilAcademicoDeleted);
+    } catch (error) {
+        handleErrorServer(res, 500, "Error interno del servidor", error.message);
+    }
+}
+
+export async function poseePerfilAcademico(req, res) {
+    try {
+        const { value: valueQuery, error: errorQuery } = perfilAcademicoQueryValidation.validate(req.query);
+
+        if (errorQuery) return handleErrorClient(res, 400, "Error de validacion", errorQuery.message);
+
+        const [perfilAcademico, errorPerfilAcademico] = await poseePerfilAcademicoService(valueQuery.rutUser);
+
+        if (errorPerfilAcademico) return handleErrorServer(res, 400, "Error al obtener el perfil academico", errorPerfilAcademico);
+
+        return handleSuccess(res, 200, "Perfil academico obtenido con éxito", perfilAcademico);
     } catch (error) {
         handleErrorServer(res, 500, "Error interno del servidor", error.message);
     }

@@ -1,17 +1,9 @@
-import { validateFileMiddleware } from '../middlewares/archivo.middleware.js';
 import { minioClient, BUCKETS } from '../config/configMinio.js';
-import { fechaActual, generarNombreArchivoForMinIO } from '../helpers/ayudasVarias.helper.js';
+import path from 'path';
 
-export async function uploadToMinIOService(filePath, buffer, size, metadata = {}) {
+export async function uploadToMinIOService(bucketName, objectName, buffer, size, metadata = {}) {
     try {
-        await minioClient.putObject(
-            BUCKETS.APUNTES,
-            filePath,
-            buffer,
-            size,
-            metadata
-        );
-
+        await minioClient.putObject(bucketName, objectName, buffer, size, metadata);
         return [true, null];
     } catch (error) {
         console.error('Error subiendo archivo a MinIO:', error);
@@ -19,55 +11,28 @@ export async function uploadToMinIOService(filePath, buffer, size, metadata = {}
     }
 }
 
-export async function downloadFromMinIOService(filePath) {
+export async function uploadFileService(bucketName, objectName, buffer, metadata = {}) {
     try {
-        // Verificar que el archivo existe
-        const stats = await minioClient.statObject(BUCKETS.APUNTES, filePath);
+        const [success, uploadError] = await uploadToMinIOService(
+            bucketName,
+            objectName,
+            buffer,
+            buffer.length,
+            metadata
+        );
 
-        if (!stats) {
-            return [null, 'Archivo no encontrado'];
-        }
+        if (uploadError) return [null, uploadError];
 
-        // Obtener el stream del archivo
-        const fileStream = await minioClient.getObject(BUCKETS.APUNTES, filePath);
+        return [{
+            bucket: bucketName,
+            objectName: objectName,
+            size: buffer.length,
+            filePath: `${bucketName}/${objectName}`
+        }, null];
 
-        // Obtener metadatos
-        const metadata = {
-            size: stats.size,
-            contentType: stats.metaData['content-type'] || 'application/octet-stream',
-            lastModified: stats.lastModified,
-            originalName: stats.metaData['x-original-name'] || path.basename(filePath)
-        };
-
-        return [{ stream: fileStream, metadata }, null];
     } catch (error) {
-        console.error('Error descargando archivo de MinIO:', error);
-
-        if (error.code === 'NoSuchKey') {
-            return [null, 'Archivo no encontrado'];
-        }
-
-        return [null, 'Error interno al descargar el archivo'];
-    }
-}
-
-export async function deleteFromMinIOService(filePath) {
-    try {
-        // Verificar que el archivo existe antes de eliminarlo
-        await minioClient.statObject(BUCKETS.APUNTES, filePath);
-
-        // Eliminar el archivo
-        await minioClient.removeObject(BUCKETS.APUNTES, filePath);
-
-        return [true, null];
-    } catch (error) {
-        console.error('Error eliminando archivo de MinIO:', error);
-
-        if (error.code === 'NoSuchKey') {
-            return [null, 'Archivo no encontrado'];
-        }
-
-        return [null, 'Error interno al eliminar el archivo'];
+        console.error('Error subiendo archivo:', error);
+        return [null, 'Error interno al subir archivo'];
     }
 }
 
@@ -106,57 +71,3 @@ export async function generarUrlFirmadaService(filePath, expiresIn = 7200) {
         return [null, 'Error interno al generar URL de previsualización'];
     }
 }
-
-export async function fileExistsInMinIOService(filePath) {
-    try {
-        await minioClient.statObject(BUCKETS.APUNTES, filePath);
-        return [true, null];
-    } catch (error) {
-        if (error.code === 'NoSuchKey') {
-            return [false, null];
-        }
-
-        console.error('Error verificando existencia del archivo:', error);
-        return [null, 'Error interno al verificar el archivo'];
-    }
-}
-
-function processFileForUploadHandler(file) {
-    try {
-        // Generar nombres únicos
-        const uniqueFileName = generateUniqueFileName(file.originalname);
-        const filePath = generateFilePath(uniqueFileName);
-
-        // Preparar metadatos
-        const metadata = {
-            'Content-Type': file.mimetype,
-            'X-Original-Name': file.originalname,
-            'X-Upload-Date': new Date().toISOString()
-        };
-
-        // Preparar información del archivo para la BD
-        const fileInfo = {
-            nombreOriginal: file.originalname,
-            nombreMinIO: uniqueFileName,
-            rutaCompleta: filePath,
-            tipoArchivo: file.mimetype,
-            tamaño: file.size,
-            bucket: BUCKETS.APUNTES
-        };
-
-        // Preparar datos para MinIO
-        const minioData = {
-            filePath,
-            buffer: file.buffer,
-            size: file.size,
-            metadata
-        };
-
-        return [{ fileInfo, minioData }, null];
-    } catch (error) {
-        console.error('Error procesando archivo:', error);
-        return [null, 'Error interno al procesar el archivo'];
-    }
-}
-
-export async function subirArchivoToMinioService(filePath, buffer, size, metadata = {}) { }

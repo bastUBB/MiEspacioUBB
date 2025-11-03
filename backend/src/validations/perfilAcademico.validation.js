@@ -39,7 +39,7 @@ export const perfilAcademicoCreateValidation = joi.object({
         .items(
             joi.string()
                 .required()
-                .min(10)
+                .min(7)
                 .max(50)
                 .strict()
                 .trim()
@@ -66,7 +66,7 @@ export const perfilAcademicoCreateValidation = joi.object({
             joi.object({
                 asignatura: joi.string()
                     .required()
-                    .min(10)
+                    .min(7)
                     .max(50)
                     .strict()
                     .trim()
@@ -132,7 +132,7 @@ export const perfilAcademicoCreateValidation = joi.object({
         .items(
             joi.string()
                 .required()
-                .min(10)
+                .min(7)
                 .max(50)
                 .strict()
                 .trim()
@@ -150,21 +150,29 @@ export const perfilAcademicoCreateValidation = joi.object({
             'array.base': 'Las asignaturas de interés deben ser un arreglo',
             'array.max': 'No puede haber más de 55 asignaturas de interés',
         }),
-    tiposApuntesPreferido: joi.string()
+    metodosEstudiosPreferidos: joi.array()
+        .items(
+            joi.string()
+                .trim()
+                .valid('Manuscritos', 'Documentos tipeados', 'Resúmenes conceptuales', 'Mapas mentales', 'Diagramas y esquemas',
+                    'Resolución de ejercicios', 'Flashcards', 'Formularios', 'Presentaciones', 'Ninguno', 'Otros')
+                .messages({
+                    'string.base': 'El tipo de apuntes preferido debe ser una cadena de texto',
+                    'any.only': 'El tipo de apuntes preferido debe ser uno de los siguientes: Manuscritos, Documentos tipeados, Resúmenes conceptuales, Mapas mentales, Diagramas y esquemas, Resolución de ejercicios, Flashcards, Formularios, Presentaciones, Ninguno, Otros',
+                })
+        )
         .required()
-        .trim()
-        .valid('Resumenes conceptuales', 'Casos prácticos', 'Mapas mentales', 'Ejercicios resueltos', 'Formularios', 'Diagramas y Esquemas')
+        .min(1)
         .messages({
-            'string.empty': 'El tipo de apuntes preferido no puede estar vacío',
-            'string.base': 'El tipo de apuntes preferido debe ser una cadena de texto',
-            'any.only': 'El tipo de apuntes preferido debe ser "Resumenes conceptuales", "Casos prácticos", "Mapas mentales", "Ejercicios resueltos", "Formularios" o "Diagramas y Esquemas"',
-            'any.required': 'El tipo de apuntes preferido es obligatorio',
-        })
+            'array.base': 'Los tipos de apuntes preferidos deben ser un arreglo',
+            'array.min': 'Debe haber al menos un tipo de apunte preferido',
+            'array.required': 'Los tipos de apuntes preferidos son obligatorios',
+        }),
 })
     .unknown(false)
     .messages({
         'object.unknown': 'No se permiten propiedades adicionales en el cuerpo de la solicitud',
-        'object.missing': 'Debe proporcionar todos los campos: rutUser, asignaturasInteres, semestreActual y tiposApuntesPreferido',
+        'object.missing': 'Debe proporcionar todos los campos: rutUser, asignaturasInteres, semestreActual y metodosEstudiosPreferidos',
     });
 
 export const perfilAcademicoUpdateValidation = joi.object({
@@ -182,7 +190,7 @@ export const perfilAcademicoUpdateValidation = joi.object({
     asignaturasInteres: joi.array()
         .items(
             joi.string()
-                .min(10)
+                .min(7)
                 .max(50)
                 .strict()
                 .trim()
@@ -230,13 +238,19 @@ export const perfilAcademicoUpdateValidation = joi.object({
             'number.base': 'La reputación debe ser un número',
             'number.min': 'La reputación no puede ser negativa',
         }),
-    tiposApuntesPreferido: joi.string()
-        .trim()
-        //TODO: Pensar bien los tipos de apuntes válidos
-        .valid('Textual', 'Gráfico', 'Escrito', 'Sin preferencia')
+    metodosEstudiosPreferidos: joi.array()
+        .items(
+            joi.string()
+                .trim()
+                .valid('Manuscritos', 'Documentos tipeados', 'Resúmenes conceptuales', 'Mapas mentales', 'Diagramas y esquemas',
+                    'Resolución de ejercicios', 'Flashcards', 'Formularios', 'Presentaciones', 'Ninguno', 'Otros')
+                .messages({
+                    'string.base': 'El tipo de apuntes preferido debe ser una cadena de texto',
+                    'any.only': 'El tipo de apuntes preferido debe ser uno de los siguientes: Manuscritos, Documentos tipeados, Resúmenes conceptuales, Mapas mentales, Diagramas y esquemas, Resolución de ejercicios, Flashcards, Formularios, Presentaciones, Ninguno, Otros',
+                })
+        )
         .messages({
-            'string.base': 'El tipo de apuntes preferido debe ser una cadena de texto',
-            'any.only': 'El tipo de apuntes preferido debe ser "Textual", "Gráfico", "Escrito" o "Sin preferencia"',
+            'array.base': 'Los tipos de apuntes preferidos deben ser un arreglo',
         }),
     apuntesIDs: joi.array()
         .items(
@@ -254,9 +268,9 @@ export const perfilAcademicoUpdateValidation = joi.object({
             "array.min": "Debe incluir al menos un ID de apunte.",
         })
 })
-    .or("rutUser", "asignaturasInteres", "semestreActual", "apuntesSubidos", "apuntesDescargados", "reputacion", "tiposApuntesPreferido", "apuntesIDs")
+    .or("rutUser", "asignaturasInteres", "semestreActual", "apuntesSubidos", "apuntesDescargados", "reputacion", "metodosEstudiosPreferidos", "apuntesIDs")
     .unknown(false)
     .messages({
         'object.unknown': 'No se permiten propiedades adicionales en el cuerpo de la solicitud',
-        'object.missing': 'Debe proporcionar al menos uno de los campos: rutUser, asignaturasInteres, semestreActual, apuntesSubidos, apuntesDescargados, reputacion, tiposApuntesPreferido o apuntesIDs',
+        'object.missing': 'Debe proporcionar al menos uno de los campos: rutUser, asignaturasInteres, semestreActual, apuntesSubidos, apuntesDescargados, reputacion, metodosEstudiosPreferidos o apuntesIDs',
     });

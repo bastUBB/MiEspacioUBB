@@ -1,3 +1,5 @@
+import { BUCKETS } from '../config/configMinio.js';
+
 const bucketAsignatura = {
     "Algebra y Trigonometria": "APUNTES_ALG_TRIG",
     "Introduccion a la Ingenieria": "APUNTES_INTRO_INGENIERIA",
@@ -52,11 +54,15 @@ export function asignarBucket(nombreAsignatura) {
 
         if (!normalizado) return [null, `Asignatura no reconocida: ${nombreAsignatura}`];
 
-        const bucketName = bucketAsignatura[normalizado];
+        const bucketKey = bucketAsignatura[normalizado];
 
-        if (!bucketName) return [null, `Asignatura no reconocida luego de la normalización: ${normalizado}`];
+        if (!bucketKey) return [null, `Asignatura no reconocida luego de la normalización: ${normalizado}`];
 
-        const abreviacionAsignatura = bucketName.replace("APUNTES_", "");
+        const bucketName = BUCKETS[bucketKey];
+
+        if (!bucketName) return [null, `Bucket no encontrado para la clave: ${bucketKey}`];
+
+        const abreviacionAsignatura = bucketKey.replace("APUNTES_", "");
 
         return [bucketName, abreviacionAsignatura, null];
 

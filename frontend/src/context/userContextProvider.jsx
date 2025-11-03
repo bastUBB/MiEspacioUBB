@@ -23,8 +23,7 @@ export function UserContextProvider({ children }) {
         // Primero intentar usar los datos del localStorage
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
-        setLoading(false);
-
+        
         // Luego verificar en segundo plano con el servidor
         axios.get('/api/auth/profile', {
           headers: { Authorization: `Bearer ${token}` },
@@ -41,11 +40,15 @@ export function UserContextProvider({ children }) {
               localStorage.removeItem('userData');
               setUser(null);
             }
+          })
+          .finally(() => {
+            setLoading(false);
           });
       } catch (parseError) {
         console.error('Error al parsear userData:', parseError);
         localStorage.removeItem('token');
         localStorage.removeItem('userData');
+        setUser(null);
         setLoading(false);
       }
     } else {

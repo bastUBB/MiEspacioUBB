@@ -1,8 +1,8 @@
 import joi from "joi";
 
 const domainEmailValidator = (value, helper) => {
-    const domainRegex = /@(gmail\.cl)$/;
-    if (!domainRegex.test(value)) return helper.message("El correo electrónico debe finalizar en @gmail.cl");
+    const domainRegex = /@(ubiobio\.cl|alumnos\.ubiobio\.cl)$/;
+    if (!domainRegex.test(value)) return helper.message("El correo electrónico debe finalizar en @ubiobio.cl o @alumnos.ubiobio.cl");
     return value;
 };
 
@@ -84,11 +84,12 @@ export const userCreateValidation = joi.object({
             "any.required": "La contraseña es obligatoria.",
         }),
     role: joi.string()
-        .valid("Estudiante", "Alumno", "Docente", "Personal", "Trabajador", "Administrador")
+        .lowercase()
+        .valid("estudiante", "docente", "admin", "ayudante")
         .required()
         .messages({
             "string.empty": "El role no puede estar vacío.",
-            "any.only": "El role debe ser uno de los siguientes: Estudiante, Alumno, Docente, Personal, Trabajador o Administrador.",
+            "any.only": "El role debe ser uno de los siguientes: estudiante, docente, admin o ayudante.",
             "any.required": "El role es obligatorio.",
         }),
 })
@@ -149,10 +150,11 @@ export const userUpdateValidation = joi.object({
             "string.pattern.base": "La contraseña solo puede contener letras y números."
         }),
     role: joi.string()
-        .valid("Estudiante", "Alumno", "Docente", "Personal", "Trabajador", "Administrador")
+        .lowercase()
+        .valid("estudiante", "docente", "admin", "ayudante")
         .messages({
             "string.empty": "El role no puede estar vacío.",
-            "any.only": "El role debe ser uno de los siguientes: Estudiante, Alumno, Docente, Personal, Trabajador o Administrador.",
+            "any.only": "El role debe ser uno de los siguientes: estudiante, docente, admin o ayudante.",
         }),
 })
     .or("nombreCompleto", "rut", "email", "password", "role")

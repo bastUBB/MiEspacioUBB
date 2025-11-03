@@ -82,6 +82,7 @@ export async function deletePerfilAcademico(req, res) {
 
 export async function poseePerfilAcademico(req, res) {
     try {
+
         const { value: valueQuery, error: errorQuery } = perfilAcademicoQueryValidation.validate(req.query);
 
         if (errorQuery) return handleErrorClient(res, 400, "Error de validacion", errorQuery.message);

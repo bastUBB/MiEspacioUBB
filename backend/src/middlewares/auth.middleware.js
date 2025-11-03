@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
 import { handleErrorClient, handleErrorServer } from '../handlers/responseHandlers.js';
+import { JWT_SECRET } from '../config/configEnv.js';
 
 export const authenticateJWT = async (req, res, next) => {
     try {
@@ -13,22 +14,16 @@ export const authenticateJWT = async (req, res, next) => {
             }
         }
 
-        if (!token) {
-            return handleErrorClient(res, 401, "Acceso denegado", "Token de autenticación requerido");
-        }
+        if (!token) return handleErrorClient(res, 401, "Acceso denegado", "Token de autenticación requerido");
 
-        // Verificar el token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'TU_SECRET_KEY');
-        
-        // Buscar el usuario en la base de datos
+        const decoded = jwt.verify(token, JWT_SECRET || 'TU_SECRET_KEY');
+
         const user = await User.findById(decoded.id).select('-password');
         
-        if (!user) {
-            return handleErrorClient(res, 401, "Acceso denegado", "Usuario no encontrado");
-        }
-
-        // Agregar la información del usuario a la request
+        if (!user) return handleErrorClient(res, 401, "Acceso denegado", "Usuario no encontrado");
+        
         req.user = user;
+        
         next();
     } catch (error) {
         if (error.name === 'JsonWebTokenError') {

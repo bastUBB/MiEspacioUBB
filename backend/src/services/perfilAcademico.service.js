@@ -15,9 +15,12 @@ export async function createPerfilAcademicoService(dataPerfilAcademico) {
 
         if (!asignaturasCursantesExist || asignaturasCursantesExist.length === 0) return [null, 'No existen asignaturas con los nombres proporcionados'];
 
-        const asignaturasInteresExist = await Asignatura.find({ nombre: { $in: asignaturasInteres } });
+        // Solo validar asignaturasInteres si el array no está vacío
+        if (asignaturasInteres && asignaturasInteres.length > 0) {
+            const asignaturasInteresExist = await Asignatura.find({ nombre: { $in: asignaturasInteres } });
 
-        if (!asignaturasInteresExist || asignaturasInteresExist.length === 0) return [null, 'No existen asignaturas con los nombres proporcionados'];
+            if (!asignaturasInteresExist || asignaturasInteresExist.length === 0) return [null, 'No existen asignaturas de interés con los nombres proporcionados'];
+        }
 
         //acceder a las asignaturas del informe curricular y verificar que existen
         for (const informe of informeCurricular) {
@@ -118,9 +121,8 @@ export async function deletePerfilAcademicoService(query) {
     }
 }
 
-export async function poseePerfilAcademicoService(query) {
+export async function poseePerfilAcademicoService(rutUser) {
     try {
-        const { rutUser } = query;
 
         const userExist = await User.findOne({ rut: rutUser });
 
@@ -133,6 +135,33 @@ export async function poseePerfilAcademicoService(query) {
         return [perfil, null];
     } catch (error) {
         console.error('Error al obtener el perfil académico:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function asignarApunteToPerfilAcademicoService(dataUserApunte) {
+    try {
+        const { rutUser, apunteID } = dataUserApunte;
+
+        const userExist = await User.findOne({ rut: rutUser });
+
+        if (!userExist) return [null, 'No existe un usuario con el RUT proporcionado'];
+
+        const perfil = await perfilAcademico.findOne({ rutUser });
+
+        if (!perfil) return [null, 'No existe un perfil académico para los datos proporcionados'];
+
+        const apunteExist = await Apunte.findOne({ _id: apunteID });
+
+        if (!apunteExist) return [null, 'No existe un apunte con el ID proporcionado'];
+
+        perfil.apuntesIDs.push(apunteID);
+
+        await perfil.save();
+
+        return [perfil, null];
+    } catch (error) {
+        console.error('Error al asignar apunte al perfil académico:', error);
         return [null, 'Error interno del servidor'];
     }
 }

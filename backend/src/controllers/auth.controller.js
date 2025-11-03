@@ -2,6 +2,8 @@ import {
     registerUserService,
     loginUserService,
     getProfileService,
+    verifyEmailService,
+    resendVerificationEmailService,
 } from "../services/auth.service.js";
 import jwt from "jsonwebtoken";
 import { registerValidation, loginValidation } from "../validations/auth.validation.js";
@@ -17,7 +19,10 @@ export async function registerUser(req, res) {
 
         if (errorNewUser) return handleErrorServer(res, 400, "Error al registrar el usuario", errorNewUser);
 
-        return handleSuccess(res, 201, "Usuario registrado con éxito", newUser);
+        return handleSuccess(res, 201, "Usuario registrado con éxito. Por favor, verifica tu correo electrónico.", {
+            user: newUser,
+            message: "Se ha enviado un correo de verificación a tu dirección de email."
+        });
     } catch (error) {
         return handleErrorServer(res, 500, "Error interno del servidor", error.message);
     }
@@ -35,7 +40,6 @@ export async function loginUser(req, res) {
 
         const { user, token } = result;
 
-        // Set cookie HttpOnly (si usas cookies en web)
         res.cookie("token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
@@ -74,6 +78,45 @@ export async function getProfile(req, res) {
         if (errorUser) return handleErrorServer(res, 404, "Usuario no encontrado", errorUser);
 
         return handleSuccess(res, 200, "Perfil obtenido con éxito", user);
+    } catch (error) {
+        return handleErrorServer(res, 500, "Error interno del servidor", error.message);
+    }
+}
+
+export async function verifyEmail(req, res) {
+    try {
+        const { token } = req.params;
+
+        if (!token) return handleErrorClient(res, 400, "Token requerido", "Debe proporcionar un token de verificación");
+        
+
+        const [user, errorVerify] = await verifyEmailService(token);
+
+        if (errorVerify) return handleErrorClient(res, 400, "Error en la verificación", errorVerify);
+
+        return handleSuccess(res, 200, "Correo verificado con éxito", {
+            user,
+            message: "Tu cuenta ha sido verificada. Ya puedes iniciar sesión."
+        });
+    } catch (error) {
+        return handleErrorServer(res, 500, "Error interno del servidor", error.message);
+    }
+}
+
+export async function enviarVerificacionEmail(req, res) {
+    try {
+        const { email } = req.body;
+
+        if (!email) return handleErrorClient(res, 400, "Email requerido", "Debe proporcionar un correo electrónico");
+        
+
+        const [success, errorResend] = await resendVerificationEmailService(email);
+
+        if (errorResend) return handleErrorClient(res, 400, "Error al reenviar", errorResend);
+
+        return handleSuccess(res, 200, "Correo reenviado", {
+            message: "Se ha enviado un nuevo correo de verificación. Por favor, revisa tu bandeja de entrada."
+        });
     } catch (error) {
         return handleErrorServer(res, 500, "Error interno del servidor", error.message);
     }

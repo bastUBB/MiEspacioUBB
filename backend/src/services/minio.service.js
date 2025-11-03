@@ -29,7 +29,6 @@ export async function uploadFileService(bucketName, objectName, buffer, metadata
             size: buffer.length,
             filePath: `${bucketName}/${objectName}`
         }, null];
-
     } catch (error) {
         console.error('Error subiendo archivo:', error);
         return [null, 'Error interno al subir archivo'];
@@ -38,7 +37,6 @@ export async function uploadFileService(bucketName, objectName, buffer, metadata
 
 export async function generarUrlFirmadaService(filePath, expiresIn = 7200) {
     try {
-        // Verificar que el archivo existe y obtener metadatos
         const stats = await minioClient.statObject(BUCKETS.APUNTES, filePath);
 
         // Generar URL firmada con tiempo extendido para previsualización

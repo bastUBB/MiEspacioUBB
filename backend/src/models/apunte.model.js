@@ -11,6 +11,11 @@ const apunteSchema = new mongoose.Schema({
         required: true,
         cast: false
     },
+    rutAutorSubida: {
+        type: String,
+        required: true,
+        cast: false
+    },
     autores: [{
         type: String,
         cast: false
@@ -43,7 +48,31 @@ const apunteSchema = new mongoose.Schema({
         type: Number,
         cast: false
     },
-    archivoEnlazado: {
+    etiquetas: [{
+        type: String,
+        cast: false
+    }],
+    archivo: {
+        nombreOriginal: {
+            type: String,
+            required: true,
+        },
+        nombreArchivo: {
+            type: String,
+            required: true,
+        },
+        rutaCompleta: {
+            type: String,
+            required: true,
+        },
+        tamano: {
+            type: Number,
+            required: true,
+        },
+        tipoMime: {
+            type: String,
+            required: true,
+        },
         bucket: {
             type: String,
             required: true,

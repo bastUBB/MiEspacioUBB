@@ -1,5 +1,8 @@
 import axios from 'axios'
 import Login from './pages/Login'
+import Register from './pages/Register.jsx'
+import VerifyEmail from './pages/VerifyEmail.jsx'
+import NotFound from './pages/NotFound.jsx'
 import ProtectedRoute from './components/protectedRoute'
 import RedireccionRol from './components/redireccionRol.jsx'
 
@@ -10,15 +13,15 @@ import DocenteLayout from './layouts/docenteLayout.jsx'
 import AyudanteLayout from './layouts/ayudanteLayout.jsx'
 
 // Páginas
-import InicioPerfilAcademicoEstudiante from './pages/perfilAcademicoEstudiante.jsx'
-import SubirApunteForm from './pages/estudiante/subirApunteForm.jsx'
+import InicioPerfilAcademicoEstudiante from './pages/estudiante/perfilAcademicoEstudiante.jsx'
+import SubirApunteForm from './pages/subirApunteForm.jsx'
 
 import { Toaster } from 'react-hot-toast'
 import { UserContextProvider } from './context/userContextProvider.jsx'
 import { RoleProtectedRoute, UnauthorizedPage } from './components/roleProtectedRoute.jsx'
 import { Routes, Route, useLocation } from 'react-router-dom'
 
-const API_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:5500'
+const API_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:5500' //Aqui deberia ir la ip + el puerto de Apache
 axios.defaults.baseURL = API_URL
 axios.defaults.withCredentials = true
 
@@ -62,7 +65,10 @@ function App() {
         <Routes>
 
           <Route path="/login" element={<Login />} />
-          {/* En un futuro irá el register */}
+
+          <Route path="/register" element={<Register />} />
+
+          <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
           <Route path="/" element={
             <ProtectedRoute>
@@ -107,6 +113,8 @@ function App() {
           </Route>
 
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
+          
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </UserContextProvider>
     </div>

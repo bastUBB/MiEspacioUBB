@@ -2,13 +2,6 @@ import { Navigate } from "react-router-dom";
 import { useContext } from "react";
 import { UserContext } from "../context/userContextProvider.jsx";
 
-/**
- * Componente para proteger rutas basado en roles específicos
- * @param {Object} props
- * @param {React.ReactNode} props.children - Componente a renderizar si tiene acceso
- * @param {string|string[]} props.allowedRoles - Rol(es) permitido(s)
- * @param {string} props.redirectTo - Ruta de redirección si no tiene acceso
- */
 export function RoleProtectedRoute({ 
   children, 
   allowedRoles = [], 
@@ -16,7 +9,6 @@ export function RoleProtectedRoute({
 }) {
   const { user, loading } = useContext(UserContext);
 
-  // Mostrar spinner mientras carga
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -25,27 +17,18 @@ export function RoleProtectedRoute({
     );
   }
 
-  // Si no hay usuario, redirigir al login
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+  
+  if (!user) return <Navigate to="/login" replace />;
 
-  // Convertir allowedRoles a array si es string
   const rolesArray = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
   
-  // Verificar si el usuario tiene uno de los roles permitidos
   const hasAccess = rolesArray.includes(user.role);
 
-  // Si no tiene el rol requerido, redirigir
-  if (!hasAccess) {
-    return <Navigate to={redirectTo} replace />;
-  }
+  if (!hasAccess) return <Navigate to={redirectTo} replace />;
 
-  // Si tiene acceso, mostrar el contenido
   return children;
 }
 
-// Componente para página de acceso no autorizado
 export function UnauthorizedPage() {
   const { user } = useContext(UserContext);
   

@@ -42,11 +42,11 @@ const perfilAcademicoSchema = mongoose.Schema({
         cast: false,
         required: true
     }],
-    tipoApuntesPreferido: {
+    metodosEstudiosPreferidos: [{
         type: String,
         required: true,
         cast: false
-    },
+    }],
     apuntesSubidos: {
         type: Number,
         cast: false

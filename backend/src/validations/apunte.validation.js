@@ -53,6 +53,20 @@ export const apunteCreateValidation = joi.object({
             "string.pattern.base": "El nombre completo solo puede contener letras y espacios.",
             "any.required": "El nombre completo es obligatorio.",
         }),
+    rutAutorSubida: joi.string()
+        .required()
+        .min(9)
+        .max(12)
+        .trim()
+        .pattern(/^(?:(?:[1-9]\d{0}|[1-2]\d{1})(\.\d{3}){2}|[1-9]\d{6}|[1-2]\d{7}|29\.999\.999|29999999)-[\dkK]$/)
+        .messages({
+            "string.base": "El rut debe ser de tipo string.",
+            "string.empty": "El rut no puede estar vacío.",
+            "string.min": "El rut debe tener como mínimo 9 caracteres.",
+            "string.max": "El rut debe tener como máximo 12 caracteres.",
+            "string.pattern.base": "Formato rut inválido, debe ser xx.xxx.xxx-x o xxxxxxxx-x.",
+            "any.required": "El rut es obligatorio.",
+        }),
     autores: joi.array()
         .required()
         .items(
@@ -121,18 +135,48 @@ export const apunteCreateValidation = joi.object({
         }),
     tipoApunte: joi.string()
         .required()
-        .valid("Manuscrito", "Texto", "Gráfico/Esquemático", "Mixto", "Otro")
+        .trim()
+        .valid('Manuscrito', 'Documento tipeado', 'Resumen conceptual', 'Mapa mental', 'Diagrama y/o esquema',
+            'Resolucion de ejercicio(s)', 'Flashcard', 'Formulario', 'Presentacion', 'Otro')
         .messages({
             "string.empty": "El tipo de apunte no puede estar vacío.",
             "string.base": "El tipo de apunte debe ser de tipo string.",
-            "any.only": "El tipo de apunte debe ser uno de los siguientes: Manuscrito, Texto, Gráfico/Esquemático, Mixto u Otro.",
+            "any.only": "El tipo de apunte debe ser uno de los siguientes: Manuscrito, Documento tipeado, Resumen conceptual, Mapa mental, Diagrama y/o esquema, Resolucion de ejercicios, Flashcard, Formulario, Presentacion u Otro.",
             "any.required": "El tipo de apunte es obligatorio."
         }),
+    etiquetas: joi.array()
+        .required()
+        .items(
+            joi.string()
+                .lowercase()
+                .min(6)
+                .max(20)
+                .trim()
+                .pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
+                .messages({
+                    "string.base": "La etiqueta debe ser de tipo string.",
+                    "string.empty": "La etiqueta no puede estar vacía.",
+                    "string.min": "La etiqueta debe tener como mínimo 6 caracteres.",
+                    "string.max": "La etiqueta debe tener como máximo 20 caracteres.",
+                    "string.pattern.base": "La etiqueta solo puede contener letras y espacios.",
+                    "any.required": "La etiqueta es obligatoria.",
+                }),
+        )
+        .min(1)
+        .max(5)
+        .messages({
+            'array.empty': 'El campo etiquetas no puede estar vacío',
+            'array.base': 'Las etiquetas deben ser un arreglo',
+            'array.min': 'Debe haber al menos una etiqueta',
+            'array.max': 'Debe haber como máximo 5 etiquetas',
+            'any.required': 'El campo etiquetas es obligatorio',
+        }),
+
 })
     .unknown(false)
     .messages({
         'object.unknown': 'No se permiten propiedades adicionales en el cuerpo de la solicitud',
-        'object.missing': 'Debe proporcionar todos los campos obligatorios: nombre, autorSubida, autores, descripcion, asignatura, fechaSubida y tipoApunte',
+        'object.missing': 'Debe proporcionar todos los campos obligatorios: nombre, autorSubida, autores, descripcion, asignatura, fechaSubida, tipoApunte y etiquetas',
     });
 
 export const apunteUpdateValidation = joi.object({
@@ -179,10 +223,35 @@ export const apunteUpdateValidation = joi.object({
             "any.only": `La fecha debe ser exactamente hoy: ${diaActual}.`,
         }),
     tipoApunte: joi.string()
-        .valid("Manuscrito", "Texto", "Gráfico/Esquemático", "Mixto", "Otro")
+        .valid('Manuscrito', 'Documento tipeado', 'Resumen conceptual', 'Mapa mental', 'Diagrama y/o esquema',
+            'Resolucion de ejercicio(s)', 'Flashcard', 'Formulario', 'Presentacion', 'Otro')
         .messages({
             "string.base": "El tipo de apunte debe ser de tipo string.",
-            "any.only": "El tipo de apunte debe ser uno de los siguientes: Manuscrito, Texto, Gráfico/Esquemático, Mixto u Otro.",
+            "any.only": "El tipo de apunte debe ser uno de los siguientes: Manuscrito, Documento tipeado, Resumen conceptual, Mapa mental, Diagrama y/o esquema, Resolucion de ejercicios, Flashcard, Formulario, Presentacion u Otro.",
+        }),
+    etiquetas: joi.array()
+        .items(
+            joi.string()
+                .lowercase()
+                .min(6)
+                .max(20)
+                .trim()
+                .pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
+                .messages({
+                    "string.base": "La etiqueta debe ser de tipo string.",
+                    "string.empty": "La etiqueta no puede estar vacía.",
+                    "string.min": "La etiqueta debe tener como mínimo 6 caracteres.",
+                    "string.max": "La etiqueta debe tener como máximo 20 caracteres.",
+                    "string.pattern.base": "La etiqueta solo puede contener letras y espacios.",
+                    "any.required": "La etiqueta es obligatoria.",
+                }),
+        )
+        .min(1)
+        .max(5)
+        .messages({
+            'array.base': 'Las etiquetas deben ser un arreglo',
+            'array.min': 'Debe haber al menos una etiqueta',
+            'array.max': 'Debe haber como máximo 5 etiquetas',
         }),
     valorizacion: joi.number()
         .min(1)

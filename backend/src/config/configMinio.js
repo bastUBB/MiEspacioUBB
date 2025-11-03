@@ -1,4 +1,3 @@
-import { MAX } from 'uuid';
 import {
   MINIO_ENDPOINT,
   MINIO_PORT,
@@ -116,7 +115,6 @@ export const FILE_CONFIG = {
 //   return true;
 // }
 
-// Función para inicializar MinIO y crear buckets
 export async function initializeMinIO() {
   try {
     await minioClient.listBuckets();

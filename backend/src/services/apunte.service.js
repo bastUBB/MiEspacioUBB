@@ -1,9 +1,10 @@
 import Apunte from '../models/apunte.model.js';
-import User from '../models/user.model.js';
 import Asignatura from '../models/asignatura.model.js';
 import { uploadFileService } from './minio.service.js';
 import { generarNombreArchivoForMinIO, diaActual } from '../helpers/ayudasVarias.helper.js';
 import { asignarBucket } from '../helpers/asignarBucket.helper.js';
+import { normalizarNombres } from '../helpers/ayudasVarias.helper.js';
+import { asignarApunteToPerfilAcademicoService } from './perfilAcademico.service.js';
 
 export async function uploadApunteService(file, body) {
     try {
@@ -13,13 +14,19 @@ export async function uploadApunteService(file, body) {
 
         const fileName = generarNombreArchivoForMinIO(file, body, abreviacionAsignatura);
 
+        const normalizeMetadata = (str) => {
+            return normalizarNombres(str);
+        };
+
         const metadata = {
             'Content-Type': file.mimetype,
-            'X-Original-Name': file.originalname,
+            'X-Original-Name': normalizeMetadata(file.originalname),
             'X-Upload-Date': diaActual,
-            'X-Asignatura': body.asignatura,
-            'X-Tipo-Apunte': body.tipoApunte,
-            'X-Autor': body.autores ? body.autores.join(',') : (body.autorSubida || 'desconocido')
+            'X-Asignatura': normalizeMetadata(body.asignatura),
+            'X-Tipo-Apunte': normalizeMetadata(body.tipoApunte),
+            'X-Autor': body.autores 
+                ? normalizeMetadata(body.autores.join(',')) 
+                : normalizeMetadata(body.autorSubida || 'desconocido')
         };
 
         const [fileData, fileError] = await uploadFileService(
@@ -46,17 +53,9 @@ export async function uploadApunteService(file, body) {
     }
 }
 
-// Crear el apunte completo: validar, subir archivo y guardar en BD
 export async function createApunteService(body, file) {
     try {
-        const { autores, asignatura } = body;
-
-        if (autores && Array.isArray(autores)) {
-            const existUsuarios = await User.find({ nombreCompleto: { $in: autores } });
-            if (existUsuarios.length !== autores.length) {
-                return [null, 'Algunos autores no existen'];
-            }
-        }
+        const { asignatura, rutAutorSubida } = body;
 
         const existAsignatura = await Asignatura.findOne({ nombre: asignatura });
 
@@ -77,12 +76,25 @@ export async function createApunteService(body, file) {
                 bucket: uploadResult.bucket,
                 objectName: uploadResult.objectName
             },
-            fechaCreacion: new Date(),
             visualizaciones: 0
         };
 
         const nuevoApunte = new Apunte(apunteData);
+
         await nuevoApunte.save();
+
+        if (rutAutorSubida) {
+            const [perfilActualizado, perfilError] = await asignarApunteToPerfilAcademicoService({
+                rutAutorSubida: rutUser,
+                apunteID: nuevoApunte._id
+            });
+
+            if (perfilError) {
+                console.warn('No se pudo asignar el apunte al perfil académico:', perfilError);
+            } else {
+                console.log('Apunte asignado automáticamente al perfil académico del usuario');
+            }
+        }
 
         return [nuevoApunte, null];
 

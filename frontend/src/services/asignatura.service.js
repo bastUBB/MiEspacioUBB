@@ -3,7 +3,6 @@ import axios from 'axios';
 export async function getAsignaturasService() {
     try {
         const response = await axios.get('/api/asignaturas/');
-
         return response.data;
     } catch (error) {
         return error.response.data;

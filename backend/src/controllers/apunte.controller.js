@@ -12,7 +12,7 @@ export async function createApunte(req, res) {
         if (errorBody) return handleErrorClient(res, 400, 'Datos de entrada inválidos', errorBody.message);
 
         if (!req.file) return handleErrorClient(res, 400, 'No se proporcionó ningún archivo');
-        
+                
         const [nuevoApunte, createError] = await createApunteService(valueBody, req.file);
 
         if (createError) return handleErrorServer(res, 500, 'Error al crear apunte', createError);
@@ -21,18 +21,10 @@ export async function createApunte(req, res) {
     } catch (error) {
         console.error('Error al crear apunte:', error);
         
-        // Manejar errores específicos de Multer
-        if (error.code === 'LIMIT_FILE_SIZE') {
-            return handleMulterError(res, error);
-        }
-        
         return handleErrorServer(res, 500, 'Error interno del servidor');
     }
 }
 
-/**
- * Obtener todos los apuntes
- */
 export async function getApuntesController(req, res) {
     try {
         const apuntes = await Apunte.find();

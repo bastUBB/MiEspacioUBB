@@ -118,13 +118,13 @@ jobs:
 
               # Desplegar archivos del frontend al servidor web
               echo "=== Removiendo datos anteriores de build... ==="
-              sudo rm -rf /var/www/html/miespacioubb/*
+              sudo rm -rf /var/www/html/*
               echo "=== Copiando nuevos archivos al servidor web... ==="
-              sudo cp -r frontend/dist/* /var/www/html/miespacioubb/
+              sudo cp -r frontend/dist/* /var/www/html/
               # Cambiar propietario
               echo "=== Cambiando permisos de los archivos... ==="
-              sudo chown -R www-data:www-data /var/www/html/miespacioubb
-              sudo chmod -R 755 /var/www/html/miespacioubb
+              sudo chown -R www-data:www-data /var/www/html
+              sudo chmod -R 755 /var/www/html
               echo "=== Reiniciando Apache... ==="
               sudo apachectl -k graceful
 

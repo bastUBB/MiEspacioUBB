@@ -38,18 +38,21 @@ export default function VerifyEmail() {
             hasVerified.current = true; // Marcar como ejecutado
 
             try {
-                const { data: response } = await axios.get(`api/auth/verify-email/${token}`);
+                
+                const response = await axios.get(`/api/auth/verify-email/${token}`);
+
+                // const { data: response } = await axios.get(`api/auth/verify-email/${token}`);
+
+                console.log("Response: ", response);
                 
                 if (response.status === "Success") {
                     setStatus('success');
                     setMessage('¡Tu correo ha sido verificado exitosamente!');
                     
-                    // Notificar a otras pestañas si el usuario registró desde otra ventana
                     localStorage.setItem('emailVerified', 'true');
                     
                     toast.success('Email verificado correctamente. Redirigiendo al login...');
                     
-                    // Redirigir al login después de 3 segundos
                     setTimeout(() => {
                         navigate('/login');
                     }, 3000);

@@ -34,7 +34,7 @@ export async function enviarEmailVerificacionService(email, verificationToken) {
                         .button { 
                             display: inline-block; 
                             padding: 12px 30px; 
-                            background-color: #4F46E5; 
+                            background-color: #ffffffff; 
                             color: white; 
                             text-decoration: none; 
                             border-radius: 5px;

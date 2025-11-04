@@ -12,7 +12,7 @@ const Asignaturas = asignaturasData.datos || asignaturasData || [];
 async function createInitialUsers() {
     try {
         const existingUsers = await User.find({});
-        if (existingUsers.length > 0) {
+        if (existingUsers.length > 1) {
             console.log('Usuarios iniciales ya existen');
             return;
         }

@@ -10,12 +10,25 @@ import { BACKEND_URL, FRONTEND_URL } from './config/configEnv.js';
 const app = express();
 const url = new URL(BACKEND_URL);
 
-app.use(
-  cors({
-    credentials: true,
-    origin: FRONTEND_URL
-  })
-);
+// Configuración de CORS mejorada
+const corsOptions = {
+  credentials: true,
+  origin: function (origin, callback) {
+
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [FRONTEND_URL];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('Origen bloqueado por CORS:', origin);
+      callback(new Error('No permitido por CORS'));
+    }
+  }
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser()); 
 app.use(express.urlencoded({ extended: false })); 

@@ -110,28 +110,25 @@ export async function verifyEmailService(token) {
         updatedAt: { $gt: new Date(Date.now() - 5 * 60 * 1000) }
       });
 
-      if (recentlyVerified) {
-        return [toSafeUser(recentlyVerified), null];
-      }
-
+      if (recentlyVerified) return [toSafeUser(recentlyVerified), null];
+      
       return [null, "Token inválido o expirado. Por favor, solicita un nuevo correo de verificación."];
     }
 
-    if (userWithToken.isVerified) {
-      return [toSafeUser(userWithToken), null];
-    }
+    if (userWithToken.isVerified) return [toSafeUser(userWithToken), null];
 
-    if (userWithToken.verificationTokenExpires < new Date()) {
-      return [null, "Token expirado. Por favor, solicita un nuevo correo de verificación."];
-    }
+    if (userWithToken.verificationTokenExpires < new Date()) return [null, "Token expirado. Por favor, solicita un nuevo correo de verificación."];
+    
 
     userWithToken.isVerified = true;
+
     userWithToken.verificationToken = undefined;
+
     userWithToken.verificationTokenExpires = undefined;
+
     await userWithToken.save();
 
-    // Enviar correo de bienvenida (no esperar a que termine)
-    enviarEmailBienvenidaService(userWithToken.email, userWithToken.nombreCompleto)
+    enviarEmailBienvenidaService(userWithToken.email, userWithToken.nombreCompleto);
 
     return [toSafeUser(userWithToken), null];
 

@@ -19,5 +19,8 @@ export const JWT_SECRET = process.env.JWT_SECRET;
 export const EMAIL_USER = process.env.EMAIL_USER;
 export const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
 
+// URL del Backend
+export const BACKEND_URL = process.env.BACKEND_URL;
+
 // URL del Frontend
-export const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+export const FRONTEND_URL = process.env.FRONTEND_URL;

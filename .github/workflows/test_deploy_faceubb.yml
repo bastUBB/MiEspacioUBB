@@ -23,7 +23,7 @@ jobs:
 
       - name: Instalar dependencias de producción del backend
         run: |
-          cd "${{ secrets.PROD_ROUTE }}/"backend || { echo "No se pudo acceder al directorio del backend"; exit 1; }
+          cd backend || { echo "No se pudo acceder al directorio del backend"; exit 1; }
           npm install
 
       - name: Ejecutar pruebas # Ejecuta las pruebas del proyecto

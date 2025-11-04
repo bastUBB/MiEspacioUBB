@@ -31,7 +31,7 @@ jobs:
           cd backend || { echo "No se pudo acceder al directorio del backend"; exit 1; }
           npm test
         env:
-          MONGO_URI: ${{ secrets.MONGO_URI_TESTS }}
+          MONGO_URI_TEST: mongodb://localhost:27017/test
 
   # CUIDADO: Las conexiones SSH y OpenVPN pueden ser peligrosas si no se protegen correctamente.
   # Asegúrate de que todas las credenciales estén protegidas usando los secretos del repositorio.

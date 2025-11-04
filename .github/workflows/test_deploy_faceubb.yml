@@ -28,6 +28,7 @@ jobs:
 
       - name: Ejecutar pruebas # Ejecuta las pruebas del proyecto
         run: |
+          cd backend || { echo "No se pudo acceder al directorio del backend"; exit 1; }
           npm test
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}

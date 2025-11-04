@@ -128,7 +128,30 @@ jobs:
               echo "=== Reiniciando Apache... ==="
               sudo apachectl -k graceful
 
-              # 5. Reiniciar servicios con PM2 (asumiendo que ya están configurados)
-              echo "=== Reiniciando procesos con PM2... ==="
-              pm2 restart all
+              # Gestión de procesos con PM2
+              echo "=== Gestionando procesos con PM2... ==="
+              
+              # Verificar si PM2 ya tiene procesos configurados
+              if pm2 list | grep -q "online\|stopped\|errored"; then
+                echo "Procesos PM2 encontrados. Reiniciando..."
+                pm2 restart all
+                pm2 save
+              else
+                echo "No se encontraron procesos PM2. Configurando desde cero..."
+                
+                # Ir al directorio del backend
+                cd backend
+                
+                # Iniciar el backend con PM2
+                pm2 start src/index.js --name "miespacioubb-backend" --watch --ignore-watch="node_modules"
+                
+                # Guardar la configuración de PM2
+                pm2 save
+                
+                # Configurar PM2 para que inicie al reiniciar el servidor
+                pm2 startup
+              fi
+              
+              echo "=== Estado de PM2 ==="
+              pm2 list
           EOF

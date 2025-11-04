@@ -24,4 +24,4 @@ export const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
 export const BACKEND_URL = process.env.BACKEND_URL;
 
 // URL del Frontend
-export const FRONTEND_URL = process.env.FRONTEND_URL;
+export const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';

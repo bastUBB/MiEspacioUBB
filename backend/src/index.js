@@ -5,7 +5,7 @@ import { connectDB } from './config/configDb.js';
 import { initializeMinIO } from './config/configMinio.js';
 import { initialSetup } from './config/initialSetup.js';
 import indexRoutes from './routes/index.routes.js';
-import { BACKEND_URL, FRONTEND_URL, FRONTEND_URL } from './config/configEnv.js';
+import { BACKEND_URL, FRONTEND_URL } from './config/configEnv.js';
 
 const app = express();
 const url = new URL(BACKEND_URL);

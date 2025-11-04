@@ -9,7 +9,7 @@ import AppPrueba from './AppPrueba.jsx'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <AppPrueba/>
+      <App/>
     </BrowserRouter>
   </StrictMode>,
 )

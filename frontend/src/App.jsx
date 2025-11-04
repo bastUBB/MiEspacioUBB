@@ -21,7 +21,7 @@ import { UserContextProvider } from './context/userContextProvider.jsx'
 import { RoleProtectedRoute, UnauthorizedPage } from './components/roleProtectedRoute.jsx'
 import { Routes, Route, useLocation } from 'react-router-dom'
 
-const API_URL = import.meta.env.VITE_BASE_URL
+const API_URL = import.meta.env.VITE_BASE_URL;
 axios.defaults.baseURL = API_URL
 axios.defaults.withCredentials = true
 

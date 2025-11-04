@@ -40,7 +40,7 @@ export default function VerifyEmail() {
             try {
                 const response = await axios.get(`/api/auth/verify-email/${token}`);
 
-                console.log("Response: ", response);
+                // console.log("Response: ", response);
                 
                 // Verificar el status dentro de response.data
                 if (response.data.status === "Success") {

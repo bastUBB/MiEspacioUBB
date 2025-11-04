@@ -22,7 +22,7 @@ import { RoleProtectedRoute, UnauthorizedPage } from './components/roleProtected
 import { Routes, Route, useLocation } from 'react-router-dom'
 
 const API_URL = import.meta.env.VITE_BASE_URL;
-console.log("API URL:", API_URL);
+// console.log("API URL:", API_URL);
 axios.defaults.baseURL = API_URL
 axios.defaults.withCredentials = true
 

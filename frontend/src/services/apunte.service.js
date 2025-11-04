@@ -25,7 +25,7 @@ export async function crearApunteService(apunteData, file) {
             });
         }
     
-        const response = await axios.post('/api/apuntes/', formData);
+        const response = await axios.post('api/apuntes/', formData);
         
         return response.data;
     } catch (error) {

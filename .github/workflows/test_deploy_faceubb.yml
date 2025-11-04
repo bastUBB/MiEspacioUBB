@@ -23,12 +23,11 @@ jobs:
 
       - name: Instalar dependencias de producción del backend
         run: |
-          cd backend || { echo "No se pudo acceder al directorio del backend"; exit 1; }
+          cd "${{ secrets.PROD_ROUTE }}/"backend || { echo "No se pudo acceder al directorio del backend"; exit 1; }
           npm install
 
       - name: Ejecutar pruebas # Ejecuta las pruebas del proyecto
         run: |
-          cd backend || { echo "No se pudo acceder al directorio del backend"; exit 1; }
           npm test
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
@@ -113,7 +112,9 @@ jobs:
               npm ci
               echo "=== Construyendo el frontend... ==="
               npm run build 
-              cd 
+              cd frontend/dist || { echo "No se pudo acceder al directorio de distribución del frontend"; exit 1; }
+
+              4. Desplegar archivos del frontend al servidor web
               echo "=== Removiendo datos anteriores de build... ==="
               rm -rf /var/www/html/miespacioubb/*
               echo "=== Copiando nuevos archivos al servidor web... ==="

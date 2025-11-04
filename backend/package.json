@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest",
+    "ui": "vitest --ui --api 9527",
     "start": "node src/index.js"
   },
   "keywords": [],
@@ -27,6 +28,8 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "@vitest/ui": "^4.0.6",
+    "nodemon": "^3.1.10",
+    "vitest": "^4.0.6"
   }
 }

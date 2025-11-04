@@ -38,14 +38,12 @@ export default function VerifyEmail() {
             hasVerified.current = true; // Marcar como ejecutado
 
             try {
-                
                 const response = await axios.get(`/api/auth/verify-email/${token}`);
-
-                // const { data: response } = await axios.get(`api/auth/verify-email/${token}`);
 
                 console.log("Response: ", response);
                 
-                if (response.status === "Success") {
+                // Verificar el status dentro de response.data
+                if (response.data.status === "Success") {
                     setStatus('success');
                     setMessage('¡Tu correo ha sido verificado exitosamente!');
                     
@@ -58,8 +56,8 @@ export default function VerifyEmail() {
                     }, 3000);
                 } else {
                     setStatus('error');
-                    setMessage(response.message || 'Error al verificar el correo');
-                    toast.error(response.message || 'Error al verificar el correo');
+                    setMessage(response.data.message || 'Error al verificar el correo');
+                    toast.error(response.data.message || 'Error al verificar el correo');
                 }
             } catch (error) {
                 console.error("Verification error:", error);

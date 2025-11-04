@@ -131,6 +131,14 @@ jobs:
               # Gestión de procesos con PM2
               echo "=== Gestionando procesos con PM2... ==="
               
+              # Verificar si PM2 está instalado
+              if ! command -v pm2 &> /dev/null; then
+                echo "PM2 no encontrado. Instalando PM2 globalmente..."
+                npm install -g pm2
+              else
+                echo "PM2 ya está instalado: $(pm2 --version)"
+              fi
+              
               # Verificar si PM2 ya tiene procesos configurados
               if pm2 list | grep -q "online\|stopped\|errored"; then
                 echo "Procesos PM2 encontrados. Reiniciando..."
@@ -148,8 +156,8 @@ jobs:
                 # Guardar la configuración de PM2
                 pm2 save
                 
-                # Configurar PM2 para que inicie al reiniciar el servidor
-                pm2 startup
+                # Configurar PM2 para que inicie al reiniciar el servidor (puede requerir sudo)
+                pm2 startup || echo "Nota: pm2 startup requiere configuración manual con sudo"
               fi
               
               echo "=== Estado de PM2 ==="

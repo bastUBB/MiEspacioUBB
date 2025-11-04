@@ -1,8 +1,6 @@
 # Node modules 
 node_modules/
 
-# Outputs
-output/
 
 # Archivos de log
 *.log

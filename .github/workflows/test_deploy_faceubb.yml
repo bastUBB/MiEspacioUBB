@@ -49,7 +49,8 @@ jobs:
           sudo apt install -y -qq openvpn openvpn-systemd-resolved openssh-client sshpass
 
       - name: Crear archivo de configuración OpenVPN # Crea el archivo de configuración de OpenVPN en memoria
-        run: echo "${{ secrets.OPENVPN_CONFIG }}" > /dev/shm/face-ubb.ovpn
+        run: |
+          echo "${{ secrets.OPENVPN_CONFIG }}" | base64 -d > /dev/shm/face-ubb.ovpn
 
         # Conecta a la VPN de la UBB usando un action de GitHub del usuario kota65535.
         # Tambien se podría usar el cliente de OpenVPN directamente.

@@ -113,20 +113,20 @@ jobs:
               cd frontend || { echo "No se pudo acceder al directorio del frontend"; exit 1; }
               npm ci
               echo "=== Construyendo el frontend... ==="
-              npm run build 
-              cd frontend/dist || { echo "No se pudo acceder al directorio de distribución del frontend"; exit 1; }
+              npm run build
+              cd ..
 
-              4. Desplegar archivos del frontend al servidor web
+              # Desplegar archivos del frontend al servidor web
               echo "=== Removiendo datos anteriores de build... ==="
-              rm -rf /var/www/html/miespacioubb/*
+              sudo rm -rf /var/www/html/miespacioubb/*
               echo "=== Copiando nuevos archivos al servidor web... ==="
-              cp -r MiEspacioUBB/frontend/dist/* /var/www/html/miespacioubb/
+              sudo cp -r frontend/dist/* /var/www/html/miespacioubb/
               # Cambiar propietario
               echo "=== Cambiando permisos de los archivos... ==="
-              chown -R www-data:www-data /var/www/html/miespacioubb
-              chmod -R 755 /var/www/html/miespacioubb
+              sudo chown -R www-data:www-data /var/www/html/miespacioubb
+              sudo chmod -R 755 /var/www/html/miespacioubb
               echo "=== Reiniciando Apache... ==="
-              apachectl -k graceful
+              sudo apachectl -k graceful
 
               # 5. Reiniciar servicios con PM2 (asumiendo que ya están configurados)
               echo "=== Reiniciando procesos con PM2... ==="

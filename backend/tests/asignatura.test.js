@@ -1,7 +1,7 @@
 import Asignatura from '../src/models/asignatura.model.js';
 import { describe, it, expect } from 'vitest';
-import { connectDbTest } from '../src/config/configDbTest.js';
-import { asignaturaQueryValidation, asignaturaBodyValidation } from '../src/validations/asignatura.validation.js';
+import { connectDbTest } from '../src/config/configDbTest.js';Ñ
+// import { asignaturaQueryValidation, asignaturaBodyValidation } from '../src/validations/asignatura.validation.js';
 
 /*
 ║═══════════════════════════════════════════════════ CASOS DE PRUEBA ═══════════════════════════════════════════════════║

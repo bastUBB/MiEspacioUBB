@@ -4,6 +4,7 @@ dotenv.config({ path: 'src/config/.env' });
 
 // Configuración MONGODB
 export const MONGO_URI = process.env.MONGO_URI;
+export const MONGO_URI_TEST = process.env.MONGO_URI_TEST;
 
 // Configuración MinIO
 export const MINIO_ENDPOINT = process.env.MINIO_ENDPOINT;

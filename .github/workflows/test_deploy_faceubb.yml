@@ -137,8 +137,8 @@ jobs:
               echo '' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '    # Proxy para el backend API - DEBE IR ANTES DEL DIRECTORY' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '    ProxyPreserveHost On' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '    ProxyPass /api/ ${{ secrets.BACKEND_URL }}/api/' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '    ProxyPassReverse /api/ ${{ secrets.BACKEND_URL }}/api/' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo '    ProxyPass /api/ ${{ secrets.BACKEND_URL }}/' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo '    ProxyPassReverse /api/ ${{ secrets.BACKEND_URL }}/' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '    <Directory /var/www/html>' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '        Options Indexes FollowSymLinks' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null

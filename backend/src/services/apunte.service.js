@@ -85,7 +85,7 @@ export async function createApunteService(body, file) {
 
         if (rutAutorSubida) {
             const [perfilActualizado, perfilError] = await asignarApunteToPerfilAcademicoService({
-                rutAutorSubida: rutUser,
+                rutAutorSubida: rutAutorSubida,
                 apunteID: nuevoApunte._id
             });
 

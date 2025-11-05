@@ -3,6 +3,7 @@ import Login from './pages/Login'
 import Register from './pages/Register.jsx'
 import VerifyEmail from './pages/VerifyEmail.jsx'
 import NotFound from './pages/NotFound.jsx'
+import Bienvenida from './pages/Bienvenida.jsx'
 import ProtectedRoute from './components/protectedRoute'
 import RedireccionRol from './components/redireccionRol.jsx'
 
@@ -59,7 +60,7 @@ function App() {
   const hideNavbar = location.pathname === "/login" || location.pathname === "/register"
 
   return (
-    <div className="w-screen h-screen overflow-hidden">
+    <div className="w-screen h-screen overflow-y-auto">
       <UserContextProvider>
         {!hideNavbar}
         <Toaster position="bottom-right" toastOptions={{ duration: 2000 }} />
@@ -72,6 +73,12 @@ function App() {
           <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
           <Route path="/" element={
+            <ProtectedRoute>
+              <Bienvenida />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/dashboard" element={
             <ProtectedRoute>
               <RedireccionRol />
             </ProtectedRoute>

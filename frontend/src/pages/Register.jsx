@@ -93,17 +93,17 @@ export default function Register() {
                     }}
                 />
 
-                <div className="relative w-full h-full flex justify-center items-center z-20">
-                    <div className="bg-white p-8 rounded-lg shadow-[0_0_20px_rgba(168,85,247,0.4)] max-w-md text-center">
+                <div className="relative w-full h-full flex justify-center items-center z-20 px-4 sm:px-6">
+                    <div className="bg-white p-6 sm:p-8 rounded-lg shadow-[0_0_20px_rgba(168,85,247,0.4)] w-full max-w-sm text-center">
                         <img
                             src={escudoUbb}
                             alt="Escudo UBB"
-                            className="h-20 mx-auto mb-6"
+                            className="h-16 sm:h-20 md:h-24 mx-auto mb-4 sm:mb-6"
                         />
                         
-                        <div className="mb-6">
+                        <div className="mb-4 sm:mb-6">
                             <svg 
-                                className="w-16 h-16 mx-auto text-purple-500 mb-4" 
+                                className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-purple-500 mb-3 sm:mb-4" 
                                 fill="none" 
                                 stroke="currentColor" 
                                 viewBox="0 0 24 24"
@@ -116,24 +116,24 @@ export default function Register() {
                                 />
                             </svg>
                             
-                            <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-cyan-500 bg-clip-text text-transparent mb-2">
+                            <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-cyan-500 bg-clip-text text-transparent mb-2">
                                 Verifica tu correo electrónico
                             </h2>
                             
-                            <p className="text-gray-600 mb-4">
+                            <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
                                 Hemos enviado un correo de verificación a:
                             </p>
                             
-                            <p className="text-purple-600 font-semibold mb-6">
+                            <p className="text-sm sm:text-base text-purple-600 font-semibold mb-4 sm:mb-6 break-words">
                                 {registeredEmail}
                             </p>
                             
-                            <p className="text-sm text-gray-500 mb-6">
+                            <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6">
                                 Por favor, revisa tu bandeja de entrada y haz clic en el enlace de verificación para activar tu cuenta.
                             </p>
                         </div>
 
-                        <div className="space-y-3">
+                        <div className="space-y-2 sm:space-y-3">
                             <button
                                 onClick={resendVerificationEmail}
                                 disabled={isResending}
@@ -172,45 +172,45 @@ export default function Register() {
                 }}
             />
 
-            <div className="relative w-full h-full flex justify-center items-center z-20">
+            <div className="relative w-full h-full flex justify-center items-center z-20 px-4 sm:px-6">
                 {/* Cuadro de registro */}
-                <div className="bg-gradient-to-br from-purple-500 to-cyan-400 bg-opacity-100 p-4 rounded-lg shadow-[0_0_20px_rgba(168,85,247,0.6)]">
+                <div className="bg-gradient-to-br from-purple-500 to-cyan-400 bg-opacity-100 p-4 sm:p-6 md:p-8 w-full max-w-sm rounded-lg shadow-[0_0_20px_rgba(168,85,247,0.6)]">
                     <img
                         src={escudoUbb}
                         alt="Escudo UBB"
-                        className="h-20 mx-auto mt-6 mb-6"
+                        className="h-16 sm:h-20 md:h-24 mx-auto mt-2 sm:mt-4 md:mt-6 mb-4 sm:mb-6"
                     />
 
                     <form
                         onSubmit={registerUser}
-                        className="w-full flex flex-col items-center gap-4 text-black font-bold rounded p-4"
+                        className="w-full flex flex-col items-center gap-3 sm:gap-4 text-black font-bold rounded p-2 sm:p-4"
                     >
                         {/* Campo de nombre completo */}
-                        <div className="relative">
+                        <div className="relative w-full max-w-[280px]">
                             <input
                                 type="text"
                                 placeholder="Nombre completo"
                                 value={data.nombreCompleto}
                                 onChange={(e) => setData({ ...data, nombreCompleto: e.target.value })}
                                 required
-                                className="w-[280px] p-2 rounded bg-white text-black border-2 border-gray-300 text-sm"
+                                className="w-full p-2 rounded bg-white text-black border-2 border-gray-300 text-sm"
                             />
                         </div>
 
                         {/* Campo de RUT */}
-                        <div className="relative">
+                        <div className="relative w-full max-w-[280px]">
                             <input
                                 type="text"
                                 placeholder="RUT (ej: 12345678-9 o 12.345.678-9)"
                                 value={data.rut}
                                 onChange={(e) => setData({ ...data, rut: e.target.value })}
                                 required
-                                className="w-[280px] p-2 rounded bg-white text-black border-2 border-gray-300 text-sm"
+                                className="w-full p-2 rounded bg-white text-black border-2 border-gray-300 text-sm"
                             />
                         </div>
 
                         {/* Campo de correo */}
-                        <div className="relative">
+                        <div className="relative w-full max-w-[280px]">
                             <img
                                 src={iconCorreo}
                                 alt="icono correo"
@@ -222,12 +222,12 @@ export default function Register() {
                                 value={data.email}
                                 onChange={(e) => setData({ ...data, email: e.target.value })}
                                 required
-                                className="w-[280px] pl-10 p-2 rounded bg-white text-black border-2 border-gray-300 text-sm"
+                                className="w-full pl-10 p-2 rounded bg-white text-black border-2 border-gray-300 text-sm"
                             />
                         </div>
 
                         {/* Campo de contraseña */}
-                        <div className="relative">
+                        <div className="relative w-full max-w-[280px]">
                             <img
                                 src={iconPassword}
                                 alt="icono contraseña"
@@ -239,17 +239,17 @@ export default function Register() {
                                 value={data.password}
                                 onChange={(e) => setData({ ...data, password: e.target.value })}
                                 required
-                                className="w-[280px] pl-10 p-2 rounded bg-white text-black border-2 border-gray-300 text-sm"
+                                className="w-full pl-10 p-2 rounded bg-white text-black border-2 border-gray-300 text-sm"
                             />
                         </div>
 
                         {/* Campo de rol */}
-                        <div className="relative">
+                        <div className="relative w-full max-w-[280px]">
                             <select
                                 value={data.role}
                                 onChange={(e) => setData({ ...data, role: e.target.value })}
                                 required
-                                className="w-[280px] p-2 rounded bg-white text-black border-2 border-gray-300 text-sm"
+                                className="w-full p-2 rounded bg-white text-black border-2 border-gray-300 text-sm"
                             >
                                 <option value="Estudiante">Estudiante</option>
                                 <option value="Docente">Docente</option>
@@ -260,7 +260,7 @@ export default function Register() {
                         {/* Botón de registro */}
                         <button
                             type="submit"
-                            className="w-[200px] bg-white text-purple-600 py-2 rounded-lg hover:bg-gradient-to-r hover:from-purple-600 hover:to-cyan-500 hover:text-white font-semibold transition-all duration-300 shadow-md hover:shadow-lg mt-2"
+                            className="w-full max-w-[200px] bg-white text-purple-600 py-2 rounded-lg hover:bg-gradient-to-r hover:from-purple-600 hover:to-cyan-500 hover:text-white font-semibold transition-all duration-300 shadow-md hover:shadow-lg mt-1 sm:mt-2"
                         >
                             Registrarse
                         </button>
@@ -269,7 +269,7 @@ export default function Register() {
                         <button
                             type="button"
                             onClick={() => navigate('/login')}
-                            className="w-[200px] bg-white text-cyan-600 py-2 rounded-lg hover:bg-gradient-to-r hover:from-cyan-500 hover:to-purple-600 hover:text-white font-semibold transition-all duration-300 shadow-md hover:shadow-lg"
+                            className="w-full max-w-[200px] bg-white text-cyan-600 py-2 rounded-lg hover:bg-gradient-to-r hover:from-cyan-500 hover:to-purple-600 hover:text-white font-semibold transition-all duration-300 shadow-md hover:shadow-lg"
                         >
                             Volver al Login
                         </button>

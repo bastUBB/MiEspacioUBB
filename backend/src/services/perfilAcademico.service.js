@@ -141,13 +141,13 @@ export async function poseePerfilAcademicoService(rutUser) {
 
 export async function asignarApunteToPerfilAcademicoService(dataUserApunte) {
     try {
-        const { rutUser, apunteID } = dataUserApunte;
+        const { rutAutorSubida, apunteID } = dataUserApunte;
 
-        const userExist = await User.findOne({ rut: rutUser });
+        const userExist = await User.findOne({ rut: rutAutorSubida });
 
         if (!userExist) return [null, 'No existe un usuario con el RUT proporcionado'];
 
-        const perfil = await perfilAcademico.findOne({ rutUser });
+        const perfil = await perfilAcademico.findOne({ rutUser: rutAutorSubida });
 
         if (!perfil) return [null, 'No existe un perfil académico para los datos proporcionados'];
 

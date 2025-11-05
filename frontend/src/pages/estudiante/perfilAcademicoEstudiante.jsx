@@ -108,8 +108,6 @@ function InicioPerfilAcademico() {
       const response = await crearPerfilAcademicoService(profileData);
 
       console.log('Respuesta creación perfil académico:', response);
-
-      console.log("URL + ruta a la que se hace la petición: ", response.config.url);
       
       if (response.status === 'Success') {
         toast.success('¡Perfil académico creado exitosamente!');

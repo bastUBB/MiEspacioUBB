@@ -1,8 +1,8 @@
-import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../context/userContextProvider';
 import { useState, useContext, useEffect } from 'react';
+import { loginService, resendVerificationService } from '../services/auth.service';
 import escudoUbb from '@assets/Escudo-ubb.svg';
 import iconCorreo from '@assets/IconCorreo.png';
 import iconPassword from '@assets/IconContraseña.png';
@@ -24,73 +24,45 @@ export default function Login() {
     const loginUser = async (e) => {
         e.preventDefault();
         const { email, password } = data;
-        try {
-            const { data: response } = await axios.post('api/auth/login', { email, password });
+        
+        const response = await loginService({ email, password });
+        
+        if (response.status === "Client error" || response.error) {
+            const errorMessage = response.message || response.error;
             
-            if (response.status === "Client error" || response.error) {
-                const errorMessage = response.message || response.error;
-                
-                if (errorMessage.includes('verificar tu correo') || errorMessage.includes('verificar su correo')) {
-                    setPendingEmail(email);
-                    setShowVerificationWarning(true);
-                    toast.error(errorMessage, { duration: 5000 });
-                } else {
-                    toast.error(errorMessage);
-                }
-            } else if (response.status === "Success" && response.data) {
-
-                const { user, token } = response.data;
-                
-                localStorage.setItem('token', token);
-                localStorage.setItem('userData', JSON.stringify(user));
-
-                setUser(user);
-
-                setData({ email: "", password: "" });
-                toast.success('Login exitoso');
-
-                setTimeout(() => {
-                    navigate('/');
-                }, 100);
+            if (errorMessage.includes('verificar tu correo') || errorMessage.includes('verificar su correo')) {
+                setPendingEmail(email);
+                setShowVerificationWarning(true);
+                toast.error(errorMessage, { duration: 5000 });
             } else {
-                toast.error('Estructura de respuesta inesperada');
+                toast.error(errorMessage);
             }
-        } catch (error) {
-            console.error("Login error:", error);
-            if (error.response?.data) {
-                const errorData = error.response.data;
-                const errorMessage = errorData.details || errorData.message || "Error al iniciar sesión";
-                
-                // Verificar si el error es por email no verificado
-                if (errorMessage.includes('verificar tu correo') || errorMessage.includes('verificar su correo')) {
-                    setPendingEmail(email);
-                    setShowVerificationWarning(true);
-                    toast.error(errorMessage, { duration: 5000 });
-                } else {
-                    toast.error(errorMessage);
-                }
-            } else {
-                toast.error("Error al iniciar sesión");
-            }
+        } else if (response.status === "Success" && response.data) {
+            const { user, token } = response.data;
+            
+            localStorage.setItem('token', token);
+            localStorage.setItem('userData', JSON.stringify(user));
+
+            setUser(user);
+            setData({ email: "", password: "" });
+            toast.success('Login exitoso');
+
+            setTimeout(() => {
+                navigate('/');
+            }, 100);
+        } else {
+            toast.error('Estructura de respuesta inesperada');
         }
     };
 
     const resendVerificationEmail = async () => {
-        try {
-            const { data: response } = await axios.post('api/auth/resend-verification', { 
-                email: pendingEmail 
-            });
-            
-            if (response.status === "Success") {
-                toast.success('Correo de verificación reenviado. Revisa tu bandeja de entrada.');
-                setShowVerificationWarning(false);
-            } else {
-                toast.error(response.message || 'Error al reenviar el correo');
-            }
-        } catch (error) {
-            console.error("Resend error:", error);
-            const errorMessage = error.response?.data?.details || error.response?.data?.message || "Error al reenviar el correo";
-            toast.error(errorMessage);
+        const response = await resendVerificationService(pendingEmail);
+        
+        if (response.status === "Success") {
+            toast.success('Correo de verificación reenviado. Revisa tu bandeja de entrada.');
+            setShowVerificationWarning(false);
+        } else {
+            toast.error(response.message || 'Error al reenviar el correo');
         }
     };
 

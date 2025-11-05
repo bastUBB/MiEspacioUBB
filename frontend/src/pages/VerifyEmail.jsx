@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import { verifyEmailService } from '../services/auth.service';
 
 // Importar assets
 import escudoUbb from '@assets/Escudo-ubb.svg';
@@ -37,34 +37,24 @@ export default function VerifyEmail() {
 
             hasVerified.current = true; // Marcar como ejecutado
 
-            try {
-                const response = await axios.get(`/api/auth/verify-email/${token}`);
-
-                // console.log("Response: ", response);
+            const response = await verifyEmailService(token);
+            
+            // Verificar el status dentro de response.data
+            if (response.data.status === "Success") {
+                setStatus('success');
+                setMessage('¡Tu correo ha sido verificado exitosamente!');
                 
-                // Verificar el status dentro de response.data
-                if (response.data.status === "Success") {
-                    setStatus('success');
-                    setMessage('¡Tu correo ha sido verificado exitosamente!');
-                    
-                    localStorage.setItem('emailVerified', 'true');
-                    
-                    toast.success('Email verificado correctamente. Redirigiendo al login...');
-                    
-                    setTimeout(() => {
-                        navigate('/login');
-                    }, 3000);
-                } else {
-                    setStatus('error');
-                    setMessage(response.data.message || 'Error al verificar el correo');
-                    toast.error(response.data.message || 'Error al verificar el correo');
-                }
-            } catch (error) {
-                console.error("Verification error:", error);
+                localStorage.setItem('emailVerified', 'true');
+                
+                toast.success('Email verificado correctamente. Redirigiendo al login...');
+                
+                setTimeout(() => {
+                    navigate('/login');
+                }, 3000);
+            } else {
                 setStatus('error');
-                const errorMessage = error.response?.data?.details || error.response?.data?.message || 'Error al verificar el correo. El token puede haber expirado.';
-                setMessage(errorMessage);
-                toast.error(errorMessage);
+                setMessage(response.data.message || 'Error al verificar el correo');
+                toast.error(response.data.message || 'Error al verificar el correo');
             }
         };
 

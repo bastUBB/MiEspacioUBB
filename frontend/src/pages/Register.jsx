@@ -1,8 +1,8 @@
-import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../context/userContextProvider';
+import { registerService, resendVerificationService } from '../services/auth.service';
 
 // Importar assets
 import escudoUbb from '@assets/Escudo-ubb.svg';
@@ -32,33 +32,22 @@ export default function Register() {
     const registerUser = async (e) => {
         e.preventDefault();
         const { nombreCompleto, rut, email, password, role } = data;
-            
-        try {
-            const { data: response } = await axios.post('api/auth/register', { 
-                nombreCompleto, 
-                rut, 
-                email, 
-                password, 
-                role 
-            });
-            
-            if (response.status === "Client error" || response.error) {
-                toast.error(response.message || response.error);
-            } else if (response.status === "Success") {
-                toast.success('¡Registro exitoso! Revisa tu correo para verificar tu cuenta.');
-                setRegisteredEmail(email);
-            } else {
-                toast.error('Estructura de respuesta inesperada');
-            }
-        } catch (error) {
-            console.error("Register error:", error);
-            if (error.response?.data) {
-                const errorData = error.response.data;
-                const errorMessage = errorData.details || errorData.message || "Error al registrarse";
-                toast.error(errorMessage);
-            } else {
-                toast.error("Error al registrarse");
-            }
+        
+        const response = await registerService({ 
+            nombreCompleto, 
+            rut, 
+            email, 
+            password, 
+            role 
+        });
+        
+        if (response.status === "Client error" || response.error) {
+            toast.error(response.message || response.error);
+        } else if (response.status === "Success") {
+            toast.success('¡Registro exitoso! Revisa tu correo para verificar tu cuenta.');
+            setRegisteredEmail(email);
+        } else {
+            toast.error('Estructura de respuesta inesperada');
         }
     };
 
@@ -66,23 +55,14 @@ export default function Register() {
         if (!registeredEmail) return;
         
         setIsResending(true);
-        try {
-            const { data: response } = await axios.post('api/auth/resend-verification', { 
-                email: registeredEmail 
-            });
-            
-            if (response.status === "Success") {
-                toast.success('Correo de verificación reenviado. Revisa tu bandeja de entrada.');
-            } else {
-                toast.error(response.message || 'Error al reenviar el correo');
-            }
-        } catch (error) {
-            console.error("Resend error:", error);
-            const errorMessage = error.response?.data?.details || error.response?.data?.message || "Error al reenviar el correo";
-            toast.error(errorMessage);
-        } finally {
-            setIsResending(false);
+        const response = await resendVerificationService(registeredEmail);
+        
+        if (response.status === "Success") {
+            toast.success('Correo de verificación reenviado. Revisa tu bandeja de entrada.');
+        } else {
+            toast.error(response.message || 'Error al reenviar el correo');
         }
+        setIsResending(false);
     };
 
     // Verificar si el usuario abrió el enlace de verificación

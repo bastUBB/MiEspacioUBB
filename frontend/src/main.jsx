@@ -10,7 +10,7 @@ import Bienvenida from './pages/Bienvenida.jsx'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <AppPrueba />
+      <App />
     </BrowserRouter>
   </StrictMode>,
 )

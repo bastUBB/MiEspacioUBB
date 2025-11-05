@@ -135,20 +135,23 @@ jobs:
               echo '    ServerAdmin webmaster@localhost' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '    DocumentRoot /var/www/html' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '    # Proxy para el backend API' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo '    # Proxy para el backend API - DEBE IR ANTES DEL DIRECTORY' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '    ProxyPreserveHost On' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '    ProxyPass /api ${{ secrets.BACKEND_URL }}' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '    ProxyPassReverse /api ${{ secrets.BACKEND_URL }}' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo '    ProxyPass /api/ ${{ secrets.BACKEND_URL }}/api/' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo '    ProxyPassReverse /api/ ${{ secrets.BACKEND_URL }}/api/' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '    <Directory /var/www/html>' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '        Options Indexes FollowSymLinks' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '        AllowOverride All' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '        Require all granted' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '        # Para React Router' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo '        # Para React Router - NO aplicar a /api/*' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '        RewriteEngine On' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '        RewriteBase /' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo '        # Excluir rutas de API del rewrite' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo '        RewriteCond %{REQUEST_URI} !^/api' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '        RewriteRule ^index\.html$ - [L]' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo '        RewriteCond %{REQUEST_URI} !^/api' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '        RewriteCond %{REQUEST_FILENAME} !-f' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '        RewriteCond %{REQUEST_FILENAME} !-d' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '        RewriteRule . /index.html [L]' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null

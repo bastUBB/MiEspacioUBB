@@ -105,26 +105,33 @@ function InicioPerfilAcademico() {
         metodosEstudiosPreferidos: formData.metodosEstudiosPreferidos
       };
 
-      console.log('📤 Enviando datos:', profileData);
+      console.log('📤 Datos a enviar:', profileData);
+      console.log('🔑 Token en localStorage:', localStorage.getItem('token'));
+      console.log('👤 Usuario actual:', user);
       
       const response = await crearPerfilAcademicoService(profileData);
 
       console.log('📥 Respuesta completa:', response);
       console.log('📥 response.status:', response.status);
-      console.log('📥 response.message:', response.message);
       
       if (response.status === 'Success') {
-        console.log('✅ Entrando al bloque de éxito');
+        console.log('✅ Perfil creado exitosamente');
         toast.success('¡Perfil académico creado exitosamente!');
         setIsComplete(true);
         setTimeout(() => {
-          console.log('🔄 Redirigiendo a /estudiante/subir-apunte');
           navigate('/estudiante/subir-apunte');
         }, 1500);
       } else {
-        console.log('❌ Entrando al bloque de error');
-        console.error('Error del servidor:', response);
-        toast.error(response.details || response.message || 'Error al crear el perfil académico');
+        console.error('❌ Error del servidor:', response);
+        
+        // Detectar específicamente errores de autorización
+        if (response.message?.includes('Acceso denegado') || 
+            response.message?.includes('Token') ||
+            response.message?.includes('rol')) {
+          toast.error(`⛔ ${response.message || response.details}`, { duration: 5000 });
+        } else {
+          toast.error(response.details || response.message || 'Error al crear el perfil académico');
+        }
       }
     } catch (error) {
       console.error('Error creando perfil académico:', error);

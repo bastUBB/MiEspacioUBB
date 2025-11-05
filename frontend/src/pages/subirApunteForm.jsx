@@ -98,6 +98,49 @@ export default function SubirApunteForm() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // Validaciones en tiempo real según el campo
+    if (name === 'name') {
+      // Validar nombre del apunte (solo letras y espacios)
+      const namePattern = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*$/;
+      if (value && !namePattern.test(value)) {
+        toast.error('El nombre del apunte solo puede contener letras y espacios', {
+          duration: 3000,
+          icon: '⚠️'
+        });
+        return;
+      }
+      if (value.length > 50) {
+        toast.error('El nombre del apunte no puede tener más de 50 caracteres', {
+          duration: 3000,
+          icon: '⚠️'
+        });
+        return;
+      }
+    }
+    
+    if (name === 'authors') {
+      // Validar autores (solo letras, espacios y comas)
+      const authorsPattern = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s,]*$/;
+      if (value && !authorsPattern.test(value)) {
+        toast.error('Los nombres de autores solo pueden contener letras, espacios y comas', {
+          duration: 3000,
+          icon: '⚠️'
+        });
+        return;
+      }
+    }
+    
+    if (name === 'description') {
+      if (value.length > 200) {
+        toast.error('La descripción no puede tener más de 200 caracteres', {
+          duration: 3000,
+          icon: '⚠️'
+        });
+        return;
+      }
+    }
+    
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -310,32 +353,61 @@ export default function SubirApunteForm() {
     const etiquetaTrimmed = currentEtiqueta.trim();
 
     if (!etiquetaTrimmed) {
-      toast.error('Escribe una etiqueta antes de agregar');
+      toast.error('Escribe una etiqueta antes de agregar', {
+        duration: 3000,
+        icon: '⚠️'
+      });
+      return;
+    }
+
+    // Validar solo letras y espacios
+    const etiquetaPattern = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+    if (!etiquetaPattern.test(etiquetaTrimmed)) {
+      toast.error('La etiqueta solo puede contener letras y espacios', {
+        duration: 3000,
+        icon: '⚠️'
+      });
       return;
     }
 
     if (etiquetaTrimmed.length < 6) {
-      toast.error('La etiqueta debe tener al menos 6 caracteres');
+      toast.error('La etiqueta debe tener al menos 6 caracteres', {
+        duration: 3000,
+        icon: '⚠️'
+      });
       return;
     }
 
     if (etiquetaTrimmed.length > 20) {
-      toast.error('La etiqueta no puede tener más de 20 caracteres');
+      toast.error('La etiqueta no puede tener más de 20 caracteres', {
+        duration: 3000,
+        icon: '⚠️'
+      });
       return;
     }
 
-    if (etiquetas.includes(etiquetaTrimmed)) {
-      toast.error('Esta etiqueta ya existe');
+    if (etiquetas.includes(etiquetaTrimmed.toLowerCase())) {
+      toast.error('Esta etiqueta ya existe', {
+        duration: 3000,
+        icon: '⚠️'
+      });
       return;
     }
 
     if (etiquetas.length >= 5) {
-      toast.error('Máximo 5 etiquetas permitidas');
+      toast.error('Máximo 5 etiquetas permitidas', {
+        duration: 3000,
+        icon: '⚠️'
+      });
       return;
     }
 
     setEtiquetas(prev => [...prev, etiquetaTrimmed]);
     setCurrentEtiqueta('');
+    toast.success(`Etiqueta "${etiquetaTrimmed}" agregada`, {
+      duration: 2000,
+      icon: '✅'
+    });
   };
 
   const eliminarEtiqueta = (etiquetaAEliminar) => {
@@ -354,57 +426,222 @@ export default function SubirApunteForm() {
 
     // Validaciones previas
     if (!user) {
-      toast.error('Debes iniciar sesión para subir apuntes');
+      toast.error('Debes iniciar sesión para subir apuntes', {
+        duration: 4000,
+        icon: '🔒'
+      });
       navigate('/login');
       return;
     }
 
+    // Validar nombre del apunte
     if (!formData.name.trim()) {
-      toast.error('El nombre del apunte es obligatorio');
+      toast.error('El nombre del apunte es obligatorio', {
+        duration: 3000,
+        icon: '⚠️'
+      });
       return;
     }
 
+    if (formData.name.trim().length < 3) {
+      toast.error('El nombre del apunte debe tener al menos 3 caracteres', {
+        duration: 3000,
+        icon: '⚠️'
+      });
+      return;
+    }
+
+    if (formData.name.trim().length > 50) {
+      toast.error('El nombre del apunte no puede tener más de 50 caracteres', {
+        duration: 3000,
+        icon: '⚠️'
+      });
+      return;
+    }
+
+    const namePattern = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/;
+    if (!namePattern.test(formData.name.trim())) {
+      toast.error('El nombre del apunte solo puede contener letras y espacios', {
+        duration: 3000,
+        icon: '⚠️'
+      });
+      return;
+    }
+
+    // Validar autores
     if (!formData.authors.trim()) {
-      toast.error('Debes especificar al menos un autor');
+      toast.error('Debes especificar al menos un autor', {
+        duration: 3000,
+        icon: '⚠️'
+      });
       return;
     }
 
+    const autoresArray = formData.authors.split(',').map(a => a.trim()).filter(a => a);
+    
+    if (autoresArray.length === 0) {
+      toast.error('Debes especificar al menos un autor válido', {
+        duration: 3000,
+        icon: '⚠️'
+      });
+      return;
+    }
+
+    if (autoresArray.length > 10) {
+      toast.error('Debe haber como máximo 10 autores', {
+        duration: 3000,
+        icon: '⚠️'
+      });
+      return;
+    }
+
+    // Validar cada autor
+    const authorPattern = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+    for (const autor of autoresArray) {
+      if (autor.length < 15) {
+        toast.error(`El nombre del autor "${autor}" debe tener al menos 15 caracteres`, {
+          duration: 4000,
+          icon: '⚠️'
+        });
+        return;
+      }
+      
+      if (autor.length > 50) {
+        toast.error(`El nombre del autor "${autor}" no puede tener más de 50 caracteres`, {
+          duration: 4000,
+          icon: '⚠️'
+        });
+        return;
+      }
+
+      if (!authorPattern.test(autor)) {
+        toast.error(`El nombre del autor "${autor}" solo puede contener letras y espacios`, {
+          duration: 4000,
+          icon: '⚠️'
+        });
+        return;
+      }
+    }
+
+    // Validar descripción
     if (!formData.description.trim()) {
-      toast.error('La descripción es obligatoria');
+      toast.error('La descripción es obligatoria', {
+        duration: 3000,
+        icon: '⚠️'
+      });
       return;
     }
 
+    if (formData.description.trim().length < 10) {
+      toast.error('La descripción debe tener al menos 10 caracteres', {
+        duration: 3000,
+        icon: '⚠️'
+      });
+      return;
+    }
+
+    if (formData.description.trim().length > 200) {
+      toast.error('La descripción no puede tener más de 200 caracteres', {
+        duration: 3000,
+        icon: '⚠️'
+      });
+      return;
+    }
+
+    // Validar asignatura
     if (!formData.subject || !formData.subject.trim()) {
-      toast.error('Debes seleccionar una asignatura');
+      toast.error('Debes seleccionar una asignatura', {
+        duration: 3000,
+        icon: '⚠️'
+      });
       return;
     }
 
+    // Validar tipo de apunte
     if (!formData.noteType) {
-      toast.error('Debes seleccionar un tipo de apunte');
+      toast.error('Debes seleccionar un tipo de apunte', {
+        duration: 3000,
+        icon: '⚠️'
+      });
       return;
     }
 
+    const tiposValidos = [
+      'Manuscrito', 'Documento tipeado', 'Resumen conceptual', 'Mapa mental', 
+      'Diagrama y/o esquema', 'Resolucion de ejercicio(s)', 'Flashcard', 
+      'Formulario', 'Presentacion', 'Otro'
+    ];
+
+    if (!tiposValidos.includes(formData.noteType)) {
+      toast.error('Tipo de apunte no válido', {
+        duration: 3000,
+        icon: '⚠️'
+      });
+      return;
+    }
+
+    // Validar archivo
     if (!formData.file) {
-      toast.error('Debes seleccionar un archivo para subir');
-      return;
-    }
-
-    // Validar etiquetas (mínimo 1, máximo 5)
-    if (etiquetas.length === 0) {
-      toast.error('Debes agregar al menos una etiqueta');
-      return;
-    }
-
-    if (etiquetas.length > 5) {
-      toast.error('Máximo 5 etiquetas permitidas');
+      toast.error('Debes seleccionar un archivo para subir', {
+        duration: 3000,
+        icon: '📎'
+      });
       return;
     }
 
     // Validar tamaño del archivo (10MB máximo)
     const maxSize = 10 * 1024 * 1024; // 10MB en bytes
     if (formData.file.size > maxSize) {
-      toast.error('El archivo excede el tamaño máximo de 10MB');
+      toast.error('El archivo excede el tamaño máximo de 10MB', {
+        duration: 4000,
+        icon: '📦'
+      });
       return;
+    }
+
+    // Validar etiquetas (mínimo 1, máximo 5)
+    if (etiquetas.length === 0) {
+      toast.error('Debes agregar al menos una etiqueta', {
+        duration: 3000,
+        icon: '🏷️'
+      });
+      return;
+    }
+
+    if (etiquetas.length > 5) {
+      toast.error('Máximo 5 etiquetas permitidas', {
+        duration: 3000,
+        icon: '🏷️'
+      });
+      return;
+    }
+
+    // Validar cada etiqueta
+    const etiquetaPattern = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+    for (const etiqueta of etiquetas) {
+      if (etiqueta.length < 6) {
+        toast.error(`La etiqueta "${etiqueta}" debe tener al menos 6 caracteres`, {
+          duration: 4000,
+          icon: '⚠️'
+        });
+        return;
+      }
+
+      if (etiqueta.length > 20) {
+        toast.error(`La etiqueta "${etiqueta}" no puede tener más de 20 caracteres`, {
+          duration: 4000,
+          icon: '⚠️'
+        });
+        return;
+      }
+
+      if (!etiquetaPattern.test(etiqueta)) {
+        toast.error(`La etiqueta "${etiqueta}" solo puede contener letras y espacios`, {
+          duration: 4000,
+          icon: '⚠️'
+        });
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -589,6 +826,9 @@ export default function SubirApunteForm() {
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#6E52D9] focus:outline-none transition-colors"
                 placeholder="Ej: Resumen de Álgebra Lineal"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Solo letras y espacios • Mínimo 3 caracteres, máximo 50 caracteres
+              </p>
             </div>
 
             <div>
@@ -604,10 +844,10 @@ export default function SubirApunteForm() {
                 onChange={handleInputChange}
                 required
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#6E52D9] focus:outline-none transition-colors"
-                placeholder="Ej: Juan Pérez, María García (separados por comas)"
+                placeholder="Ej: Juan Pérez González, María García López"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Separa múltiples autores con comas
+                Separa múltiples autores con comas • Mínimo 15 caracteres por autor, máximo 50 • Máximo 10 autores
               </p>
             </div>
 
@@ -626,6 +866,9 @@ export default function SubirApunteForm() {
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#6E52D9] focus:outline-none transition-colors resize-none"
                 placeholder="Describe brevemente el contenido del apunte..."
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Mínimo 10 caracteres, máximo 200 caracteres • {formData.description.length}/200
+              </p>
             </div>
 
             {/* Campo de Etiquetas */}
@@ -678,7 +921,7 @@ export default function SubirApunteForm() {
               )}
 
               <p className="text-xs text-gray-500 mt-2">
-                {etiquetas.length}/10 etiquetas
+                {etiquetas.length}/5 etiquetas • Mínimo 6 caracteres, máximo 20 caracteres por etiqueta
               </p>
             </div>
 

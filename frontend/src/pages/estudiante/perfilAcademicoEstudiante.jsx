@@ -104,29 +104,16 @@ function InicioPerfilAcademico() {
           : [],
         metodosEstudiosPreferidos: formData.metodosEstudiosPreferidos
       };
-
-      console.log('📤 Datos a enviar:', profileData);
-      console.log('🔑 Token en localStorage:', localStorage.getItem('token'));
-      console.log('👤 Usuario actual:', user);
       
       const response = await crearPerfilAcademicoService(profileData);
-
-      console.log('📥 Respuesta completa:', response);
-      console.log('📥 response.status:', response.status);
-      console.log('📥 response.message:', response.message);
-      console.log('📥 response.details:', response.details);
-      console.log('📥 response completo (JSON):', JSON.stringify(response, null, 2));
       
       if (response.status === 'Success') {
-        console.log('✅ Perfil creado exitosamente');
         toast.success('¡Perfil académico creado exitosamente!');
         setIsComplete(true);
         setTimeout(() => {
           navigate('/estudiante/subir-apunte');
         }, 1500);
-      } else {
-        console.error('❌ Error del servidor:', response);
-        
+      } else {        
         // Detectar específicamente errores de autorización
         if (response.message?.includes('Acceso denegado') || 
             response.message?.includes('Token') ||

@@ -113,6 +113,9 @@ function InicioPerfilAcademico() {
 
       console.log('📥 Respuesta completa:', response);
       console.log('📥 response.status:', response.status);
+      console.log('📥 response.message:', response.message);
+      console.log('📥 response.details:', response.details);
+      console.log('📥 response completo (JSON):', JSON.stringify(response, null, 2));
       
       if (response.status === 'Success') {
         console.log('✅ Perfil creado exitosamente');

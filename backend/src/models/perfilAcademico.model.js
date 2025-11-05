@@ -67,8 +67,7 @@ const perfilAcademicoSchema = mongoose.Schema({
     apuntesIDs: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Apunte',
-        cast: false,
-        unique: true
+        cast: false
     }]
 }, {
     versionKey: false,

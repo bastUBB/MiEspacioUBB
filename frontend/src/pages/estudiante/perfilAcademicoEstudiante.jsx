@@ -105,17 +105,24 @@ function InicioPerfilAcademico() {
         metodosEstudiosPreferidos: formData.metodosEstudiosPreferidos
       };
 
+      console.log('📤 Enviando datos:', profileData);
+      
       const response = await crearPerfilAcademicoService(profileData);
 
-      console.log('Respuesta creación perfil académico:', response);
+      console.log('📥 Respuesta completa:', response);
+      console.log('📥 response.status:', response.status);
+      console.log('📥 response.message:', response.message);
       
       if (response.status === 'Success') {
+        console.log('✅ Entrando al bloque de éxito');
         toast.success('¡Perfil académico creado exitosamente!');
         setIsComplete(true);
         setTimeout(() => {
+          console.log('🔄 Redirigiendo a /estudiante/subir-apunte');
           navigate('/estudiante/subir-apunte');
         }, 1500);
       } else {
+        console.log('❌ Entrando al bloque de error');
         console.error('Error del servidor:', response);
         toast.error(response.details || response.message || 'Error al crear el perfil académico');
       }

@@ -74,7 +74,7 @@ export async function loginUserService(dataUser) {
 
     if (!secret) throw new Error("JWT_SECRET no configurado");
 
-    const token = jwt.sign({ id: user._id, role: user.role }, secret, { expiresIn: "1d" });
+    const token = jwt.sign({ id: user._id, role: user.role }, secret, { expiresIn: "2h" });
 
     const userResponse = toSafeUser(user);
 

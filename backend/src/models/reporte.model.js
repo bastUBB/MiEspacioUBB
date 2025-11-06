@@ -12,18 +12,16 @@ const reporteSchema = new mongoose.Schema({
         cast: false
     },
     fecha: {
-        type: Date,
+        type: String,
         required: true,
         cast: false
     },
     estado: {
         type: String,
-        required: true,
         cast: false
     },
     resolucion: {
         type: String,
-        required: true,
         cast: false
     }
 }, {

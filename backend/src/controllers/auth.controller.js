@@ -44,7 +44,7 @@ export async function loginUser(req, res) {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",           
-            maxAge: 1000 * 60 * 60 * 24, 
+            maxAge: 1000 * 60 * 60 * 2, // 2 horas
             path: "/",
         });
 

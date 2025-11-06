@@ -81,7 +81,12 @@ const apunteSchema = new mongoose.Schema({
             type: String,
             required: true,
         },
-    }
+    }, 
+    reportes: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Reporte',
+        cast: false
+    }],
 }, {
     versionKey: false,
     strict: true

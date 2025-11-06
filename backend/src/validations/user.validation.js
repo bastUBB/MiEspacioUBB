@@ -28,14 +28,14 @@ export const userQueryValidation = joi.object({
 export const userCreateValidation = joi.object({
     nombreCompleto: joi.string()
         .required()
-        .min(15)
+        .min(5)
         .max(50)
         .trim()
         .pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
         .messages({
             "string.base": "El nombre completo debe ser de tipo string.",
             "string.empty": "El nombre completo no puede estar vacío.",
-            "string.min": "El nombre completo debe tener como mínimo 15 caracteres.",
+            "string.min": "El nombre completo debe tener como mínimo 5 caracteres.",
             "string.max": "El nombre completo debe tener como máximo 50 caracteres.",
             "string.pattern.base": "El nombre completo solo puede contener letras y espacios.",
             "any.required": "El nombre completo es obligatorio.",
@@ -56,7 +56,7 @@ export const userCreateValidation = joi.object({
         }),
     email: joi.string()
         .required()
-        .min(15)
+        .min(10)
         .max(50)
         .email()
         .trim()
@@ -64,7 +64,7 @@ export const userCreateValidation = joi.object({
         .messages({
             "string.empty": "El correo electrónico no puede estar vacío.",
             "string.base": "El correo electrónico debe ser de tipo string.",
-            "string.min": "El correo electrónico debe tener como mínimo 15 caracteres.",
+            "string.min": "El correo electrónico debe tener como mínimo 10 caracteres.",
             "string.max": "El correo electrónico debe tener como máximo 50 caracteres.",
             "string.email": "El correo electrónico debe ser válido.",
             "any.custom": "El correo electrónico debe finalizar en @gmail.cl, @ubiobio.cl o @alumnos.ubiobio.cl.",

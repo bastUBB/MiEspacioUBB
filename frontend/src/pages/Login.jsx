@@ -25,6 +25,44 @@ export default function Login() {
         e.preventDefault();
         const { email, password } = data;
         
+        // Validaciones del lado del cliente
+        if (!email || !password) {
+            toast.error('Por favor, completa todos los campos');
+            return;
+        }
+
+        // Validar formato de email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            toast.error('Por favor, ingresa un correo electrónico válido');
+            return;
+        }
+
+        // Validar dominio del email
+        if (!email.endsWith('@ubiobio.cl') && !email.endsWith('@alumnos.ubiobio.cl')) {
+            toast.error('El correo debe ser institucional (@ubiobio.cl o @alumnos.ubiobio.cl)');
+            return;
+        }
+
+        // Validar longitud del email
+        if (email.length < 10 || email.length > 50) {
+            toast.error('El correo debe tener entre 10 y 50 caracteres');
+            return;
+        }
+
+        // Validar longitud de la contraseña
+        if (password.length < 6 || password.length > 26) {
+            toast.error('La contraseña debe tener entre 6 y 26 caracteres');
+            return;
+        }
+
+        // Validar que la contraseña solo contenga letras y números
+        const passwordRegex = /^[a-zA-Z0-9]+$/;
+        if (!passwordRegex.test(password)) {
+            toast.error('La contraseña solo puede contener letras y números');
+            return;
+        }
+        
         const response = await loginService({ email, password });
         
         if (response.status === "Client error" || response.error) {

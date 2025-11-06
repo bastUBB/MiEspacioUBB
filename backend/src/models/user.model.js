@@ -40,7 +40,12 @@ const userSchema = mongoose.Schema({
     verificationTokenExpires: {
         type: Date,
         cast: false
-    }
+    },
+    notificaciones: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Notificacion',
+        cast: false
+    }],
 }, {
     timestamps: true,
     versionKey: false,

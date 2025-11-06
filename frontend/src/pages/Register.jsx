@@ -33,12 +33,81 @@ export default function Register() {
         e.preventDefault();
         const { nombreCompleto, rut, email, password, role } = data;
         
+        // Validaciones del lado del cliente
+        if (!nombreCompleto || !rut || !email || !password || !role) {
+            toast.error('Por favor, completa todos los campos');
+            return;
+        }
+
+        // Validar nombre completo
+        if (nombreCompleto.length < 5 || nombreCompleto.length > 50) {
+            toast.error('El nombre completo debe tener entre 5 y 50 caracteres');
+            return;
+        }
+
+        const nombreRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+        if (!nombreRegex.test(nombreCompleto)) {
+            toast.error('El nombre completo solo puede contener letras y espacios');
+            return;
+        }
+
+        // Validar RUT
+        if (rut.length < 9 || rut.length > 12) {
+            toast.error('El RUT debe tener entre 9 y 12 caracteres');
+            return;
+        }
+
+        const rutRegex = /^(?:(?:[1-9]\d{0}|[1-2]\d{1})(\.\d{3}){2}|[1-9]\d{6}|[1-2]\d{7}|29\.999\.999|29999999)-[\dkK]$/;
+        if (!rutRegex.test(rut)) {
+            toast.error('Formato de RUT inválido. Debe ser xx.xxx.xxx-x o xxxxxxxx-x');
+            return;
+        }
+
+        // Validar formato de email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            toast.error('Por favor, ingresa un correo electrónico válido');
+            return;
+        }
+
+        // Validar dominio del email
+        if (!email.endsWith('@ubiobio.cl') && !email.endsWith('@alumnos.ubiobio.cl')) {
+            toast.error('El correo debe ser institucional (@ubiobio.cl o @alumnos.ubiobio.cl)');
+            return;
+        }
+
+        // Validar longitud del email
+        if (email.length < 10 || email.length > 50) {
+            toast.error('El correo debe tener entre 10 y 50 caracteres');
+            return;
+        }
+
+        // Validar longitud de la contraseña
+        if (password.length < 6 || password.length > 26) {
+            toast.error('La contraseña debe tener entre 6 y 26 caracteres');
+            return;
+        }
+
+        // Validar que la contraseña solo contenga letras y números
+        const passwordRegex = /^[a-zA-Z0-9]+$/;
+        if (!passwordRegex.test(password)) {
+            toast.error('La contraseña solo puede contener letras y números');
+            return;
+        }
+        
+        // Convertir role a lowercase para coincidir con el backend
+        const roleMap = {
+            'Estudiante': 'estudiante',
+            'Docente': 'docente',
+            'Personal': 'ayudante'
+        };
+
         const response = await registerService({ 
             nombreCompleto, 
             rut, 
             email, 
             password, 
-            role 
+            role: roleMap[role] || role.toLowerCase()
         });
         
         if (response.status === "Client error" || response.error) {

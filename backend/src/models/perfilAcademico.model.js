@@ -68,6 +68,17 @@ const perfilAcademicoSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Apunte',
         cast: false
+    }],
+    apuntesValorados: [{
+        apunteID: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Apunte',
+            cast: false
+        },
+        valoracion: {
+            type: Number,
+            cast: false
+        }
     }]
 }, {
     versionKey: false,

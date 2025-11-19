@@ -123,7 +123,6 @@ export async function deletePerfilAcademicoService(query) {
 
 export async function poseePerfilAcademicoService(rutUser) {
     try {
-
         const userExist = await User.findOne({ rut: rutUser });
 
         if (!userExist) return [null, 'No existe un usuario con el RUT proporcionado'];
@@ -166,75 +165,160 @@ export async function asignarApunteToPerfilAcademicoService(dataUserApunte) {
     }
 }
 
-// export async function addApunteToAcademicProfileService(dataUserApunte) {
-//     try {
-//         const { rutUser, apuntesIDs } = dataUserApunte;
+//hacer controlador
+export async function numeroApuntesUserService(rutUser) {
+    try {
+        const userExist = await User.findOne({ rut: rutUser });
 
-//         const userExist = await User.findOne({ rut: rutUser });
-        
-//         if (!userExist) return [null, 'No existe un usuario con el RUT proporcionado'];
+        if (!userExist) return [null, 'No existe un usuario con el RUT proporcionado'];
 
-//         const perfil = await perfilAcademico.findOne({ rutUser });
+        const perfil = await perfilAcademico.findOne({ rutUser: rutUser });
 
-//         if (!perfil) return [null, 'No existe un perfil académico para los datos proporcionados'];
-        
-//         const apuntesExist = await Apunte.find({ _id: { $in: apuntesIDs } });
+        if (!perfil) return [null, 'No existe un perfil académico para los datos proporcionados'];
 
-//         if (!apuntesExist || apuntesExist.length === 0) return [null, 'No existen apuntes con los IDs proporcionados'];
+        perfil.apuntesSubidos = perfil.apuntesIDs.length;
 
-//         const lengthInitial = perfil.apuntesIDs.length;
+        await perfil.save();
 
-//         //añadir apuntesIDS al perfil académico sin duplicados
-//         const apuntesIDsSet = new Set(perfil.apuntesIDs.map(id => id.toString()));
+        return [perfil.apuntesIDs.length, null];
+    } catch (error) {
+        console.error('Error al obtener el número de apuntes del usuario:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
 
-//         apuntesIDs.forEach(id => apuntesIDsSet.add(id.toString()));
+//asociar en el servicio de apunte (IMPLEMENTAR)
+export async function sumarDescargaApunteService(rutUser) {
+    try {
+        const userExist = await User.findOne({ rut: rutUser });
 
-//         perfil.apuntesIDs = Array.from(apuntesIDsSet);
+        if (!userExist) return [null, 'No existe un usuario con el RUT proporcionado'];
 
-//         await perfil.save();
+        const perfil = await perfilAcademico.findOne({ rutUser: rutUser });
 
-//         if (perfil.apuntesIDs.length === lengthInitial) return ["Error al añadir apuntes al perfil", null];
+        if (!perfil) return [null, 'No existe un perfil académico para los datos proporcionados'];
 
-//         return ["Apuntes agregados con exito al perfil", null];
-//     } catch (error) {
-//         console.error('Error al agregar apunte al usuario:', error);
-//         return [null, 'Error interno del servidor'];
-//     }
-// }
+        perfil.apuntesDescargados += 1;
 
-// export async function getApuntesOfUserService(query) {
-//     try {
-//         const { rutUser } = query;
+        await perfil.save();
 
-//         const userExist = await User.findOne({ rut: rutUser });
+        return [perfil.apuntesDescargados, null];
+    } catch (error) {
+        console.error('Error al sumar descarga de apunte:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
 
-//         if (!userExist) return [null, 'No existe un usuario con el RUT proporcionado'];
+//hacer controlador
+export async function busquedaApuntesMismoAutorService(rutAutor, asignaturaApunteActual){
+    try {
+        const userExist = await User.findOne({ rut: rutAutor });
 
-//         const userApunte = await UserApunte.findOne({ rutUser }).populate('apuntesIDs');
+        if (!userExist) return [null, 'No existe un usuario con el RUT proporcionado'];
 
-//         if (!userApunte) return [null, 'No existen apuntes asociados al usuario proporcionado'];
+        const perfil = await perfilAcademico.findOne({ rutUser: rutAutor });
 
-//         return [userApunte.apuntesIDs, null];
-//     } catch (error) {
-//         console.error('Error al obtener los apuntes del usuario:', error);
-//         return [null, 'Error interno del servidor'];
-//     }
-// }
+        if (!perfil) return [null, 'No existe un perfil académico para los datos proporcionados'];
 
-// export async function deleteApunteOfAcademicProfile(query, body) {
-//     try {
-//         const { rutUser: rutUserQuery } = query;
+        // buscar apuntes al azar, subidos por el mismo autor y que sean de una asignatura distina a asignaturaApunteActual (maximo 4)
+        const apuntesMismoAutor = await Apunte.aggregate([
+            { $match: { rutAutorSubida: rutAutor, asignatura: { $ne: asignaturaApunteActual } } },
+            { $sample: { size: 4 } }
+        ]);
 
-//         const userExist = await User.findOne({ rut: rutUserQuery });
-    
+        return [apuntesMismoAutor, null];
+
+    } catch (error) {
+        console.error('Error al buscar apuntes del mismo autor:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+//hacer controlador
+export async function busquedaApuntesMismaAsignaturaService(rutAutor, asignaturaApunteActual){
+    try {
+        const userExist = await User.findOne({ rut: rutAutor });
+
+        if (!userExist) return [null, 'No existe un usuario con el RUT proporcionado'];
+
+        const perfil = await perfilAcademico.findOne({ rutUser: rutAutor });
+
+        if (!perfil) return [null, 'No existe un perfil académico para los datos proporcionados'];
+
+        // buscar apuntes al azar, subidos de distintos autores y que sean de la misma asignatura a asignaturaApunteActual (maximo 4)
+        const apuntesMismaAsignatura = await Apunte.aggregate([
+            { $match: { rutAutorSubida: { $ne: rutAutor }, asignatura: asignaturaApunteActual } },
+            { $sample: { size: 4 } }
+        ]);
+
+        if (apuntesMismaAsignatura.length === 0) return [null, 'No existen apuntes del mismo autor para la misma asignatura'];
+
+        return [apuntesMismaAsignatura, null];
+
+    } catch (error) {
+        console.error('Error al buscar apuntes del mismo autor:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+// export async function actualizarValoracionPerfilAcademicoService -> aqui deberia de hacer una formula
+
+export async function obtenerValoracionPerfilAcademicoService(rutUser) {
+    try {
+        const userExist = await User.findOne({ rut: rutUser });
+
+        if (!userExist) return [null, 'No existe un usuario con el RUT proporcionado'];
+
+        const perfil = await perfilAcademico.findOne({ rutUser: rutUser });
+
+        if (!perfil) return [null, 'No existe un perfil académico para los datos proporcionados'];
+
+        return [perfil.valoracionPerfilAcademico, null];
+    } catch (error) {
+        console.error('Error al obtener la valoración del perfil académico:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function obtenerNumeroDescargasApuntesService(rutUser) {
+    try {
+        const userExist = await User.findOne({ rut: rutUser });
+
+        if (!userExist) return [null, 'No existe un usuario con el RUT proporcionado'];
+
+        const perfil = await perfilAcademico.findOne({ rutUser: rutUser });
+
+        if (!perfil) return [null, 'No existe un perfil académico para los datos proporcionados'];
+
+        return [perfil.apuntesDescargados, null];
+    } catch (error) {
+        console.error('Error al obtener el número de descargas de apuntes:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function obtenerMayoresContribuidoresService() {
+    try {
+        const perfiles = await perfilAcademico.find().sort({ apuntesSubidos: -1 }).limit(5);
+
+        if (!perfiles || perfiles.length === 0) return [[], null];
+
+        const contribuidores = await Promise.all(
+            perfiles.map(async (perfil) => {
+                const usuario = await User.findOne({ rut: perfil.rutUser });
+                return {
+                    nombreCompleto: usuario?.nombreCompleto || 'Usuario desconocido',
+                    apuntesSubidos: perfil.apuntesSubidos || 0,
+                };
+            })
+        );
+
+        return [contribuidores, null];
+    } catch (error) {
+        console.error('Error al obtener los mayores contribuidores:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
 
 
 
-
-
-
-//     } catch (error) {
-//         console.error('Error al eliminar los apuntes del usuario:', error);
-//         return [null, 'Error interno del servidor'];
-//     }
-// }

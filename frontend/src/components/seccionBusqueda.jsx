@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Search, BookOpen, Calendar, TrendingUp, Clock } from 'lucide-react';
 
-const SearchSection = () => {
+const SearchSection = ({ onSearch, onFilterChange }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
+  const [showResults, setShowResults] = useState(false);
 
   const filters = [
     { id: 'all', label: 'Todos', icon: BookOpen },
@@ -18,8 +19,30 @@ const SearchSection = () => {
     'Estadística', 'Física II', 'Derecho Civil', 'Microeconomía'
   ];
 
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    setShowResults(query.length > 0);
+    if (onSearch) {
+      onSearch(query, activeFilter);
+    }
+  };
+
+  const handleFilterClick = (filterId) => {
+    setActiveFilter(filterId);
+    if (onFilterChange) {
+      onFilterChange(filterId);
+    }
+    if (searchQuery && onSearch) {
+      onSearch(searchQuery, filterId);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    handleSearch(suggestion);
+  };
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+    <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl shadow-sm p-6 mb-8">
       <div className="flex items-center space-x-2 mb-4">
         <Search className="w-5 h-5 text-purple-600" />
         <h2 className="text-lg font-semibold text-gray-900">Buscar apuntes</h2>
@@ -32,9 +55,10 @@ const SearchSection = () => {
         </div>
         <input
           type="text"
-          placeholder="Buscar por asignatura, tema, universidad..."
+          placeholder="Buscar por asignatura, tema, autor, etiquetas..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => handleSearch(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && handleSearch(searchQuery)}
           className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
         />
       </div>
@@ -46,8 +70,8 @@ const SearchSection = () => {
           return (
             <button
               key={filter.id}
-              onClick={() => setActiveFilter(filter.id)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all ${
+              onClick={() => handleFilterClick(filter.id)}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all cursor-pointer ${
                 activeFilter === filter.id
                   ? 'bg-purple-100 text-purple-700 border-2 border-purple-200'
                   : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border-2 border-transparent'
@@ -68,8 +92,8 @@ const SearchSection = () => {
             {suggestions.map((suggestion, index) => (
               <button
                 key={index}
-                onClick={() => setSearchQuery(suggestion)}
-                className="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-sm hover:bg-purple-100 transition-colors"
+                onClick={() => handleSuggestionClick(suggestion)}
+                className="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-sm hover:bg-purple-100 transition-colors cursor-pointer"
               >
                 {suggestion}
               </button>

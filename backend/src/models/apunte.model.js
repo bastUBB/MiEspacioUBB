@@ -40,13 +40,22 @@ const apunteSchema = new mongoose.Schema({
         required: true,
         cast: false
     },
-    valorizacion: {
-        type: Number,
-        cast: false
-    },
+    valoracion: [{
+        cantidadValoraciones: {
+            type: Number,
+            cast: false,
+            default: 0
+        },
+        promedioValoracion: {
+            type: Number,
+            cast: false,
+            default: 0
+        }
+    }],
     visualizaciones: {
         type: Number,
-        cast: false
+        cast: false,
+        default: 0
     },
     etiquetas: [{
         type: String,
@@ -87,6 +96,16 @@ const apunteSchema = new mongoose.Schema({
         ref: 'Reporte',
         cast: false
     }],
+    estado: { //Activo, Bajo Revisión, Suspendido (aún en BD pero no visible para usuarios)
+        type: String,
+        default: 'Activo',
+        cast: false
+    },
+    comentarios: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Comentario',
+        cast: false
+    }],
 }, {
     versionKey: false,
     strict: true
@@ -94,3 +113,6 @@ const apunteSchema = new mongoose.Schema({
 
 const Apunte = mongoose.model('Apunte', apunteSchema);
 export default Apunte;
+
+
+//TODO: Falta agregar campo: comentarios, descargas

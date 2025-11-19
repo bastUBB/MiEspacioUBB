@@ -2,25 +2,30 @@ import joi from 'joi';
 import { diaActual } from '../helpers/ayudasVarias.helper.js';
 
 export const apunteQueryValidation = joi.object({
-    nombre: joi.string()
-        .required()
-        .min(3)
-        .max(50)
-        .strict()
-        .pattern(/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/)
+    apunteID: joi.string()
+        .pattern(/^[a-fA-F0-9]{24}$/)
         .messages({
-            'string.empty': 'El nombre del apunte no puede estar vacío',
-            'string.base': 'El nombre del apunte debe ser una cadena de texto',
-            'string.min': 'El nombre del apunte debe tener al menos 3 caracteres',
-            'string.max': 'El nombre del apunte no puede tener más de 50 caracteres',
-            'string.pattern.base': 'El nombre del apunte solo puede contener letras y espacios',
-            'any.required': 'El nombre del apunte es obligatorio',
+            "string.base": "El ID del apunte debe ser de tipo string.",
+            "string.empty": "El ID del apunte no puede estar vacío.",
+            "string.pattern.base": "El ID del apunte debe ser un ObjectId válido de MongoDB.",
         }),
-})
+    rutAutorSubida: joi.string()
+        .trim()
+        .min(9)
+        .max(12)
+        .pattern(/^[0-9]{1,2}\.[0-9]{3}\.[0-9]{3}-[0-9kK]$/)
+        .messages({
+            "string.base": "El rut debe ser de tipo string.",
+            "string.min": "El rut debe tener como mínimo 9 caracteres.",
+            "string.max": "El rut debe tener como máximo 12 caracteres.",
+            "string.pattern.base": "Formato rut inválido, debe ser xx.xxx.xxx-x.",
+        }),
+})  
+    .or("apunteID", "rutAutorSubida")
     .unknown(false)
     .messages({
-        'object.unknown': 'No se permiten propiedades adicionales en el cuerpo de la solicitud',
-        'object.missing': 'Debe proporcionar todos los campos: nombre',
+        'object.unknown': 'No se permiten propiedades adicionales en la consulta',
+        'object.missing': 'Debe proporcionar al menos uno de los campos: apunteID o rutAutorSubida',
     });
 
 export const apunteCreateValidation = joi.object({
@@ -150,14 +155,14 @@ export const apunteCreateValidation = joi.object({
             joi.string()
                 .lowercase()
                 .min(6)
-                .max(20)
+                .max(30)
                 .trim()
                 .pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
                 .messages({
                     "string.base": "La etiqueta debe ser de tipo string.",
                     "string.empty": "La etiqueta no puede estar vacía.",
                     "string.min": "La etiqueta debe tener como mínimo 6 caracteres.",
-                    "string.max": "La etiqueta debe tener como máximo 20 caracteres.",
+                    "string.max": "La etiqueta debe tener como máximo 30 caracteres.",
                     "string.pattern.base": "La etiqueta solo puede contener letras y espacios.",
                     "any.required": "La etiqueta es obligatoria.",
                 }),
@@ -234,14 +239,14 @@ export const apunteUpdateValidation = joi.object({
             joi.string()
                 .lowercase()
                 .min(6)
-                .max(20)
+                .max(30)
                 .trim()
                 .pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
                 .messages({
                     "string.base": "La etiqueta debe ser de tipo string.",
                     "string.empty": "La etiqueta no puede estar vacía.",
                     "string.min": "La etiqueta debe tener como mínimo 6 caracteres.",
-                    "string.max": "La etiqueta debe tener como máximo 20 caracteres.",
+                    "string.max": "La etiqueta debe tener como máximo 30 caracteres.",
                     "string.pattern.base": "La etiqueta solo puede contener letras y espacios.",
                     "any.required": "La etiqueta es obligatoria.",
                 }),
@@ -253,31 +258,87 @@ export const apunteUpdateValidation = joi.object({
             'array.min': 'Debe haber al menos una etiqueta',
             'array.max': 'Debe haber como máximo 5 etiquetas',
         }),
-    valorizacion: joi.number()
+    valoracion: joi.number()
         .min(1)
         .max(7)
         .integer()
         .messages({
-            'number.base': 'La valorización debe ser un número',
-            'number.min': 'La valorización debe ser al menos 1',
-            'number.max': 'La valorización no puede ser más de 7',
-            'number.integer': 'La valorización debe ser un número entero',
+            'number.base': 'La valoracion debe ser un número',
+            'number.min': 'La valoracion debe ser al menos 1',
+            'number.max': 'La valoracion no puede ser más de 7',
+            'number.integer': 'La valoracion debe ser un número entero',
         }),
-    visualizaciones: joi.number()
-        .min(1)
-        .max(1)
+    visualizacion: joi.number()
+        .valid(1)
         .integer()
         .messages({
-            'number.base': 'La visualización debe ser un número',
-            'number.min': 'La visualización debe ser al menos 1',
-            'number.max': 'La visualización no puede ser más de 1',
-            'number.integer': 'La visualización debe ser un número entero',
+            'number.base': 'Las visualizaciones deben ser un número',
+            'any.only': 'Para incrementar las visualizaciones, el valor debe ser 1',
+            'number.integer': 'Las visualizaciones deben ser un número entero',
         }),
 })
-    .or("nombre", "descripcion", "asignatura", "fechaSubida", "tipoApunte", "valorizacion", "visualizaciones")
+    .or("nombre", "descripcion", "asignatura", "fechaSubida", "tipoApunte", "valoracion", "visualizacion")
     .unknown(false)
     .messages({
         'object.unknown': 'No se permiten propiedades adicionales en el cuerpo de la solicitud',
-        'object.missing': 'Debe proporcionar al menos uno de los campos: nombre, descripcion, asignatura, fechaSubida, tipoApunte, valorizacion o visualizaciones',
+        'object.missing': 'Debe proporcionar al menos uno de los campos: nombre, descripcion, asignatura, fechaSubida, tipoApunte, valoracion o visualizacion',
     });
 
+export const visualizacionValidation = joi.object({
+    _id: joi.string()
+        .required()
+        .pattern(/^[a-fA-F0-9]{24}$/)
+        .messages({
+            "string.base": "El ID del reporte debe ser de tipo string.",
+            "string.empty": "El ID del reporte no puede estar vacío.",
+            "string.pattern.base": "El ID del reporte debe ser un ObjectId válido de MongoDB.",
+            "any.required": "El ID del reporte es obligatorio.",
+        }),
+    rutDueñoApunte: joi.string()
+        .min(9)
+        .max(12)
+        .trim()
+        .pattern(/^(?:(?:[1-9]\d{0}|[1-2]\d{1})(\.\d{3}){2}|[1-9]\d{6}|[1-2]\d{7}|29\.999\.999|29999999)-[\dkK]$/)
+        .messages({
+            "string.base": "El rut debe ser de tipo string.",
+            "string.min": "El rut debe tener como mínimo 9 caracteres.",
+            "string.max": "El rut debe tener como máximo 12 caracteres.",
+            "string.pattern.base": "Formato rut inválido, debe ser xx.xxx.xxx-x o xxxxxxxx-x.",
+        }),
+})
+    .or("rutDueñoApunte")
+    .unknown(false)
+    .messages({
+        'object.unknown': 'No se permiten propiedades adicionales en el cuerpo de la solicitud',
+        'object.missing': 'Debe proporcionar el campo obligatorio: _id',
+    });
+
+export const valoracionValidation = joi.object({
+    rutUserValoracion: joi.string()
+        .required()
+        .min(9)
+        .max(12)
+        .trim()
+        .pattern(/^(?:(?:[1-9]\d{0}|[1-2]\d{1})(\.\d{3}){2}|[1-9]\d{6}|[1-2]\d{7}|29\.999\.999|29999999)-[\dkK]$/)
+        .messages({
+            "string.base": "El rut debe ser de tipo string.",
+            "string.empty": "El rut no puede estar vacío.",
+            "string.min": "El rut debe tener como mínimo 9 caracteres.",
+            "string.max": "El rut debe tener como máximo 12 caracteres.",
+            "string.pattern.base": "Formato rut inválido, debe ser xx.xxx.xxx-x o xxxxxxxx-x.",
+            "any.required": "El rut es obligatorio.",
+        }),
+    valoracion: joi.number()
+        .required()
+        .min(1)
+        .max(7)
+        .integer()
+        .messages({
+            'number.base': 'La valoracion debe ser un número',
+            'number.empty': 'La valoracion no puede estar vacía',
+            'number.min': 'La valoracion debe ser al menos 1',
+            'number.max': 'La valoracion no puede ser más de 7',
+            'number.integer': 'La valoracion debe ser un número entero',
+            'any.required': 'La valoracion es obligatoria',
+        }),
+});

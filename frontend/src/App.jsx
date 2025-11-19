@@ -16,6 +16,11 @@ import AyudanteLayout from './layouts/ayudanteLayout.jsx'
 // Páginas
 import InicioPerfilAcademicoEstudiante from './pages/estudiante/perfilAcademicoEstudiante.jsx'
 import SubirApunteForm from './pages/subirApunteForm.jsx'
+import Home from './pages/Home.jsx'
+import Profile from './pages/Profile.jsx'
+import ExplorarApuntes from './pages/ExplorarApuntes.jsx'
+import MisApuntes from './pages/MisApuntes.jsx'
+import Estadisticas from './pages/Estadisticas.jsx'
 
 import { Toaster } from 'react-hot-toast'
 import { UserContextProvider } from './context/userContextProvider.jsx'
@@ -118,6 +123,11 @@ function App() {
             <Route index element={<InicioPerfilAcademicoEstudiante />} />
             <Route path="perfil-academico" element={<InicioPerfilAcademicoEstudiante />} />
             <Route path="subir-apunte" element={<SubirApunteForm />} />
+            <Route path="home" element={<Home />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="explorar" element={<ExplorarApuntes />} />
+            <Route path="mis-apuntes" element={<MisApuntes />} />
+            <Route path="estadisticas" element={<Estadisticas />} />
           </Route>
 
           <Route path="/unauthorized" element={<UnauthorizedPage />} />

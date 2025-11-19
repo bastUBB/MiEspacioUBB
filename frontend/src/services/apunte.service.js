@@ -34,3 +34,145 @@ export async function crearApunteService(apunteData, file) {
     }
 }
 
+// TODO: Ver mas adelante
+// export async function updateApunteService(apunteData) {}
+
+// TODO: Ver mas adelante
+// export async function deleteApunteService(apunteID) {}
+
+export async function obtenerMisApuntesByRutService(rutAutorSubida) {
+    try {
+        const response = await axios.get('/api/apuntes/apuntes-rut/detail', {
+            params: { rutAutorSubida }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al obtener mis apuntes:", error.response?.data || error.message);
+        throw error;
+    }
+}
+
+export async function getAllApuntesService() {
+    try {
+        const response = await axios.get('/api/apuntes/');
+        
+        return response.data;
+    } catch (error) {
+        console.error("Error al obtener todos los apuntes:", error);
+        throw error;
+    }
+}
+
+export async function sumarVisualizacionInvitadoApunteService(apunteID) {
+    try {
+        const response = await axios.post('/api/apuntes/visualizacion-invitado/detail', { _id: apunteID });
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al sumar visualización de invitado al apunte:", error);
+        throw error;
+    }
+}
+
+export async function sumarVisualizacionUsuariosApunteService(apunteID, rutDueñoApunte) {
+    try {
+        const response = await axios.post('/api/apuntes/visualizacion-usuario/detail', { 
+            _id: apunteID,
+            rutDueñoApunte 
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al sumar visualización de usuario al apunte:", error);
+        throw error;
+    }
+}
+
+export async function crearComentarioApunteService(apunteID, comentarioData) {
+    try {
+        const response = await axios.post('/api/apuntes/crear-comentario/detail', comentarioData, {
+            params: { apunteID }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al crear comentario de apunte:", error);
+        throw error;
+    }
+}
+
+export async function crearRespuestaComentarioApunteService(apunteID, respuestaData) {
+    try {
+        const response = await axios.post('/api/apuntes/respuesta-comentario/detail', respuestaData, {
+            params: { apunteID }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al crear respuesta de comentario de apunte:", error);
+        throw error;
+    }
+}
+
+export async function realizarValoracionApunteService(apunteID, rutUsuarioValoracion, valoracion) {
+    try {
+        const response = await axios.post('/api/apuntes/valoracion/detail', { 
+            rutUsuarioValoracion,
+            valoracion 
+        }, {
+            params: { apunteID }
+        });    
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al realizar valoración de apunte:", error);
+        throw error;
+    }  
+}
+
+export async function crearReporteApunteService(apunteID, reporteData) {
+    try {
+        const response = await axios.post('/api/apuntes/reporte/detail', reporteData, {
+            params: { apunteID }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al crear reporte de apunte:", error);
+        throw error;
+    }
+}
+
+export async function obtenerApuntesMasValoradosService() {
+    try {
+        const response = await axios.get('/api/apuntes/mas-valorados/');
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al obtener apuntes más valorados:", error);
+        throw error;
+    }
+}
+
+export async function obtenerApuntesMasVisualizadosService() {
+    try {
+        const response = await axios.get('/api/apuntes/mas-visualizados/');
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al obtener apuntes más visualizados:", error);
+        throw error;
+    }
+}
+
+export async function obtenerAsignaturasConMasApuntesService() {
+    try {
+        const response = await axios.get('/api/apuntes/asignaturas-mas-apuntes/');
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al obtener asignaturas con más apuntes:", error);
+        throw error;
+    }
+}

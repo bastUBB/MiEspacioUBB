@@ -131,7 +131,7 @@ const NoteView = ({ note, onBack }) => {
                                 <BookOpen className="w-6 h-6 text-white" />
                             </div>
                             <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-violet-600 bg-clip-text text-transparent">
-                                ASIGUBB
+                                MiEspacioUBB
                             </span>
                         </div>
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GripVertical, Edit3, Plus } from 'lucide-react';
 import PopupEvaluaciones from './PopupEvaluaciones';
 
@@ -14,6 +14,60 @@ const CalificacionComplejidad = ({ asignaturas = [], onGuardarDatos, datosInicia
   const [arrastrando, setArrastrando] = useState(null);
   const [popupAbierto, setPopupAbierto] = useState(false);
   const [asignaturaSeleccionada, setAsignaturaSeleccionada] = useState(null);
+
+  // Sincronizar estados cuando cambien los datosIniciales (cuando vuelve de otro paso)
+  useEffect(() => {
+    if (datosIniciales.modo) {
+      setModo(datosIniciales.modo);
+    }
+    if (datosIniciales.calificaciones) {
+      setCalificaciones(datosIniciales.calificaciones);
+    }
+    if (datosIniciales.pesosComplejidad) {
+      setPesosComplejidad(datosIniciales.pesosComplejidad);
+    }
+  }, [datosIniciales]);
+
+  // Sincronizar ordenComplejidad cuando cambien las asignaturas
+  useEffect(() => {
+    if (asignaturas.length === 0) {
+      setOrdenComplejidad([]);
+      return;
+    }
+
+    // Crear un Set con los códigos de las asignaturas actuales
+    const codigosActuales = new Set(asignaturas.map(a => a.codigo));
+    
+    // Obtener el orden guardado o el inicial
+    const ordenGuardado = datosIniciales.ordenComplejidad && datosIniciales.ordenComplejidad.length > 0
+      ? datosIniciales.ordenComplejidad
+      : ordenComplejidad;
+
+    // Filtrar asignaturas que todavía están en la lista actual
+    const asignaturasExistentes = ordenGuardado.filter(a => codigosActuales.has(a.codigo));
+    
+    // Encontrar asignaturas nuevas que no están en el orden actual
+    const codigosEnOrden = new Set(asignaturasExistentes.map(a => a.codigo));
+    const asignaturasNuevas = asignaturas.filter(a => !codigosEnOrden.has(a.codigo));
+    
+    // Combinar: asignaturas existentes (con su orden) + asignaturas nuevas al final
+    const nuevoOrden = [...asignaturasExistentes, ...asignaturasNuevas];
+    
+    // Solo actualizar si el orden realmente cambió
+    const ordenCambio = JSON.stringify(nuevoOrden.map(a => a.codigo)) !== JSON.stringify(ordenComplejidad.map(a => a.codigo));
+    
+    if (ordenCambio) {
+      setOrdenComplejidad(nuevoOrden);
+
+      // Si estamos en modo complejidad, recalcular pesos con el nuevo orden
+      if (modo === 'complejidad' && nuevoOrden.length > 0) {
+        const nuevosPesos = calcularPesos(nuevoOrden);
+        setPesosComplejidad(nuevosPesos);
+        onGuardarDatos({ modo, calificaciones, pesosComplejidad: nuevosPesos, ordenComplejidad: nuevoOrden });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [asignaturas, datosIniciales.ordenComplejidad]);
 
   const handleAbrirPopup = (asignatura) => {
     setAsignaturaSeleccionada(asignatura);
@@ -67,7 +121,16 @@ const CalificacionComplejidad = ({ asignaturas = [], onGuardarDatos, datosInicia
 
   const handleModoChange = (nuevoModo) => {
     setModo(nuevoModo);
-    onGuardarDatos({ modo: nuevoModo, calificaciones, pesosComplejidad, ordenComplejidad });
+    
+    // Si se cambia a modo complejidad, recalcular y guardar los pesos según el orden actual
+    if (nuevoModo === 'complejidad') {
+      const pesosActualizados = calcularPesos(ordenComplejidad);
+      setPesosComplejidad(pesosActualizados);
+      onGuardarDatos({ modo: nuevoModo, calificaciones, pesosComplejidad: pesosActualizados, ordenComplejidad });
+    } else {
+      // Si se cambia a modo calificaciones, solo guardar el modo
+      onGuardarDatos({ modo: nuevoModo, calificaciones, pesosComplejidad, ordenComplejidad });
+    }
   };
 
   return (
@@ -154,7 +217,7 @@ const CalificacionComplejidad = ({ asignaturas = [], onGuardarDatos, datosInicia
       {modo === 'complejidad' && (
         <div className="space-y-3">
           <p className="text-sm text-gray-600 text-center mb-4">
-            Arrastra las asignaturas para ordenarlas de mayor a menor complejidad.
+            Las asignaturas están ordenadas de mayor a menor complejidad. Puedes arrastrarlas para cambiar el orden si lo deseas.
           </p>
           <div className="space-y-2 max-h-[350px] overflow-y-auto pr-2">
             {ordenComplejidad.map((asignatura, index) => {

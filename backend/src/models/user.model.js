@@ -41,11 +41,20 @@ const userSchema = mongoose.Schema({
         type: Date,
         cast: false
     },
-    notificaciones: [{
+    notificaciones: [{ //TODO: que luego de un tiempo se vayan borrando las notificaciones leidas
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Notificacion',
         cast: false
     }],
+    reportes: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Reporte',
+        cast: false
+    }],
+    estado: { // activo, suspendido para subir apuntes e interactuar, baneado (aqui usar correo)
+        type: String,
+        cast: false
+    }
 }, {
     timestamps: true,
     versionKey: false,

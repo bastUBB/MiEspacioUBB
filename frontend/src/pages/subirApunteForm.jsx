@@ -378,8 +378,8 @@ export default function SubirApunteForm() {
       return;
     }
 
-    if (etiquetaTrimmed.length > 20) {
-      toast.error('La etiqueta no puede tener más de 20 caracteres', {
+    if (etiquetaTrimmed.length > 30) {
+      toast.error('La etiqueta no puede tener más de 30 caracteres', {
         duration: 3000,
         icon: '⚠️'
       });
@@ -921,7 +921,7 @@ export default function SubirApunteForm() {
               )}
 
               <p className="text-xs text-gray-500 mt-2">
-                {etiquetas.length}/5 etiquetas • Mínimo 6 caracteres, máximo 20 caracteres por etiqueta
+                {etiquetas.length}/5 etiquetas • Mínimo 6 caracteres, máximo 30 caracteres por etiqueta
               </p>
             </div>
 

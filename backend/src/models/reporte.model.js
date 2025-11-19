@@ -1,6 +1,16 @@
 import mongoose from "mongoose";
 
 const reporteSchema = new mongoose.Schema({
+    rutUsuarioReportado: {
+        type: String,
+        required: true,
+        cast: false
+    },
+    rutUsuarioReporte: {
+        type: String,
+        required: true,
+        cast: false
+    },
     motivo: {
         type: String,
         required: true,
@@ -16,8 +26,9 @@ const reporteSchema = new mongoose.Schema({
         required: true,
         cast: false
     },
-    estado: {
+    estado: {// Pendiente, Resuelto
         type: String,
+        default: 'Pendiente',
         cast: false
     },
     resolucion: {

@@ -238,6 +238,14 @@ export const perfilAcademicoUpdateValidation = joi.object({
             'number.base': 'La reputación debe ser un número',
             'number.min': 'La reputación no puede ser negativa',
         }),
+    valoracionPerfil: joi.number()
+        .default(0)
+        .min(0)
+        .max(5)
+        .messages({
+            'number.base': 'La valoración del perfil debe ser un número',
+            'number.min': 'La valoración del perfil no puede ser negativa',
+        }),
     metodosEstudiosPreferidos: joi.array()
         .items(
             joi.string()
@@ -273,4 +281,26 @@ export const perfilAcademicoUpdateValidation = joi.object({
     .messages({
         'object.unknown': 'No se permiten propiedades adicionales en el cuerpo de la solicitud',
         'object.missing': 'Debe proporcionar al menos uno de los campos: rutUser, asignaturasInteres, semestreActual, apuntesSubidos, apuntesDescargados, reputacion, metodosEstudiosPreferidos o apuntesIDs',
+    });
+
+export const busquedaApuntesValidation = joi.object({
+    asignaturaApunteActual: joi.string()
+        .required()
+        .min(3)
+        .trim()
+        .max(50)
+        .pattern(/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/)
+        .messages({
+            'string.empty': 'El nombre de la asignatura no puede estar vacío',
+            'string.base': 'El nombre de la asignatura debe ser de tipo string',
+            'string.min': 'El nombre de la asignatura debe tener al menos 3 caracteres',
+            'string.max': 'El nombre de la asignatura no puede tener más de 50 caracteres',
+            'string.pattern.base': 'El nombre de la asignatura solo puede contener letras y espacios',
+            'any.required': 'El nombre de la asignatura es obligatorio',
+        }),
+})
+    .unknown(false)
+    .messages({
+        'object.unknown': 'No se permiten propiedades adicionales en la consulta',
+        'object.missing': 'Debe proporcionar el campo: asignaturaApunteActual',
     });

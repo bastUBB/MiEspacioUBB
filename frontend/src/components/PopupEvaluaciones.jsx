@@ -103,17 +103,26 @@ const PopupEvaluaciones = ({ asignatura, evaluacionesIniciales = [], onGuardar, 
     // Calcular el porcentaje total
     const porcentajeTotal = evaluaciones.reduce((sum, evaluacion) => sum + parseFloat(evaluacion.porcentaje), 0);
     
-    // Advertir si el porcentaje total no es 100%
-    if (porcentajeTotal !== 100) {
-      toast.error(`El porcentaje total debe ser 100%. Actualmente tienes ${porcentajeTotal}%`, {
+    // Advertir si el porcentaje total excede 100%
+    if (porcentajeTotal > 100) {
+      toast.error(`El porcentaje total no puede superar 100%. Actualmente tienes ${porcentajeTotal}%`, {
         duration: 5000
       });
       return;
     }
 
+    // Informar si el porcentaje es menor a 100%
+    if (porcentajeTotal < 100) {
+      toast.success(`Evaluaciones guardadas. Total: ${porcentajeTotal}% (notas hasta el momento) de la asignatura ${asignatura.nombre}`, {
+        duration: 4000,
+        icon: '📊'
+      });
+    } else {
+      toast.success('Evaluaciones guardadas correctamente');
+    }
+
     onGuardar(evaluaciones);
     onCerrar();
-    toast.success('Evaluaciones guardadas correctamente');
   };
 
   return (

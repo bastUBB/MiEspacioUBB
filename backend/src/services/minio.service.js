@@ -1,5 +1,5 @@
-import { minioClient, BUCKETS } from '../config/configMinio.js';
 import path from 'path';
+import { minioClient, BUCKETS } from '../config/configMinio.js';
 
 export async function uploadToMinIOService(bucketName, objectName, buffer, size, metadata = {}) {
     try {
@@ -39,14 +39,12 @@ export async function generarUrlFirmadaService(filePath, expiresIn = 7200) {
     try {
         const stats = await minioClient.statObject(BUCKETS.APUNTES, filePath);
 
-        // Generar URL firmada con tiempo extendido para previsualización
         const signedUrl = await minioClient.presignedGetObject(
             BUCKETS.APUNTES,
             filePath,
             expiresIn  // 2 horas por defecto para dar tiempo a previsualizar y descargar
         );
 
-        // Retornar URL y metadatos útiles para el frontend
         const fileInfo = {
             url: signedUrl,
             metadata: {

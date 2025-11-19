@@ -25,7 +25,7 @@ const RecommendationsSection = ({ notes, onNoteClick }) => {
         {notes.map((note) => (
           <div
             key={note.id}
-            className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-300 cursor-pointer group"
+            className="bg-gradient-to-br from-white to-purple-50/20 rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer group"
             onClick={onNoteClick}
           >
             <div className="flex items-start justify-between mb-4">

@@ -21,7 +21,6 @@ const asignaturaSchema = new mongoose.Schema({
         type: String,
         cast: false,
     }],
-    //TODO: Semestre en el que se impartirá la asignatura
     semestre: {
         type: Number,
         required: true,

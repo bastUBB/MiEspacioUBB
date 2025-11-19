@@ -41,7 +41,7 @@ function InicioPerfilAcademico() {
           if (response.data && response.data._id) {
             // Usuario ya tiene perfil, redirigir inmediatamente
             setProfileLoading(false);
-            navigate('/estudiante/subir-apunte', { replace: true });
+            navigate('/estudiante/home', { replace: true });
             return;
           } else {
             setHasProfile(false);
@@ -111,7 +111,7 @@ function InicioPerfilAcademico() {
         toast.success('¡Perfil académico creado exitosamente!');
         setIsComplete(true);
         setTimeout(() => {
-          navigate('/estudiante/subir-apunte');
+          navigate('/estudiante/home');
         }, 1500);
       } else {        
         // Detectar específicamente errores de autorización
@@ -172,16 +172,28 @@ function InicioPerfilAcademico() {
 
   const toggleNoteType = (noteType) => {
     const isSelected = formData.metodosEstudiosPreferidos.includes(noteType);
+    
     if (isSelected) {
+      // Si ya está seleccionado, lo deseleccionamos
       setFormData({
         ...formData,
         metodosEstudiosPreferidos: formData.metodosEstudiosPreferidos.filter(type => type !== noteType)
       });
     } else {
-      setFormData({
-        ...formData,
-        metodosEstudiosPreferidos: [...formData.metodosEstudiosPreferidos, noteType]
-      });
+      // Si vamos a seleccionar "Ninguno", eliminamos todas las demás opciones
+      if (noteType === 'Ninguno') {
+        setFormData({
+          ...formData,
+          metodosEstudiosPreferidos: ['Ninguno']
+        });
+      } else {
+        // Si seleccionamos cualquier otra opción y "Ninguno" está seleccionado, lo quitamos
+        const metodosActualizados = formData.metodosEstudiosPreferidos.filter(type => type !== 'Ninguno');
+        setFormData({
+          ...formData,
+          metodosEstudiosPreferidos: [...metodosActualizados, noteType]
+        });
+      }
     }
   };
 

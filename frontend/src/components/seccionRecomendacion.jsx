@@ -1,4 +1,4 @@
-import { Star, Download, User, BookOpen } from 'lucide-react';
+import { Star, Eye, User, BookOpen } from 'lucide-react';
 
 const RecommendationsSection = ({ notes, onNoteClick }) => {
   const renderStars = (rating) => {
@@ -66,7 +66,7 @@ const RecommendationsSection = ({ notes, onNoteClick }) => {
                 <span>{note.author}</span>
               </div>
               <div className="flex items-center space-x-1">
-                <Download className="w-4 h-4" />
+                <Eye className="w-4 h-4" />
                 <span>{note.downloads.toLocaleString()}</span>
               </div>
             </div>

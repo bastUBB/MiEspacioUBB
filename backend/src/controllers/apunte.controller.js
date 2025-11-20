@@ -157,7 +157,7 @@ export async function sumarVisualizacionUsuariosApunte(req, res) {
 
         if (errorBody) return handleErrorClient(res, 400, 'Datos de entrada inválidos', errorBody.message);
 
-        const [apunteActualizado, updateError] = await sumarVisualizacionUsuariosApunteService(valueBody._id, valueBody.rutDueñoApunte);
+        const [apunteActualizado, updateError] = await sumarVisualizacionUsuariosApunteService(valueBody._id, valueBody.rutUsuario);
 
         if (updateError) return handleErrorServer(res, 500, 'Error al actualizar visualizaciones', updateError);
 

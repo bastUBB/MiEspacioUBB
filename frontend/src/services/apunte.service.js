@@ -75,11 +75,11 @@ export async function sumarVisualizacionInvitadoApunteService(apunteID) {
     }
 }
 
-export async function sumarVisualizacionUsuariosApunteService(apunteID, rutDueñoApunte) {
+export async function sumarVisualizacionUsuariosApunteService(apunteID, rutUsuario) {
     try {
         const response = await axios.post('/api/apuntes/visualizacion-usuario/detail', { 
             _id: apunteID,
-            rutDueñoApunte 
+            rutUsuario 
         });
 
         return response.data;

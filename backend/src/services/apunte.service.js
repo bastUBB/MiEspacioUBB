@@ -15,7 +15,6 @@ import { registrarSubidaApunteService, registrarComentarioService, registrarResp
 import { notificacionNuevoComentarioApunteService, notificacionRespuestaComentarioService,
     notificacionNuevaValoracionApunteService } from "./notificacion.service.js";
 
-
 export async function uploadApunteService(file, body) {
     try {
         const [bucketName, abreviacionAsignatura, bucketError] = asignarBucket(body.asignatura);
@@ -450,6 +449,15 @@ export async function crearRespuestaComentarioApunteService(apunteID, comentario
 
 export async function realizarValoracionApunteService(apunteID, rutUserValoracion, nuevaValoracion) {
     try {
+        const apunteExist = await Apunte.findById(apunteID);
+
+        if (!apunteExist) return [null, 'El apunte que se desea valorar no existe'];
+
+        // Validar que el autor no puede valorar su propio apunte
+        if (apunteExist.rutAutorSubida === rutUserValoracion) {
+            return [null, 'No puedes valorar tu propio apunte'];
+        }
+
         // Verificar si el usuario ya posee un perfil académico
         const [poseePerfil, errorPerfil] = await poseePerfilAcademicoService(rutUserValoracion);
 
@@ -460,10 +468,6 @@ export async function realizarValoracionApunteService(apunteID, rutUserValoracio
         const yaValorado = perfilUsuarioValoracion.apuntesValorados.some(v => v.apunteID.toString() === apunteID.toString());
 
         if (yaValorado) return [null, 'El usuario ya valoró este apunte'];
-
-        const apunteExist = await Apunte.findById(apunteID);
-
-        if (!apunteExist) return [null, 'El apunte que se desea valorar no existe'];
 
         const valoracionActualApunte = apunteExist.valoracion?.promedioValoracion || 0;
         const cantidadActualValoraciones = apunteExist.valoracion?.cantidadValoraciones || 0;

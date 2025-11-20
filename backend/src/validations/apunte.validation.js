@@ -294,7 +294,7 @@ export const visualizacionValidation = joi.object({
             "string.pattern.base": "El ID del reporte debe ser un ObjectId válido de MongoDB.",
             "any.required": "El ID del reporte es obligatorio.",
         }),
-    rutDueñoApunte: joi.string()
+    rutUsuario: joi.string()
         .min(9)
         .max(12)
         .trim()
@@ -306,7 +306,7 @@ export const visualizacionValidation = joi.object({
             "string.pattern.base": "Formato rut inválido, debe ser xx.xxx.xxx-x o xxxxxxxx-x.",
         }),
 })
-    .or("rutDueñoApunte")
+    .or("rutUsuario")
     .unknown(false)
     .messages({
         'object.unknown': 'No se permiten propiedades adicionales en el cuerpo de la solicitud',

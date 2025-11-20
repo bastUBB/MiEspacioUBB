@@ -92,6 +92,14 @@ function Estadisticas() {
   const handleExplorarClick = () => navigate('/estudiante/explorar');
   const handleMisApuntesClick = () => navigate('/estudiante/mis-apuntes');
   const handleEstadisticasClick = () => {}; // Ya estamos aquí
+  const handleConfigClick = () => navigate('/estudiante/configuracion');
+  
+  const handleLogout = () => {
+    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    localStorage.removeItem('user');
+    toast.success('Sesión cerrada exitosamente');
+    navigate('/login');
+  };
 
   if (userLoading || loading) {
     return (
@@ -111,6 +119,8 @@ function Estadisticas() {
         onExplorarClick={handleExplorarClick}
         onMisApuntesClick={handleMisApuntesClick}
         onEstadisticasClick={handleEstadisticasClick}
+        onLogout={handleLogout}
+        onConfigClick={handleConfigClick}
       />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

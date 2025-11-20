@@ -1,17 +1,22 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bell, User, BookOpen, BarChart3, FileText, Home, Compass, X, Check } from 'lucide-react';
+import { Bell, User, BookOpen, BarChart3, FileText, Home, Compass, X, Check, Settings, LogOut } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 
-const Header = ({ notificationCount = 0, notifications = [], onNotificationClick, onMarkAsRead, onClearAll, onProfileClick, onHomeClick, onExplorarClick, onMisApuntesClick, onEstadisticasClick }) => {
+const Header = ({ notificationCount = 0, notifications = [], onNotificationClick, onMarkAsRead, onClearAll, onProfileClick, onHomeClick, onExplorarClick, onMisApuntesClick, onEstadisticasClick, onLogout, onConfigClick }) => {
   const location = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const dropdownRef = useRef(null);
+  const profileMenuRef = useRef(null);
 
   // Cerrar dropdown al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowNotifications(false);
+      }
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setShowProfileMenu(false);
       }
     };
 
@@ -200,14 +205,52 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
               )}
             </div>
 
-            <button 
-              onClick={onProfileClick}
-              className="transition-transform hover:scale-110"
-            >
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-violet-600 rounded-full flex items-center justify-center cursor-pointer">
-                <User className="w-4 h-4 text-white" />
-              </div>
-            </button>
+            <div className="relative" ref={profileMenuRef}>
+              <button 
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="transition-transform hover:scale-110"
+              >
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-violet-600 rounded-full flex items-center justify-center cursor-pointer">
+                  <User className="w-4 h-4 text-white" />
+                </div>
+              </button>
+
+              {/* Dropdown de perfil */}
+              {showProfileMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
+                  <button
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      onProfileClick && onProfileClick();
+                    }}
+                    className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 text-gray-700 hover:text-purple-600"
+                  >
+                    <User className="w-4 h-4" />
+                    <span className="font-medium">Mi Perfil</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      onConfigClick && onConfigClick();
+                    }}
+                    className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 text-gray-700 hover:text-purple-600 border-t border-gray-100"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span className="font-medium">Configuración</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      onLogout && onLogout();
+                    }}
+                    className="w-full px-4 py-3 text-left hover:bg-red-50 transition-colors flex items-center gap-3 text-red-600 hover:text-red-700 border-t border-gray-100"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span className="font-medium">Cerrar Sesión</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

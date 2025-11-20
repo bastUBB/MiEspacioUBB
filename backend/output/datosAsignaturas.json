@@ -387,15 +387,6 @@
     "area": "Área Sistemas Computacionales"
   },
   {
-    "nombre": "Electivo Profesional 1",
-    "codigo": "620459",
-    "creditos": 5,
-    "prerrequisitos": [],
-    "semestre": 9,
-    "ambito": "Ámbito Ingeniería Aplicada",
-    "area": "Una de las áreas anteriores"
-  },
-  {
     "nombre": "Gestión de Proyectos de Software",
     "codigo": "620458",
     "creditos": 4,
@@ -412,24 +403,6 @@
     "semestre": 9,
     "ambito": "Ámbito Ingeniería Aplicada",
     "area": "Área Gestión Informática"
-  },
-  {
-    "nombre": "Electivo Profesional 2",
-    "codigo": "620470",
-    "creditos": 5,
-    "prerrequisitos": [],
-    "semestre": 9,
-    "ambito": "Ámbito Ingeniería Aplicada",
-    "area": "Una de las áreas anteriores"
-  },
-  {
-    "nombre": "Electivo Profesional 3",
-    "codigo": "620471",
-    "creditos": 5,
-    "prerrequisitos": [],
-    "semestre": 9,
-    "ambito": "Ámbito Ingeniería Aplicada",
-    "area": "Una de las áreas anteriores"
   },
   {
     "nombre": "Proyecto de Título",
@@ -450,25 +423,7 @@
     "area": "Área Ingeniería de Software y Base de Datos"
   },
   {
-    "nombre": "Electivo Profesional 4",
-    "codigo": "620474",
-    "creditos": 5,
-    "prerrequisitos": [],
-    "semestre": 10,
-    "ambito": "Ámbito Ingeniería Aplicada",
-    "area": "Una de las áreas anteriores"
-  },
-  {
-    "nombre": "Electivo Profesional 5",
-    "codigo": "620475",
-    "creditos": 5,
-    "prerrequisitos": [],
-    "semestre": 10,
-    "ambito": "Ámbito Ingeniería Aplicada",
-    "area": "Una de las áreas anteriores"
-  },
-  {
-    "nombre": "Electivo Profesional 6",
+    "nombre": "Electivo Profesional",
     "codigo": "620476",
     "creditos": 5,
     "prerrequisitos": [],

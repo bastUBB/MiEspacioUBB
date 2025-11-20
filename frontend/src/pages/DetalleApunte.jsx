@@ -165,6 +165,12 @@ function DetalleApunte() {
       return;
     }
 
+    // Validar que no sea el autor del apunte
+    if (apunte && user.rut === apunte.rutAutorSubida) {
+      toast.error('No puedes valorar tu propio apunte');
+      return;
+    }
+
     try {
       let response;
       
@@ -175,7 +181,9 @@ function DetalleApunte() {
           setUserRating(rating);
           toast.success('Valoración actualizada exitosamente');
           // Recargar apunte para actualizar promedio
-          loadApunte();
+          await loadApunte();
+        } else {
+          toast.error(response.message || 'Error al actualizar valoración');
         }
       } else {
         response = await realizarValoracionApunteService(id, user.rut, rating);
@@ -183,15 +191,20 @@ function DetalleApunte() {
           setUserRating(rating);
           toast.success('Valoración registrada exitosamente');
           // Recargar apunte para actualizar promedio
-          loadApunte();
+          await loadApunte();
+        } else {
+          toast.error(response.message || 'Error al registrar valoración');
         }
       }
     } catch (err) {
       console.error('Error en valoración:', err);
-      if (err.response?.data?.message?.includes('ya valoró')) {
+      const errorMessage = err.response?.data?.message || err.message || 'Error al procesar valoración';
+      if (errorMessage.includes('ya valoró') || errorMessage.includes('ya has valorado')) {
         toast.error('Ya has valorado este apunte');
+      } else if (errorMessage.includes('propio apunte')) {
+        toast.error('No puedes valorar tu propio apunte');
       } else {
-        toast.error('Error al registrar valoración');
+        toast.error(errorMessage);
       }
     }
   };
@@ -306,6 +319,15 @@ function DetalleApunte() {
   const handleExplorarClick = () => navigate('/estudiante/explorar');
   const handleMisApuntesClick = () => navigate('/estudiante/mis-apuntes');
   const handleEstadisticasClick = () => navigate('/estudiante/estadisticas');
+  const handleConfigClick = () => navigate('/estudiante/configuracion');
+  
+  const handleLogout = () => {
+    // Limpiar token y datos del usuario
+    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    localStorage.removeItem('user');
+    toast.success('Sesión cerrada exitosamente');
+    navigate('/login');
+  };
 
   const handleNavigateToProfile = (rut) => {
     navigate(`/estudiante/profile/${rut}`);
@@ -358,6 +380,8 @@ function DetalleApunte() {
         onExplorarClick={handleExplorarClick}
         onMisApuntesClick={handleMisApuntesClick}
         onEstadisticasClick={handleEstadisticasClick}
+        onLogout={handleLogout}
+        onConfigClick={handleConfigClick}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

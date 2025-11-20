@@ -177,24 +177,27 @@ function DetalleApunte() {
       // Si ya tiene valoración, actualizar; si no, crear nueva
       if (userRating > 0) {
         response = await actualizarValoracionApunteService(id, user.rut, rating);
-        if (response.status === 'Success') {
-          setUserRating(rating);
-          toast.success('Valoración actualizada exitosamente');
-          // Recargar apunte para actualizar promedio
-          await loadApunte();
-        } else {
-          toast.error(response.message || 'Error al actualizar valoración');
-        }
       } else {
         response = await realizarValoracionApunteService(id, user.rut, rating);
-        if (response.status === 'Success') {
-          setUserRating(rating);
-          toast.success('Valoración registrada exitosamente');
-          // Recargar apunte para actualizar promedio
+      }
+
+      // Verificar el status de la respuesta
+      if (response.status === 'Success') {
+        // Actualizar el rating del usuario primero
+        setUserRating(rating);
+        
+        // Mostrar mensaje de éxito
+        const mensaje = userRating > 0 ? 'Valoración actualizada exitosamente' : 'Valoración registrada exitosamente';
+        toast.success(mensaje);
+        
+        // Recargar apunte para actualizar promedio
+        try {
           await loadApunte();
-        } else {
-          toast.error(response.message || 'Error al registrar valoración');
+        } catch {
+          console.log('Apunte recargado con el estado actual');
         }
+      } else {
+        toast.error(response.message || 'Error al procesar valoración');
       }
     } catch (err) {
       console.error('Error en valoración:', err);
@@ -216,13 +219,27 @@ function DetalleApunte() {
         return;
       }
 
+      toast.info('Preparando descarga...');
+
+      // Fetch el archivo y crear un blob para descarga directa
+      const response = await fetch(downloadUrl);
+      if (!response.ok) {
+        throw new Error('Error al obtener el archivo');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
       // Crear un enlace temporal y hacer click para descargar
       const link = document.createElement('a');
-      link.href = downloadUrl;
+      link.href = url;
       link.download = apunte.archivo?.nombreOriginal || 'apunte.pdf';
       document.body.appendChild(link);
       link.click();
+      
+      // Limpiar
       document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
       
       toast.success('Descarga iniciada');
     } catch (error) {
@@ -340,16 +357,26 @@ function DetalleApunte() {
     }
 
     try {
+      // Obtener fecha actual en formato DD-MM-YYYY
+      const today = new Date();
+      const day = String(today.getDate()).padStart(2, '0');
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const year = today.getFullYear();
+      const fechaComentario = `${day}-${month}-${year}`;
+
       const comentarioData = {
         rutAutor: user.rut,
-        contenido: comentario
+        comentario: comentario,
+        fechaComentario: fechaComentario
       };
       await crearComentarioApunteService(id, comentarioData);
       setComentario('');
       toast.success('Comentario publicado');
       loadApunte();
-    } catch {
-      toast.error('Error al publicar comentario');
+    } catch (error) {
+      console.error('Error al publicar comentario:', error);
+      const errorMessage = error.response?.data?.message || 'Error al publicar comentario';
+      toast.error(errorMessage);
     }
   };
 

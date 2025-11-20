@@ -43,7 +43,6 @@ function DetalleApunte() {
   const [comentarios, setComentarios] = useState([]);
   const [otrosApuntesAutor, setOtrosApuntesAutor] = useState([]);
   const [apuntesRelacionados, setApuntesRelacionados] = useState([]);
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const [visualizacionRegistrada, setVisualizacionRegistrada] = useState(false);
   const [respuestaActiva, setRespuestaActiva] = useState(null);
   const [textoRespuesta, setTextoRespuesta] = useState('');
@@ -215,19 +214,24 @@ function DetalleApunte() {
         toast.success(mensaje);
         
         // Recargar apunte para actualizar promedio
-        try {
-          await loadApunte();
-        } catch {
-          console.log('Apunte recargado con el estado actual');
-        }
+        setTimeout(() => {
+          loadApunte();
+        }, 500);
       } else {
         toast.error(response.message || 'Error al procesar valoración');
       }
     } catch (err) {
       console.error('Error en valoración:', err);
-      const errorMessage = err.response?.data?.message || err.message || 'Error al procesar valoración';
+      const errorMessage = err.response?.data?.message || err.response?.data?.details || err.message || 'Error al procesar valoración';
+      
+      // Si el error indica que ya valoró pero tiene status Client error, es un mensaje informativo
       if (errorMessage.includes('ya valoró') || errorMessage.includes('ya has valorado')) {
-        toast.error('Ya has valorado este apunte');
+        // Actualizar el rating del usuario
+        setUserRating(rating);
+        toast.success(userRating > 0 ? 'Valoración actualizada exitosamente' : 'Valoración registrada exitosamente');
+        setTimeout(() => {
+          loadApunte();
+        }, 500);
       } else if (errorMessage.includes('propio apunte')) {
         toast.error('No puedes valorar tu propio apunte');
       } else {
@@ -330,9 +334,15 @@ function DetalleApunte() {
     changePage(1);
   };
 
-  const handleBookmark = () => {
-    setIsBookmarked(!isBookmarked);
-    toast.success(isBookmarked ? 'Eliminado de favoritos' : 'Agregado a favoritos');
+  const handleShare = async () => {
+    try {
+      const url = window.location.href;
+      await navigator.clipboard.writeText(url);
+      toast.success('Enlace copiado al portapapeles');
+    } catch (error) {
+      console.error('Error al copiar enlace:', error);
+      toast.error('No se pudo copiar el enlace');
+    }
   };
 
   if (loading) {
@@ -422,25 +432,51 @@ function DetalleApunte() {
       return;
     }
 
+    // Verificar si ya dio like ANTES de hacer la petición
+    if (userLikesMap[comentarioId]) {
+      toast.info('Ya has dado like a este comentario');
+      return;
+    }
+
     try {
       const response = await darLikeComentarioService(comentarioId);
       if (response.status === 'Success') {
-        // Actualizar mapas locales
+        // Actualizar mapas locales PRIMERO para feedback visual inmediato
         setUserLikesMap(prev => ({ ...prev, [comentarioId]: true }));
         setUserDislikesMap(prev => {
           const newMap = { ...prev };
           delete newMap[comentarioId];
           return newMap;
         });
+        
+        // Actualizar el contador localmente para feedback visual inmediato
+        setComentarios(prev => prev.map(com => {
+          if (com._id === comentarioId) {
+            const yaTenieDislike = userDislikesMap[comentarioId];
+            return {
+              ...com,
+              Likes: (com.Likes || 0) + 1,
+              Dislikes: yaTenieDislike ? Math.max(0, (com.Dislikes || 0) - 1) : (com.Dislikes || 0),
+              usuariosLikes: [...(com.usuariosLikes || []), user.rut],
+              usuariosDislikes: yaTenieDislike ? (com.usuariosDislikes || []).filter(rut => rut !== user.rut) : (com.usuariosDislikes || [])
+            };
+          }
+          return com;
+        }));
+        
         toast.success('Like agregado');
-        loadApunte();
       } else if (response.status === 'Client error') {
-        toast.info(response.details || 'Ya has dado like a este comentario');
+        toast.info(response.details || response.message || 'Ya has dado like a este comentario');
       }
     } catch (error) {
       console.error('Error al dar like:', error);
-      const errorMsg = error.response?.data?.details || error.response?.data?.message || 'Error al dar like';
-      toast.error(errorMsg);
+      const errorMsg = error.response?.data?.details || error.response?.data?.message || error.message || 'Error al dar like';
+      // Si el mensaje contiene "ya has dado like" o es un ID, mostrar mensaje amigable
+      if (/^[a-f0-9]{24}$/i.test(errorMsg) || errorMsg.includes('ya has dado like') || errorMsg.includes('Ya has dado like')) {
+        toast.info('Ya has dado like a este comentario');
+      } else {
+        toast.error(errorMsg);
+      }
     }
   };
 
@@ -450,25 +486,51 @@ function DetalleApunte() {
       return;
     }
 
+    // Verificar si ya dio dislike ANTES de hacer la petición
+    if (userDislikesMap[comentarioId]) {
+      toast.info('Ya has dado dislike a este comentario');
+      return;
+    }
+
     try {
       const response = await darDislikeComentarioService(comentarioId);
       if (response.status === 'Success') {
-        // Actualizar mapas locales
+        // Actualizar mapas locales PRIMERO para feedback visual inmediato
         setUserDislikesMap(prev => ({ ...prev, [comentarioId]: true }));
         setUserLikesMap(prev => {
           const newMap = { ...prev };
           delete newMap[comentarioId];
           return newMap;
         });
+        
+        // Actualizar el contador localmente para feedback visual inmediato
+        setComentarios(prev => prev.map(com => {
+          if (com._id === comentarioId) {
+            const yaTenieLike = userLikesMap[comentarioId];
+            return {
+              ...com,
+              Dislikes: (com.Dislikes || 0) + 1,
+              Likes: yaTenieLike ? Math.max(0, (com.Likes || 0) - 1) : (com.Likes || 0),
+              usuariosDislikes: [...(com.usuariosDislikes || []), user.rut],
+              usuariosLikes: yaTenieLike ? (com.usuariosLikes || []).filter(rut => rut !== user.rut) : (com.usuariosLikes || [])
+            };
+          }
+          return com;
+        }));
+        
         toast.success('Dislike agregado');
-        loadApunte();
       } else if (response.status === 'Client error') {
-        toast.info(response.details || 'Ya has dado dislike a este comentario');
+        toast.info(response.details || response.message || 'Ya has dado dislike a este comentario');
       }
     } catch (error) {
       console.error('Error al dar dislike:', error);
-      const errorMsg = error.response?.data?.details || error.response?.data?.message || 'Error al dar dislike';
-      toast.error(errorMsg);
+      const errorMsg = error.response?.data?.details || error.response?.data?.message || error.message || 'Error al dar dislike';
+      // Si el mensaje contiene "ya has dado dislike" o es un ID, mostrar mensaje amigable
+      if (/^[a-f0-9]{24}$/i.test(errorMsg) || errorMsg.includes('ya has dado dislike') || errorMsg.includes('Ya has dado dislike')) {
+        toast.info('Ya has dado dislike a este comentario');
+      } else {
+        toast.error(errorMsg);
+      }
     }
   };
 
@@ -518,14 +580,7 @@ function DetalleApunte() {
     }
   };
 
-  const getNivelColor = (nivel) => {
-    const colores = {
-      'Oro': 'from-yellow-400 to-yellow-600',
-      'Plata': 'from-gray-300 to-gray-500',
-      'Bronce': 'from-amber-600 to-amber-800'
-    };
-    return colores[nivel] || 'from-gray-400 to-gray-600';
-  };
+
 
   const formatBytes = (bytes) => {
     if (bytes === 0) return '0 Bytes';
@@ -914,23 +969,13 @@ function DetalleApunte() {
                 Descargar PDF
               </button>
               
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={handleBookmark}
-                  className={`py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
-                    isBookmarked
-                      ? 'bg-purple-100 text-purple-700 border-2 border-purple-200'
-                      : 'bg-gray-100 text-gray-700 border-2 border-transparent hover:bg-gray-200'
-                  }`}
-                >
-                  <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
-                  Guardar
-                </button>
-                <button className="py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-all flex items-center justify-center gap-2 border-2 border-transparent">
-                  <Share2 className="w-4 h-4" />
-                  Compartir
-                </button>
-              </div>
+              <button
+                onClick={handleShare}
+                className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-all flex items-center justify-center gap-2 border-2 border-transparent"
+              >
+                <Share2 className="w-4 h-4" />
+                Compartir
+              </button>
             </div>
 
             {/* Sistema de Valoración */}
@@ -1015,7 +1060,7 @@ function DetalleApunte() {
 
             {/* Información del Autor */}
             <div className="bg-gradient-to-br from-white to-purple-50 rounded-2xl shadow-sm border border-purple-100 p-6 overflow-hidden relative">
-              <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${getNivelColor(apunte.autorInfo.nivel)} opacity-10 rounded-full -mr-16 -mt-16`}></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-400 to-purple-600 opacity-10 rounded-full -mr-16 -mt-16"></div>
               
               <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 flex items-center gap-2 relative z-10">
                 <Award className="w-4 h-4 text-purple-600" />
@@ -1024,15 +1069,12 @@ function DetalleApunte() {
               
               <div className="relative z-10">
                 <div className="flex items-start gap-4 mb-4">
-                  <div className={`w-16 h-16 bg-gradient-to-br ${getNivelColor(apunte.autorInfo.nivel)} rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg`}>
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
                     {apunte.autorInfo.nombreCompleto.charAt(0)}
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="mb-1">
                       <h4 className="font-bold text-gray-900">{apunte.autorInfo.nombreCompleto}</h4>
-                      <span className={`px-2 py-0.5 bg-gradient-to-r ${getNivelColor(apunte.autorInfo.nivel)} text-white text-xs font-bold rounded-full`}>
-                        {apunte.autorInfo.nivel}
-                      </span>
                     </div>
                     <div className="flex items-center gap-1 mb-2">
                       <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />

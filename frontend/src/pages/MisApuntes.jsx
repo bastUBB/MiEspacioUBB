@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../context/userContextProvider';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { FileText, Star, Eye, Download, Edit2, Trash2, Filter, Calendar } from 'lucide-react';
+import { FileText, Star, Eye, Edit2, Trash2, Filter, Calendar } from 'lucide-react';
 import Header from '../components/header';
 import { obtenerMisApuntesByRutService } from '../services/apunte.service';
 import { parseCustomDate, formatDateToLocal } from '../helpers/dateFormatter.helper';
@@ -251,10 +251,6 @@ function MisApuntes() {
                     <div className="flex items-center gap-1">
                       <Eye className="w-4 h-4" />
                       <span>{apunte.visualizaciones || 0} vistas</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Download className="w-4 h-4" />
-                      <span>{apunte.descargas || 0} descargas</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />

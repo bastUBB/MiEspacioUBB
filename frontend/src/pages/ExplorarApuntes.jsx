@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../context/userContextProvider';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { Search, Filter, BookOpen, Star, Download, Eye, Calendar, Tag } from 'lucide-react';
+import { Search, Filter, BookOpen, Star, Eye, Calendar, Tag } from 'lucide-react';
 import Header from '../components/header';
 import { obtenerApuntesMasValoradosService } from '../services/apunte.service';
 import { parseCustomDate } from '../helpers/dateFormatter.helper';
@@ -219,11 +219,7 @@ function ExplorarApuntes() {
                 <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-gray-200">
                   <div className="flex items-center space-x-1">
                     <Eye className="w-4 h-4" />
-                    <span>{apunte.visualizaciones || 0}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Download className="w-4 h-4" />
-                    <span>{apunte.descargas || 0}</span>
+                    <span>{apunte.visualizaciones || 0} vistas</span>
                   </div>
                   <span className="text-xs">Por {apunte.autorSubida}</span>
                 </div>

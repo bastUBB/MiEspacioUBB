@@ -187,6 +187,27 @@ export const perfilAcademicoUpdateValidation = joi.object({
             "string.max": "El rut debe tener como máximo 12 caracteres.",
             "string.pattern.base": "Formato rut inválido, debe ser xx.xxx.xxx-x o xxxxxxxx-x.",
         }),
+    asignaturasCursantes: joi.array()
+        .items(
+            joi.string()
+                .min(7)
+                .max(50)
+                .strict()
+                .trim()
+                .pattern(/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s\.\-\d\,]+$/)
+                .messages({
+                    'string.base': 'El nombre de la asignatura debe ser una cadena de texto',
+                    'string.min': 'El nombre de la asignatura debe tener al menos 7 caracteres',
+                    'string.max': 'El nombre de la asignatura no puede tener más de 50 caracteres',
+                    'string.pattern.base': 'El nombre de la asignatura solo puede contener letras, números, puntos, guiones, comas y espacios',
+                }),
+        )
+        .min(0)
+        .max(55)
+        .messages({
+            'array.base': 'Las asignaturas cursantes deben ser un arreglo',
+            'array.max': 'No puede haber más de 55 asignaturas cursantes',
+        }),
     asignaturasInteres: joi.array()
         .items(
             joi.string()
@@ -223,6 +244,68 @@ export const perfilAcademicoUpdateValidation = joi.object({
         .messages({
             'number.base': 'El número de apuntes subidos debe ser un número',
             'number.min': 'El número de apuntes subidos no puede ser negativo',
+        }),
+    informeCurricular: joi.array()
+        .items(
+            joi.object({
+                asignatura: joi.string()
+                    .min(7)
+                    .max(50)
+                    .trim()
+                    .pattern(/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s\.\-\d\,]+$/)
+                    .messages({
+                        'string.base': 'El nombre de la asignatura debe ser una cadena de texto',
+                        'string.min': 'El nombre de la asignatura debe tener al menos 10 caracteres',
+                        'string.max': 'El nombre de la asignatura no puede tener más de 50 caracteres',
+                        'string.pattern.base': 'El nombre de la asignatura solo puede contener letras, números, puntos, guiones, comas y espacios',
+                    }),
+                evaluaciones: joi.array()
+                    .items(
+                        joi.object({
+                            tipoEvaluacion: joi.string()
+                                .trim()
+                                .messages({
+                                    'string.base': 'El tipo de evaluación debe ser una cadena de texto',
+                                }),
+                            nota: joi.number()
+                                .min(1)
+                                .max(7)
+                                .messages({
+                                    'number.base': 'La nota debe ser un número',
+                                    'number.min': 'La nota debe ser al menos 1',
+                                    'number.max': 'La nota no puede ser más de 7',
+                                }),
+                            porcentaje: joi.number()
+                                .min(0)
+                                .max(100)
+                                .messages({
+                                    'number.base': 'El porcentaje debe ser un número',
+                                    'number.min': 'El porcentaje debe ser al menos 0',
+                                    'number.max': 'El porcentaje no puede ser más de 100',
+                                }),
+                        })
+                    )
+                    .messages({
+                        'array.base': 'Las evaluaciones deben ser un arreglo',
+                    }),
+                ordenComplejidad: joi.number()
+                    .min(1)
+                    .max(10)
+                    .messages({
+                        'number.base': 'El orden de complejidad debe ser un número',
+                        'number.min': 'El orden de complejidad debe ser al menos 1',
+                        'number.max': 'El orden de complejidad no puede ser más de 10',
+                    }),
+            })
+                .xor('evaluaciones', 'ordenComplejidad')
+                .messages({
+                    'object.xor': 'Debe incluir solo "evaluaciones" u "ordenComplejidad", pero no ambos.',
+                })
+        )
+        .min(1)
+        .messages({
+            'array.base': 'El informe curricular debe ser un arreglo',
+            'array.min': 'Debe haber al menos un informe curricular',
         }),
     apuntesDescargados: joi.number()
         .default(0)
@@ -276,11 +359,11 @@ export const perfilAcademicoUpdateValidation = joi.object({
             "array.min": "Debe incluir al menos un ID de apunte.",
         })
 })
-    .or("rutUser", "asignaturasInteres", "semestreActual", "apuntesSubidos", "apuntesDescargados", "reputacion", "metodosEstudiosPreferidos", "apuntesIDs")
+    .or("rutUser", "asignaturasCursantes", "asignaturasInteres", "semestreActual", "apuntesSubidos", "apuntesDescargados", "informeCurricular", "reputacion", "metodosEstudiosPreferidos", "apuntesIDs")
     .unknown(false)
     .messages({
         'object.unknown': 'No se permiten propiedades adicionales en el cuerpo de la solicitud',
-        'object.missing': 'Debe proporcionar al menos uno de los campos: rutUser, asignaturasInteres, semestreActual, apuntesSubidos, apuntesDescargados, reputacion, metodosEstudiosPreferidos o apuntesIDs',
+        'object.missing': 'Debe proporcionar al menos uno de los campos: rutUser, asignaturasCursantes, asignaturasInteres, semestreActual, apuntesSubidos, apuntesDescargados, informeCurricular, reputacion, metodosEstudiosPreferidos o apuntesIDs',
     });
 
 export const busquedaApuntesValidation = joi.object({

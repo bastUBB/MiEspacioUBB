@@ -40,7 +40,7 @@ const apunteSchema = new mongoose.Schema({
         required: true,
         cast: false
     },
-    valoracion: [{
+    valoracion: {
         cantidadValoraciones: {
             type: Number,
             cast: false,
@@ -51,7 +51,7 @@ const apunteSchema = new mongoose.Schema({
             cast: false,
             default: 0
         }
-    }],
+    },
     visualizaciones: {
         type: Number,
         cast: false,

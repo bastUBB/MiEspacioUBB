@@ -111,7 +111,7 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
               }`}
             >
               <BarChart3 className="w-4 h-4" />
-              <span>Progreso</span>
+              <span>Estadísticas</span>
             </button>
             <a href="#" className="flex items-center space-x-2 text-gray-600 hover:text-purple-600 transition-all hover:scale-105 cursor-pointer font-medium">
               <Compass className="w-4 h-4" />

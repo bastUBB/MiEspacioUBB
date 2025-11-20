@@ -8,8 +8,6 @@ import SearchSection from '../components/seccionBusqueda';
 import RecommendationsSection from '../components/seccionRecomendacion';
 import Sidebar from '../components/sidebar';
 import FloatingActionButton from '../components/botonAccionFlotante';
-import NoteView from '../components/noteView';
-import { formatDateToLocal } from '../helpers/dateFormatter.helper';
 import SubirApunteModal from '../components/SubirApunteModal';
 import { obtenerApuntesMasValoradosService, obtenerApuntesMasVisualizadosService, obtenerAsignaturasConMasApuntesService } from '../services/apunte.service';
 import { obtenerMisApuntesByRutService } from '../services/apunte.service';
@@ -20,8 +18,6 @@ function Home() {
   const { user, loading: userLoading } = useContext(UserContext);
   const navigate = useNavigate();
   
-  const [currentView, setCurrentView] = useState('dashboard');
-  const [selectedNote, setSelectedNote] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Estados para datos del backend
@@ -366,31 +362,14 @@ function Home() {
   };
 
   const handleNoteClick = (note) => {
-    // Transformar datos para vista detallada
-    const noteData = {
-      id: note.id,
-      title: note.title,
-      subject: note.subject,
-      author: {
-        name: note.author,
-        reputation: userStats.reputation || 500,
-      },
-      uploadDate: note.fullData?.fechaSubida ? formatDateToLocal(note.fullData.fechaSubida) : 'Fecha desconocida',
-      downloads: note.downloads,
-      rating: note.rating,
-      totalRatings: note.fullData?.valoracion?.cantidadValoraciones || 0,
-      content: note.preview || 'Contenido no disponible',
-      tags: note.tags,
-      comments: [] // Los comentarios se cargarían del backend
-    };
-
-    setSelectedNote(noteData);
-    setCurrentView('note');
-  };
-
-  const handleBackToDashboard = () => {
-    setCurrentView('dashboard');
-    setSelectedNote(null);
+    const apunteId = note.id || note._id;
+    
+    if (!apunteId) {
+      toast.error('Error: ID de apunte no encontrado');
+      return;
+    }
+    
+    navigate(`/estudiante/apunte/${apunteId}`);
   };
 
   const handleModalClose = () => {
@@ -476,11 +455,6 @@ function Home() {
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
       </div>
     );
-  }
-
-  // Vista de nota individual
-  if (currentView === 'note' && selectedNote) {
-    return <NoteView note={selectedNote} onBack={handleBackToDashboard} />;
   }
 
   // Vista principal del dashboard

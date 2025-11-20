@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Apunte from '../models/apunte.model.js';
 import User from '../models/user.model.js';
 import Reporte from '../models/reporte.model.js';
@@ -9,8 +10,11 @@ import { asignarBucket } from '../helpers/asignarBucket.helper.js';
 import { normalizarNombres } from '../helpers/ayudasVarias.helper.js';
 import { asignarApunteToPerfilAcademicoService, poseePerfilAcademicoService, sumarDescargaApunteService } from './perfilAcademico.service.js';
 import { realizarComentarioService, realizarComentarioRespuestaService } from "./comentario.service.js";
+import { registrarSubidaApunteService, registrarComentarioService, registrarRespuestaComentarioService,
+    registrarValoracionApunteService } from './historial.service.js';
 import { notificacionNuevoComentarioApunteService, notificacionRespuestaComentarioService,
     notificacionNuevaValoracionApunteService } from "./notificacion.service.js";
+
 
 export async function uploadApunteService(file, body) {
     try {
@@ -101,6 +105,14 @@ export async function createApunteService(body, file) {
 
             if (perfilError) return [null, perfilError];
         }
+
+        const [historialCreado, historialError] = await registrarSubidaApunteService(
+            rutAutorSubida,
+            nuevoApunte._id
+        );
+
+        if (historialError) return [null, historialError];
+
         return [nuevoApunte, null];
 
     } catch (error) {
@@ -109,7 +121,118 @@ export async function createApunteService(body, file) {
     }
 }
 
-// export async function obtenerURLFirmadaApunteService(apunteID) - > asociar con minio service
+export async function getApunteByIdService(apunteID) {
+    try {
+        const apunteExist = await Apunte.findById(apunteID)
+            .populate({
+                path: 'comentarios',
+                populate: {
+                    path: 'rutAutor',
+                    select: 'nombreCompleto'
+                }
+            })
+            .populate({
+                path: 'valoracion',
+                select: 'promedioValoracion cantidadValoraciones'
+            });
+
+        if (!apunteExist) return [null, 'El apunte solicitado no existe'];
+
+        if (apunteExist.estado !== 'Activo') return [null, 'El apunte solicitado no está disponible'];
+
+        // Obtener información del autor
+        const autorInfo = await User.findOne({ rut: apunteExist.rutAutorSubida })
+            .select('nombreCompleto rut');
+
+        if (autorInfo) {
+            // Obtener perfil académico del autor
+            const perfilAutor = await perfilAcademico.findOne({ rutUser: apunteExist.rutAutorSubida });
+            
+            if (perfilAutor) {
+                apunteExist._doc.autorInfo = {
+                    nombreCompleto: autorInfo.nombreCompleto,
+                    nivel: perfilAutor.nivel || 'Bronce',
+                    reputacion: perfilAutor.reputacion || 0,
+                    totalApuntes: perfilAutor.apuntesIDs?.length || 0,
+                    totalValoraciones: perfilAutor.cantidadValoraciones || 0
+                };
+            } else {
+                apunteExist._doc.autorInfo = {
+                    nombreCompleto: autorInfo.nombreCompleto,
+                    nivel: 'Bronce',
+                    reputacion: 0,
+                    totalApuntes: 0,
+                    totalValoraciones: 0
+                };
+            }
+        }
+
+        // Transformar comentarios para incluir el nombre del autor
+        if (apunteExist.comentarios && apunteExist.comentarios.length > 0) {
+            apunteExist._doc.comentarios = apunteExist.comentarios.map(comentario => ({
+                _id: comentario._id,
+                contenido: comentario.contenido,
+                fecha: comentario.fecha,
+                likes: comentario.likes || 0,
+                autor: comentario.rutAutor?.nombreCompleto || 'Usuario desconocido'
+            }));
+        }
+
+        return [apunteExist, null];
+    } catch (error) {
+        console.error('Error al obtener el apunte por ID:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function obtenerLinkDescargaApunteURLFirmadaService(apunteID) {
+    try {
+        console.log('Obteniendo URL firmada para apunte:', apunteID);
+        const apunteExist = await Apunte.findById(apunteID);
+
+        if (!apunteExist) {
+            console.log('Apunte no encontrado:', apunteID);
+            return [null, 'El apunte solicitado no existe'];
+        }
+
+        if (apunteExist.estado !== 'Activo') {
+            console.log('Apunte no está activo:', apunteExist.estado);
+            return [null, 'El apunte solicitado no está disponible'];
+        }
+
+        console.log('Información del archivo:', {
+            objectName: apunteExist.archivo?.objectName,
+            bucket: apunteExist.archivo?.bucket,
+            nombreOriginal: apunteExist.archivo?.nombreOriginal
+        });
+
+        if (!apunteExist.archivo || !apunteExist.archivo.objectName || !apunteExist.archivo.bucket) {
+            console.log('Archivo incompleto en el apunte');
+            return [null, 'El apunte no tiene un archivo asociado'];
+        }
+
+        // Importar el servicio de MinIO dinámicamente para evitar dependencias circulares
+        const minioService = await import('./minio.service.js');
+        
+        // Generar URL firmada con tiempo de expiración de 2 horas, usando el bucket del apunte
+        const [fileInfo, urlError] = await minioService.generarUrlFirmadaService(
+            apunteExist.archivo.objectName, 
+            7200,
+            apunteExist.archivo.bucket
+        );
+
+        if (urlError) {
+            console.log('Error al generar URL firmada:', urlError);
+            return [null, urlError];
+        }
+
+        console.log('URL firmada generada exitosamente');
+        return [fileInfo, null];
+    } catch (error) {
+        console.error('Error al obtener URL firmada del apunte:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
 
 export async function updateApunteService(query, body) {
     try {
@@ -271,6 +394,13 @@ export async function crearComentarioApunteService(apunteID, dataComentario) {
 
         await apunteExist.save();
 
+        const [historialCreado, historialError] = await registrarComentarioService(
+            dataComentario.rutAutor,
+            apunteID
+        );
+
+        if (historialError) return [null, historialError];
+
         return [comentarioCreado, null];
 
     } catch (error) {
@@ -303,6 +433,13 @@ export async function crearRespuestaComentarioApunteService(apunteID, comentario
 
         await apunteExist.save();
 
+        const [historialCreado, historialError] = await registrarRespuestaComentarioService(
+            dataComentario.rutAutor,
+            apunteID
+        );
+
+        if (historialError) return [null, historialError];
+
         return [comentarioCreado, null];
 
     } catch (error) {
@@ -318,7 +455,7 @@ export async function realizarValoracionApunteService(apunteID, rutUserValoracio
 
         if (errorPerfil) return [null, errorPerfil];
 
-        const perfilUsuarioValoracion = await perfilAcademico.findOne({ rut: rutUserValoracion });
+        const perfilUsuarioValoracion = await perfilAcademico.findOne({ rutUser: rutUserValoracion });
 
         const yaValorado = perfilUsuarioValoracion.apuntesValorados.some(v => v.apunteID.toString() === apunteID.toString());
 
@@ -328,24 +465,28 @@ export async function realizarValoracionApunteService(apunteID, rutUserValoracio
 
         if (!apunteExist) return [null, 'El apunte que se desea valorar no existe'];
 
-        const valoracionActualApunte = apunteExist.valoracion.promedioValoracion || 0;
+        const valoracionActualApunte = apunteExist.valoracion?.promedioValoracion || 0;
+        const cantidadActualValoraciones = apunteExist.valoracion?.cantidadValoraciones || 0;
 
-        const cantidadActualValoraciones = apunteExist.valoracion.cantidadValoraciones || 0;
+        // Calcular nuevo promedio: (suma total anterior + nueva valoración) / (cantidad + 1)
+        const sumaTotalAnterior = valoracionActualApunte * cantidadActualValoraciones;
+        const nuevaValoracionApunte = (sumaTotalAnterior + nuevaValoracion) / (cantidadActualValoraciones + 1);
 
-        const nuevaValoracionApunte = ((valoracionActualApunte + nuevaValoracion)) / (cantidadActualValoraciones + 1);
+        // Asegurarnos de que valoracion sea un objeto
+        if (!apunteExist.valoracion) {
+            apunteExist.valoracion = {};
+        }
 
         apunteExist.valoracion.promedioValoracion = nuevaValoracionApunte;
-
         apunteExist.valoracion.cantidadValoraciones = cantidadActualValoraciones + 1;
 
         // añadir la nueva informacion al perfil academico del usuario que esta realizando la valoracion
         perfilUsuarioValoracion.apuntesValorados.push({
-            apunteID: apunteID,
+            apunteID: mongoose.Types.ObjectId.createFromHexString(apunteID),
             valoracion: nuevaValoracion,
         });
 
         await perfilUsuarioValoracion.save();
-
         await apunteExist.save();
 
         const [notificacionCreada, errorNotificacion] = await notificacionNuevaValoracionApunteService(
@@ -355,6 +496,13 @@ export async function realizarValoracionApunteService(apunteID, rutUserValoracio
         );
 
         if (errorNotificacion) return [null, errorNotificacion];
+
+        const [historialCreado, historialError] = await registrarValoracionApunteService(
+            rutUserValoracion,
+            apunteID
+        );
+
+        if (historialError) return [null, historialError];
 
         return [apunteExist, null];
 
@@ -462,6 +610,75 @@ export async function obtenerAsignaturasConMasApuntesService() {
         return [asignaturasConMasApuntes, null];
     } catch (error) {
         console.error('Error al obtener las asignaturas con más apuntes:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function obtenerValoracionApunteService(apunteID, rutUsuarioValoracion) {
+    try {
+        const apunteExist = await Apunte.findById(apunteID);
+
+        if (!apunteExist) return [null, 'El apunte solicitado no existe'];
+
+        const perfilUsuarioValoracion = await perfilAcademico.findOne({ rutUser: rutUsuarioValoracion });
+
+        if (!perfilUsuarioValoracion) return [null, 'El usuario no posee perfil académico'];
+
+        const valoracionUsuario = perfilUsuarioValoracion.apuntesValorados.find(
+            v => v.apunteID.toString() === apunteID.toString()
+        );
+
+        if (!valoracionUsuario) return [null, 'El usuario no ha valorado este apunte'];
+
+        return [valoracionUsuario.valoracion, null];
+    } catch (error) {
+        console.error('Error al obtener la valoración del apunte:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function actualizarValoracionApunteService(apunteID, rutUserValoracion, nuevaValoracion) {
+    try {
+        const perfilUsuarioValoracion = await perfilAcademico.findOne({ rutUser: rutUserValoracion });
+
+        if (!perfilUsuarioValoracion) return [null, 'El usuario no posee perfil académico'];
+
+        const valoracionIndex = perfilUsuarioValoracion.apuntesValorados.findIndex(
+            v => v.apunteID.toString() === apunteID.toString()
+        );
+
+        if (valoracionIndex === -1) return [null, 'El usuario no ha valorado este apunte previamente'];
+
+        const valoracionAnterior = perfilUsuarioValoracion.apuntesValorados[valoracionIndex].valoracion;
+
+        const apunteExist = await Apunte.findById(apunteID);
+
+        if (!apunteExist) return [null, 'El apunte que se desea actualizar no existe'];
+
+        // Recalcular el promedio de valoración
+        const cantidadValoraciones = apunteExist.valoracion?.cantidadValoraciones || 0;
+        const promedioActual = apunteExist.valoracion?.promedioValoracion || 0;
+
+        // Restar la valoración anterior y agregar la nueva
+        const sumaTotal = (promedioActual * cantidadValoraciones) - valoracionAnterior + nuevaValoracion;
+        const nuevoPromedio = sumaTotal / cantidadValoraciones;
+
+        // Asegurarnos de que valoracion sea un objeto
+        if (!apunteExist.valoracion) {
+            apunteExist.valoracion = {};
+        }
+
+        apunteExist.valoracion.promedioValoracion = nuevoPromedio;
+
+        // Actualizar la valoración en el perfil del usuario
+        perfilUsuarioValoracion.apuntesValorados[valoracionIndex].valoracion = nuevaValoracion;
+
+        await perfilUsuarioValoracion.save();
+        await apunteExist.save();
+
+        return [apunteExist, null];
+    } catch (error) {
+        console.error('Error al actualizar la valoración del apunte:', error);
         return [null, 'Error interno del servidor'];
     }
 }

@@ -8,8 +8,11 @@ const historialUsuario = new mongoose.Schema({
         cast: false
     },
     acciones: [{
+        //subida apunte, descarga apunte, realizar comentario, responder comentario, creacion perfil academico, valorar apunte, 
+        // editar campos de perfil de usuario, editar campos de perfil academico
+
         tipoAccion: {
-            type: String, //subida apunte, descarga apunte, realizar comentario, responder comentario, creacion perfil academico, valorar apunte, 
+            type: String,  
             cast: false
         },
         fechaAccion: {

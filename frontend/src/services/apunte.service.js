@@ -118,7 +118,7 @@ export async function crearRespuestaComentarioApunteService(apunteID, respuestaD
 export async function realizarValoracionApunteService(apunteID, rutUsuarioValoracion, valoracion) {
     try {
         const response = await axios.post('/api/apuntes/valoracion/detail', { 
-            rutUsuarioValoracion,
+            rutUserValoracion: rutUsuarioValoracion,
             valoracion 
         }, {
             params: { apunteID }
@@ -127,6 +127,38 @@ export async function realizarValoracionApunteService(apunteID, rutUsuarioValora
         return response.data;
     } catch (error) {
         console.error("Error al realizar valoración de apunte:", error);
+        throw error;
+    }  
+}
+
+export async function obtenerValoracionUsuarioApunteService(apunteID, rutUsuario) {
+    try {
+        const response = await axios.get('/api/apuntes/valoracion/detail', {
+            params: { 
+                apunteID,
+                rutAutorSubida: rutUsuario
+            }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al obtener valoración del usuario:", error);
+        throw error;
+    }
+}
+
+export async function actualizarValoracionApunteService(apunteID, rutUsuarioValoracion, valoracion) {
+    try {
+        const response = await axios.put('/api/apuntes/valoracion/detail', { 
+            rutUserValoracion: rutUsuarioValoracion,
+            valoracion 
+        }, {
+            params: { apunteID }
+        });    
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al actualizar valoración de apunte:", error);
         throw error;
     }  
 }
@@ -173,6 +205,62 @@ export async function obtenerAsignaturasConMasApuntesService() {
         return response.data;
     } catch (error) {
         console.error("Error al obtener asignaturas con más apuntes:", error);
+        throw error;
+    }
+}
+
+export async function obtenerApuntePorIdService(apunteID) {
+    try {
+        const response = await axios.get('/api/apuntes/detail', {
+            params: { apunteID }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al obtener apunte por ID:", error);
+        throw error;
+    }
+}
+
+export async function busquedaApuntesMismoAutorService(rutUser, asignaturaApunteActual) {
+    try {
+        const response = await axios.post('/api/apuntes/busqueda-mismo-autor', 
+            { asignaturaApunteActual },
+            {
+                params: { rutUser }
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Error al buscar apuntes del mismo autor:", error);
+        throw error;
+    }
+}
+
+export async function busquedaApuntesMismaAsignaturaService(rutUser, asignaturaApunteActual) {
+    try {
+        const response = await axios.post('/api/apuntes/busqueda-misma-asignatura', 
+            { asignaturaApunteActual },
+            {
+                params: { rutUser }
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Error al buscar apuntes de la misma asignatura:", error);
+        throw error;
+    }
+}
+
+export async function obtenerLinkDescargaApunteURLFirmadaService(apunteID) {
+    try {
+        const response = await axios.get('/api/apuntes/url-descarga/detail', {
+            params: { apunteID }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al obtener link de descarga del apunte:", error);
         throw error;
     }
 }

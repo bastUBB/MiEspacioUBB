@@ -13,11 +13,17 @@ import {
     sumarVisualizacionUsuariosApunte,
     crearComentarioApunte,
     crearRespuestaComentarioApunte,
+    getApunteById,
     realizarValoracionApunte,
+    actualizarValoracionApunte,
     crearReporteApunte,
     obtenerApuntesMasValorados,
     obtenerApuntesMasVisualizados,
-    obtenerAsignaturasConMasApuntes
+    obtenerAsignaturasConMasApuntes,
+    busquedaApuntesMismoAutor,
+    busquedaApuntesMismaAsignatura,
+    obtenerValoracionApunte,
+    obtenerLinkDescargaApunte
 } from '../controllers/apunte.controller.js';
 
 const router = Router();
@@ -37,14 +43,20 @@ router
     .delete('/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), deleteApunte)
     .get('/apuntes-rut/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), obtenerMisApuntesByRut)
     .get('/', authorizeRoles('admin'), getAllApuntes)
+    .get('/valoracion/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), obtenerValoracionApunte)
+    .get('/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), getApunteById)
+    .get('/url-descarga/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), obtenerLinkDescargaApunte)
     .get('/mas-valorados/', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), obtenerApuntesMasValorados)
     .get('/mas-visualizados/', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), obtenerApuntesMasVisualizados)
     .get('/asignaturas-mas-apuntes/', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), obtenerAsignaturasConMasApuntes)
+    .post('/busqueda-mismo-autor', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), busquedaApuntesMismoAutor)
+    .post('/busqueda-misma-asignatura', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), busquedaApuntesMismaAsignatura)
     .post('/visualizacion-invitado/detail', sumarVisualizacionInvitadoApunte)
     .post('/visualizacion-usuario/detail', authenticateJWT, sumarVisualizacionUsuariosApunte)
     .post('/crear-comentario/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), crearComentarioApunte)
     .post('/respuesta-comentario/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), crearRespuestaComentarioApunte)
     .post('/valoracion/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), realizarValoracionApunte)
+    .put('/valoracion/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), actualizarValoracionApunte)
     .post('/reporte/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), crearReporteApunte);
     
 router.use(handleMulterError);

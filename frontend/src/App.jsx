@@ -21,6 +21,7 @@ import Profile from './pages/Profile.jsx'
 import ExplorarApuntes from './pages/ExplorarApuntes.jsx'
 import MisApuntes from './pages/MisApuntes.jsx'
 import Estadisticas from './pages/Estadisticas.jsx'
+import DetalleApunte from './pages/DetalleApunte.jsx'
 
 import { Toaster } from 'react-hot-toast'
 import { UserContextProvider } from './context/userContextProvider.jsx'
@@ -128,6 +129,7 @@ function App() {
             <Route path="explorar" element={<ExplorarApuntes />} />
             <Route path="mis-apuntes" element={<MisApuntes />} />
             <Route path="estadisticas" element={<Estadisticas />} />
+            <Route path="apunte/:id" element={<DetalleApunte />} />
           </Route>
 
           <Route path="/unauthorized" element={<UnauthorizedPage />} />

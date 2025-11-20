@@ -6,17 +6,26 @@ import {
     obtenerMisApuntesByRutService,
     sumarVisualizacionInvitadoApunteService,
     sumarVisualizacionUsuariosApunteService,
+    getApunteByIdService,
     crearComentarioApunteService,
     crearRespuestaComentarioApunteService,
     realizarValoracionApunteService,
+    actualizarValoracionApunteService,
     crearReporteApunteService,
     obtenerApuntesMasValoradosService,
     apuntesMasVisualizadosService,
-    obtenerAsignaturasConMasApuntesService
+    obtenerAsignaturasConMasApuntesService,
+    obtenerValoracionApunteService,
+    obtenerLinkDescargaApunteURLFirmadaService
 } from '../services/apunte.service.js';
+import { 
+    busquedaApuntesMismoAutorService,
+    busquedaApuntesMismaAsignaturaService 
+} from '../services/perfilAcademico.service.js';
 import { comentarioCreateValidation } from '../validations/comentario.validation.js';
 import { apunteQueryValidation, apunteCreateValidation, apunteUpdateValidation, visualizacionValidation,
     valoracionValidation } from '../validations/apunte.validation.js';
+import { busquedaApuntesValidation, perfilAcademicoQueryValidation } from '../validations/perfilAcademico.validation.js';
 import { reporteCreateValidation } from '../validations/reporte.validation.js';
 import { handleSuccess, handleErrorClient, handleErrorServer, handleMulterError } from '../handlers/responseHandlers.js';
 
@@ -35,6 +44,23 @@ export async function createApunte(req, res) {
         return handleSuccess(res, 201, 'Apunte creado exitosamente', nuevoApunte);
     } catch (error) {
         console.error('Error al crear apunte:', error);
+        return handleErrorServer(res, 500, 'Error interno del servidor');
+    }
+}
+
+export async function getApunteById(req, res) {
+    try {
+        const { value: valueQuery, error: errorQuery } = apunteQueryValidation.validate(req.query);
+
+        if (errorQuery) return handleErrorClient(res, 400, 'ID de apunte inválido', errorQuery.message);
+
+        const [apunteExist, getError] = await getApunteByIdService(valueQuery.apunteID);
+
+        if (getError) return handleErrorServer(res, 500, 'Error al obtener apunte', getError);
+
+        return handleSuccess(res, 200, 'Apunte obtenido exitosamente', apunteExist);
+    } catch (error) {
+        console.error('Error al obtener apunte:', error);
         return handleErrorServer(res, 500, 'Error interno del servidor');
     }
 }
@@ -84,8 +110,6 @@ export async function obtenerMisApuntesByRut(req, res) {
         if (errorQuery) return handleErrorClient(res, 400, 'RUT de usuario inválido', errorQuery.message);
 
         const [misApuntes, misApuntesError] = await obtenerMisApuntesByRutService(valueQuery.rutAutorSubida);    
-
-        if (misApuntes.length === 0) return handleSuccess(res, 200, 'No tienes apuntes subidos', []);
 
         if (misApuntesError) return handleErrorServer(res, 500, 'Error al obtener mis apuntes', misApuntesError);
 
@@ -197,7 +221,7 @@ export async function realizarValoracionApunte(req, res) {
 
         if (errorValoracion) return handleErrorClient(res, 400, 'Datos de valoración inválidos', errorValoracion.message);
 
-        const [apunteActualizado, valoracionError] = await realizarValoracionApunteService(valueID.apunteID, valueValoracion.rutUsuarioValoracion, valueValoracion.valoracion);
+        const [apunteActualizado, valoracionError] = await realizarValoracionApunteService(valueID.apunteID, valueValoracion.rutUserValoracion, valueValoracion.valoracion);
 
         if (valoracionError) return handleErrorServer(res, 500, 'Error al realizar valoración', valoracionError);
 
@@ -273,4 +297,101 @@ export async function obtenerAsignaturasConMasApuntes(req, res) {
         console.error('Error al obtener asignaturas con más apuntes:', error);
         return handleErrorServer(res, 500, 'Error interno del servidor');
     }   
+}
+
+export async function busquedaApuntesMismoAutor(req, res) {
+    try {
+        const { value: valueQuery, error: errorQuery } = perfilAcademicoQueryValidation.validate(req.query);
+
+        if (errorQuery) return handleErrorClient(res, 400, "Error de validacion", errorQuery.message);
+
+        const { value: valueBusqueda, error: errorBusqueda } = busquedaApuntesValidation.validate(req.body);
+
+        if (errorBusqueda) return handleErrorClient(res, 400, "Error de validacion", errorBusqueda.message);
+
+        const [apuntes, errorApuntes] = await busquedaApuntesMismoAutorService(valueQuery.rutUser, valueBusqueda.asignaturaApunteActual);
+
+        if (errorApuntes) return handleErrorServer(res, 400, "Error al buscar apuntes del mismo autor", errorApuntes);
+
+        return handleSuccess(res, 200, "Apuntes del mismo autor obtenidos con éxito", apuntes);
+    } catch (error) {
+        console.error('Error al buscar apuntes del mismo autor:', error);
+        return handleErrorServer(res, 500, "Error interno del servidor");
+    }
+}
+
+export async function busquedaApuntesMismaAsignatura(req, res) {
+    try {
+        const { value: valueQuery, error: errorQuery } = perfilAcademicoQueryValidation.validate(req.query);
+
+        if (errorQuery) return handleErrorClient(res, 400, "Error de validacion", errorQuery.message);
+
+        const { value: valueBusqueda, error: errorBusqueda } = busquedaApuntesValidation.validate(req.body);
+
+        if (errorBusqueda) return handleErrorClient(res, 400, "Error de validacion", errorBusqueda.message);
+
+        const [apuntes, errorApuntes] = await busquedaApuntesMismaAsignaturaService(valueQuery.rutUser, valueBusqueda.asignaturaApunteActual);
+
+        if (errorApuntes) return handleErrorServer(res, 400, "Error al buscar apuntes de la misma asignatura", errorApuntes);
+
+        return handleSuccess(res, 200, "Apuntes de la misma asignatura obtenidos con éxito", apuntes);
+    } catch (error) {
+        console.error('Error al buscar apuntes de la misma asignatura:', error);
+        return handleErrorServer(res, 500, "Error interno del servidor");
+    }
+}
+
+export async function obtenerValoracionApunte(req, res) {
+    try {
+        const { value: valueQuery, error: errorQuery } = apunteQueryValidation.validate(req.query);
+
+        if (errorQuery) return handleErrorClient(res, 400, 'Parámetros inválidos', errorQuery.message);
+
+        const [valoracion, getError] = await obtenerValoracionApunteService(valueQuery.apunteID, valueQuery.rutAutorSubida);
+
+        if (getError) return handleErrorServer(res, 404, 'Valoración no encontrada', getError);
+
+        return handleSuccess(res, 200, 'Valoración del apunte obtenida exitosamente', { valoracion });
+    } catch (error) {
+        console.error('Error al obtener valoración del apunte:', error);
+        return handleErrorServer(res, 500, 'Error interno del servidor');
+    }
+}
+
+export async function actualizarValoracionApunte(req, res) {
+    try {
+        const { value: valueID, error: errorID } = apunteQueryValidation.validate(req.query);
+
+        if (errorID) return handleErrorClient(res, 400, 'ID de apunte inválido', errorID.message);
+
+        const { value: valueValoracion, error: errorValoracion } = valoracionValidation.validate(req.body);
+
+        if (errorValoracion) return handleErrorClient(res, 400, 'Datos de valoración inválidos', errorValoracion.message);
+
+        const [apunteActualizado, valoracionError] = await actualizarValoracionApunteService(valueID.apunteID, valueValoracion.rutUserValoracion, valueValoracion.valoracion);
+
+        if (valoracionError) return handleErrorServer(res, 500, 'Error al actualizar valoración', valoracionError);
+
+        return handleSuccess(res, 200, 'Valoración actualizada exitosamente', apunteActualizado);
+    } catch (error) {
+        console.error('Error al actualizar valoración:', error);
+        return handleErrorServer(res, 500, 'Error interno del servidor');
+    }
+}
+
+export async function obtenerLinkDescargaApunte(req, res) {
+    try {
+        const { value: valueQuery, error: errorQuery } = apunteQueryValidation.validate(req.query);
+
+        if (errorQuery) return handleErrorClient(res, 400, 'ID de apunte inválido', errorQuery.message);
+
+        const [fileInfo, urlError] = await obtenerLinkDescargaApunteURLFirmadaService(valueQuery.apunteID);
+
+        if (urlError) return handleErrorServer(res, 500, 'Error al obtener URL de descarga', urlError);
+
+        return handleSuccess(res, 200, 'URL de descarga obtenida exitosamente', fileInfo);
+    } catch (error) {
+        console.error('Error al obtener URL de descarga:', error);
+        return handleErrorServer(res, 500, 'Error interno del servidor');
+    }
 }

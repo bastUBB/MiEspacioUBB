@@ -1,0 +1,924 @@
+import { useState, useEffect, useContext } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { UserContext } from '../context/userContextProvider';
+import { toast } from 'react-hot-toast';
+import {
+  BookOpen, Download, Star, Eye, Calendar, Tag, User, MessageSquare,
+  ThumbsUp, Share2, Bookmark, Clock, Award, TrendingUp, Send,
+  ChevronRight, FileText, Heart, MoreVertical, Flag, Users, Loader2, ChevronLeft
+} from 'lucide-react';
+import Header from '../components/header';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
+import { 
+  sumarVisualizacionUsuariosApunteService,
+  realizarValoracionApunteService,
+  obtenerValoracionUsuarioApunteService,
+  actualizarValoracionApunteService,
+  crearComentarioApunteService,
+  obtenerApuntePorIdService,
+  busquedaApuntesMismoAutorService,
+  busquedaApuntesMismaAsignaturaService,
+  obtenerLinkDescargaApunteURLFirmadaService
+} from '../services/apunte.service';
+
+// Configurar worker de PDF.js usando CDN
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+
+function DetalleApunte() {
+  const { id } = useParams();
+  const { user } = useContext(UserContext);
+  const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(true);
+  const [apunte, setApunte] = useState(null);
+  const [userRating, setUserRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comentario, setComentario] = useState('');
+  const [comentarios, setComentarios] = useState([]);
+  const [otrosApuntesAutor, setOtrosApuntesAutor] = useState([]);
+  const [apuntesRelacionados, setApuntesRelacionados] = useState([]);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [visualizacionRegistrada, setVisualizacionRegistrada] = useState(false);
+  
+  // Estados para el visor PDF
+  const [pdfUrl, setPdfUrl] = useState(null);
+  const [numPages, setNumPages] = useState(null);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [loadingPdf, setLoadingPdf] = useState(false);
+  const [pdfError, setPdfError] = useState(null);
+  const [downloadUrl, setDownloadUrl] = useState(null);
+
+  useEffect(() => {
+    // Validar que el ID existe y no está undefined
+    if (!id || id === 'undefined') {
+      console.error('ID de apunte inválido:', id);
+      toast.error('ID de apunte inválido');
+      navigate('/estudiante/home');
+      return;
+    }
+
+    // Solo cargar si no hemos cargado ya (evitar doble llamada)
+    if (!apunte) {
+      loadApunte();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  const loadApunte = async () => {
+    try {
+      setLoading(true);
+
+      // Obtener apunte por ID
+      const responseApunte = await obtenerApuntePorIdService(id);
+            
+      // El backend devuelve 'status' no 'state'
+      if (responseApunte.status === 'Success' && responseApunte.data) {
+        const apunteData = responseApunte.data;
+        setApunte(apunteData);
+        
+        // Cargar comentarios del apunte (ya vienen desde el backend)
+        if (apunteData.comentarios && apunteData.comentarios.length > 0) {
+          setComentarios(apunteData.comentarios);
+        } else {
+          setComentarios([]);
+        }
+
+        // Cargar valoración del usuario si está logueado
+        if (user && user.rut) {
+          try {
+            const responseValoracion = await obtenerValoracionUsuarioApunteService(id, user.rut);
+            if (responseValoracion.status === 'Success' && responseValoracion.data) {
+              setUserRating(responseValoracion.data.valoracion);
+            } else {
+              setUserRating(0);
+            }
+          } catch {
+            // El usuario no ha valorado aún
+            setUserRating(0);
+          }
+        } else {
+          setUserRating(0);
+        }
+
+        // Registrar visualización solo una vez y si el usuario está logueado
+        if (user && user.rut && !visualizacionRegistrada) {
+          try {
+            await sumarVisualizacionUsuariosApunteService(id, user.rut);
+            setVisualizacionRegistrada(true);
+          } catch {
+            console.log('No se pudo registrar la visualización');
+          }
+        }
+
+        // Buscar otros apuntes del mismo autor (solo si no están cargados)
+        if (otrosApuntesAutor.length === 0 && user?.rut) {
+          try {
+            const responseOtrosAutor = await busquedaApuntesMismoAutorService(
+              user.rut, 
+              apunteData.asignatura
+            );
+            if (responseOtrosAutor.status === 'Success' && responseOtrosAutor.data) {
+              setOtrosApuntesAutor(responseOtrosAutor.data);
+            }
+          } catch {
+            console.log('No se pudieron cargar otros apuntes del autor');
+          }
+        }
+
+        // Buscar apuntes de la misma asignatura (solo si no están cargados)
+        if (apuntesRelacionados.length === 0 && user?.rut) {
+          try {
+            const responseRelacionados = await busquedaApuntesMismaAsignaturaService(
+              user.rut,
+              apunteData.asignatura
+            );
+            if (responseRelacionados.status === 'Success' && responseRelacionados.data) {
+              setApuntesRelacionados(responseRelacionados.data);
+            }
+          } catch {
+            console.log('No se pudieron cargar apuntes relacionados');
+          }
+        }
+
+        // Cargar URL del PDF para visualización
+        loadPdfUrl();
+      } else {
+        console.error('Respuesta sin éxito:', responseApunte);
+        toast.error(`No se pudo cargar el apunte: ${responseApunte.message || 'Error desconocido'}`);
+        navigate('/estudiante/home');
+      }
+    } catch (error) {
+      console.error('Error al cargar apunte:', error);
+      const errorMsg = error.response?.data?.message || error.message || 'Error desconocido';
+      toast.error(`Error al cargar el apunte: ${errorMsg}`);
+      navigate('/estudiante/home');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRating = async (rating) => {
+    if (!user) {
+      toast.error('Debes iniciar sesión para valorar');
+      return;
+    }
+
+    try {
+      let response;
+      
+      // Si ya tiene valoración, actualizar; si no, crear nueva
+      if (userRating > 0) {
+        response = await actualizarValoracionApunteService(id, user.rut, rating);
+        if (response.status === 'Success') {
+          setUserRating(rating);
+          toast.success('Valoración actualizada exitosamente');
+          // Recargar apunte para actualizar promedio
+          loadApunte();
+        }
+      } else {
+        response = await realizarValoracionApunteService(id, user.rut, rating);
+        if (response.status === 'Success') {
+          setUserRating(rating);
+          toast.success('Valoración registrada exitosamente');
+          // Recargar apunte para actualizar promedio
+          loadApunte();
+        }
+      }
+    } catch (err) {
+      console.error('Error en valoración:', err);
+      if (err.response?.data?.message?.includes('ya valoró')) {
+        toast.error('Ya has valorado este apunte');
+      } else {
+        toast.error('Error al registrar valoración');
+      }
+    }
+  };
+
+  const handleDownload = async () => {
+    try {
+      if (!downloadUrl) {
+        toast.error('URL de descarga no disponible');
+        return;
+      }
+
+      // Crear un enlace temporal y hacer click para descargar
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = apunte.archivo?.nombreOriginal || 'apunte.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success('Descarga iniciada');
+    } catch (error) {
+      console.error('Error al descargar:', error);
+      toast.error('Error al descargar el archivo');
+    }
+  };
+
+  const loadPdfUrl = async () => {
+    try {
+      setLoadingPdf(true);
+      setPdfError(null);
+      
+      console.log('Obteniendo URL del PDF para apunte:', id);
+      const response = await obtenerLinkDescargaApunteURLFirmadaService(id);
+      console.log('Respuesta del servidor:', response);
+      
+      if (response.status === 'Success' && response.data) {
+        console.log('URL del PDF obtenida:', response.data.url);
+        setPdfUrl(response.data.url);
+        setDownloadUrl(response.data.url);
+      } else {
+        console.error('Respuesta sin éxito:', response);
+        setPdfError('No se pudo obtener el PDF');
+        toast.error('Error al cargar el PDF');
+      }
+    } catch (error) {
+      console.error('Error al obtener URL del PDF:', error);
+      console.error('Detalles del error:', error.response?.data || error.message);
+      setPdfError(error.response?.data?.message || 'Error al cargar el PDF');
+      toast.error('Error al cargar el PDF');
+    } finally {
+      setLoadingPdf(false);
+    }
+  };
+
+  const onDocumentLoadSuccess = ({ numPages }) => {
+    console.log('PDF cargado exitosamente. Páginas:', numPages);
+    setNumPages(numPages);
+    setPageNumber(1);
+  };
+
+  const onDocumentLoadError = (error) => {
+    console.error('Error al cargar documento PDF:', error);
+    setPdfError('Error al renderizar el PDF');
+  };
+
+  const changePage = (offset) => {
+    setPageNumber(prevPageNumber => prevPageNumber + offset);
+  };
+
+  const previousPage = () => {
+    changePage(-1);
+  };
+
+  const nextPage = () => {
+    changePage(1);
+  };
+
+  const handleBookmark = () => {
+    setIsBookmarked(!isBookmarked);
+    toast.success(isBookmarked ? 'Eliminado de favoritos' : 'Agregado a favoritos');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+        <Header />
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Cargando apunte...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!apunte) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+        <Header />
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <p className="text-gray-600">No se encontró el apunte</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const handleHomeClick = () => navigate('/estudiante/home');
+  const handleProfileClick = () => navigate('/estudiante/profile');
+  const handleExplorarClick = () => navigate('/estudiante/explorar');
+  const handleMisApuntesClick = () => navigate('/estudiante/mis-apuntes');
+  const handleEstadisticasClick = () => navigate('/estudiante/estadisticas');
+
+  const handleNavigateToProfile = (rut) => {
+    navigate(`/estudiante/profile/${rut}`);
+  };
+
+  const handleComentario = async () => {
+    if (!comentario.trim()) {
+      toast.error('Escribe un comentario');
+      return;
+    }
+
+    try {
+      const comentarioData = {
+        rutAutor: user.rut,
+        contenido: comentario
+      };
+      await crearComentarioApunteService(id, comentarioData);
+      setComentario('');
+      toast.success('Comentario publicado');
+      loadApunte();
+    } catch {
+      toast.error('Error al publicar comentario');
+    }
+  };
+
+  const getNivelColor = (nivel) => {
+    const colores = {
+      'Oro': 'from-yellow-400 to-yellow-600',
+      'Plata': 'from-gray-300 to-gray-500',
+      'Bronce': 'from-amber-600 to-amber-800'
+    };
+    return colores[nivel] || 'from-gray-400 to-gray-600';
+  };
+
+  const formatBytes = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  return (
+    <div className="min-h-screen bg-[#FAFAFA]">
+      <Header 
+        notificationCount={0}
+        notifications={[]}
+        onHomeClick={handleHomeClick}
+        onProfileClick={handleProfileClick}
+        onExplorarClick={handleExplorarClick}
+        onMisApuntesClick={handleMisApuntesClick}
+        onEstadisticasClick={handleEstadisticasClick}
+      />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* Hero Section */}
+        <div className="relative overflow-hidden bg-white rounded-3xl shadow-sm border border-gray-100 mb-8 group hover:shadow-md transition-all duration-300">
+          <div className="absolute top-0 left-0 w-full h-48 bg-gradient-to-br from-purple-700 via-purple-600 to-purple-500"></div>
+          
+          <div className="relative px-8 pb-8 pt-20">
+            <div className="flex flex-col md:flex-row items-start md:items-end gap-6">
+              <div className="relative">
+                <div className="w-24 h-24 bg-white rounded-2xl p-1 shadow-xl ring-4 ring-white">
+                  <div className="w-full h-full bg-gradient-to-br from-purple-100 to-indigo-100 rounded-xl flex items-center justify-center text-purple-600">
+                    <BookOpen className="w-12 h-12" />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex-1">
+                <div className="flex flex-wrap items-baseline gap-3 mb-2">
+                  <h1 className="text-3xl font-bold text-white tracking-tight">{apunte.nombre}</h1>
+                  <span className="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-xs font-semibold rounded-full border border-white/30 flex items-center gap-1">
+                    <Tag className="w-3 h-3" />
+                    {apunte.tipoApunte}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-4 text-white/90 text-sm font-semibold">
+                  <div className="flex items-center gap-1.5">
+                    <BookOpen className="w-4 h-4" />
+                    {apunte.asignatura}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <User className="w-4 h-4" />
+                    {apunte.autorSubida}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4" />
+                    {new Date(apunte.fechaSubida).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Left Column - Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            
+            {/* Descripción y Contenido */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Descripción</h2>
+                <p className="text-gray-700 leading-relaxed text-base mb-6">
+                  {apunte.descripcion}
+                </p>
+
+                {/* Autores */}
+                {apunte.autores && apunte.autores.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      Autores del Contenido
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {apunte.autores.map((autor, index) => (
+                        <span key={index} className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium border border-indigo-100">
+                          {autor}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Etiquetas */}
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <Tag className="w-4 h-4" />
+                    Etiquetas
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {apunte.etiquetas.map((etiqueta, index) => (
+                      <span key={index} className="px-4 py-2 bg-purple-50 text-purple-700 rounded-full text-sm font-medium border border-purple-100 hover:bg-purple-100 transition-colors cursor-pointer">
+                        #{etiqueta}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Área de Lectura del Documento */}
+              <div className="border-t border-gray-100 bg-gray-50 p-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-purple-600" />
+                    Vista Previa del Documento
+                  </h3>
+                  <span className="text-sm text-gray-500">{formatBytes(apunte.archivo.tamano)}</span>
+                </div>
+                
+                {/* Visor de PDF */}
+                <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200">
+                  {loadingPdf && (
+                    <div className="flex flex-col items-center justify-center p-12">
+                      <Loader2 className="w-12 h-12 text-purple-600 animate-spin mb-4" />
+                      <p className="text-gray-600">Cargando documento PDF...</p>
+                    </div>
+                  )}
+                  
+                  {pdfError && !loadingPdf && (
+                    <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-gray-200 rounded-xl">
+                      <FileText className="w-16 h-16 text-red-300 mx-auto mb-4" />
+                      <p className="text-red-600 mb-2 font-medium">Error al cargar el documento</p>
+                      <p className="text-sm text-gray-500">{pdfError}</p>
+                      <button 
+                        onClick={loadPdfUrl}
+                        className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                      >
+                        Reintentar
+                      </button>
+                    </div>
+                  )}
+                  
+                  {!loadingPdf && !pdfError && pdfUrl && (
+                    <>
+                      <div className="flex items-center justify-center bg-gray-100 p-4 overflow-x-auto">
+                        <Document
+                          file={pdfUrl}
+                          onLoadSuccess={onDocumentLoadSuccess}
+                          onLoadError={onDocumentLoadError}
+                          loading={
+                            <div className="flex flex-col items-center justify-center p-12">
+                              <Loader2 className="w-8 h-8 text-purple-600 animate-spin mb-3" />
+                              <span className="text-gray-600">Cargando PDF...</span>
+                            </div>
+                          }
+                          error={
+                            <div className="text-center p-8">
+                              <FileText className="w-12 h-12 text-red-300 mx-auto mb-3" />
+                              <p className="text-red-600 font-medium mb-2">Error al cargar el PDF</p>
+                              <p className="text-sm text-gray-500">Verifica que el archivo existe y es un PDF válido</p>
+                            </div>
+                          }
+                        >
+                          <Page 
+                            pageNumber={pageNumber}
+                            width={Math.min(window.innerWidth * 0.55, 750)}
+                            renderTextLayer={false}
+                            renderAnnotationLayer={false}
+                            loading={
+                              <div className="flex items-center justify-center p-12">
+                                <Loader2 className="w-6 h-6 text-purple-600 animate-spin" />
+                              </div>
+                            }
+                          />
+                        </Document>
+                      </div>
+                      
+                      {/* Controles de navegación del PDF */}
+                      {numPages && numPages > 1 && (
+                        <div className="flex items-center justify-between bg-gray-50 px-6 py-4 border-t border-gray-200">
+                          <button
+                            onClick={previousPage}
+                            disabled={pageNumber <= 1}
+                            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                            Anterior
+                          </button>
+                          
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="text-gray-600">Página</span>
+                            <input
+                              type="number"
+                              min="1"
+                              max={numPages}
+                              value={pageNumber}
+                              onChange={(e) => {
+                                const page = parseInt(e.target.value);
+                                if (page >= 1 && page <= numPages) {
+                                  setPageNumber(page);
+                                }
+                              }}
+                              className="w-16 px-2 py-1 text-center border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            />
+                            <span className="text-gray-600">de {numPages}</span>
+                          </div>
+                          
+                          <button
+                            onClick={nextPage}
+                            disabled={pageNumber >= numPages}
+                            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                          >
+                            Siguiente
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                      
+                      <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
+                        <p className="text-sm text-gray-500 text-center">
+                          {apunte.archivo.nombreOriginal}
+                        </p>
+                      </div>
+                    </>
+                  )}
+                  
+                  {!loadingPdf && !pdfError && !pdfUrl && (
+                    <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-gray-200 rounded-xl">
+                      <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-600 mb-2">No se pudo cargar la vista previa</p>
+                      <p className="text-sm text-gray-400">{apunte.archivo.nombreOriginal}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Sección de Comentarios */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-6 border-b border-gray-50">
+                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5 text-purple-600" />
+                  Comentarios ({comentarios.length})
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">Comparte tu opinión sobre este apunte</p>
+              </div>
+
+              <div className="p-6">
+                {/* Escribir Comentario */}
+                <div className="mb-6">
+                  <div className="flex gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                      {user?.nombreCompleto?.charAt(0) || 'U'}
+                    </div>
+                    <div className="flex-1">
+                      <textarea
+                        value={comentario}
+                        onChange={(e) => setComentario(e.target.value)}
+                        placeholder="Escribe un comentario..."
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none transition-all"
+                        rows="3"
+                      />
+                      <div className="flex justify-end mt-3">
+                        <button
+                          onClick={handleComentario}
+                          className="px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all flex items-center gap-2 font-medium shadow-sm hover:shadow-md"
+                        >
+                          <Send className="w-4 h-4" />
+                          Publicar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Lista de Comentarios */}
+                <div className="space-y-4">
+                  {comentarios.length === 0 ? (
+                    <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-xl">
+                      <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-500 font-medium">Aún no hay comentarios</p>
+                      <p className="text-sm text-gray-400 mt-1">Sé el primero en comentar este apunte</p>
+                    </div>
+                  ) : (
+                    comentarios.map((com) => (
+                      <div key={com._id} className="group bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-all border border-transparent hover:border-purple-100">
+                        <div className="flex gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                            {com.autor.charAt(0)}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-semibold text-gray-900">{com.autor}</span>
+                              <span className="text-xs text-gray-400">•</span>
+                              <span className="text-xs text-gray-500">
+                                {new Date(com.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                              </span>
+                            </div>
+                            <p className="text-gray-700 text-sm leading-relaxed mb-2">{com.contenido}</p>
+                            <div className="flex items-center gap-4">
+                              <button className="flex items-center gap-1 text-xs text-gray-500 hover:text-purple-600 transition-colors">
+                                <ThumbsUp className="w-3.5 h-3.5" />
+                                <span>{com.likes}</span>
+                              </button>
+                              <button className="text-xs text-gray-500 hover:text-purple-600 transition-colors">
+                                Responder
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Right Column - Sidebar */}
+          <div className="space-y-6">
+            
+            {/* Acciones Principales */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-8">
+              <button
+                onClick={handleDownload}
+                className="w-full py-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-purple-800 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 mb-3 group"
+              >
+                <Download className="w-5 h-5 group-hover:animate-bounce" />
+                Descargar PDF
+              </button>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={handleBookmark}
+                  className={`py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
+                    isBookmarked
+                      ? 'bg-purple-100 text-purple-700 border-2 border-purple-200'
+                      : 'bg-gray-100 text-gray-700 border-2 border-transparent hover:bg-gray-200'
+                  }`}
+                >
+                  <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
+                  Guardar
+                </button>
+                <button className="py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-all flex items-center justify-center gap-2 border-2 border-transparent">
+                  <Share2 className="w-4 h-4" />
+                  Compartir
+                </button>
+              </div>
+            </div>
+
+            {/* Sistema de Valoración */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <Star className="w-4 h-4 text-yellow-500" />
+                Valoración
+              </h3>
+              
+              <div className="text-center mb-6">
+                <div className="text-4xl font-bold text-gray-900 mb-1">
+                  {apunte.valoracion?.promedioValoracion?.toFixed(1) || '0.0'}
+                </div>
+                <div className="flex items-center justify-center gap-1 mb-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`w-5 h-5 ${
+                        star <= Math.round(apunte.valoracion?.promedioValoracion || 0)
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'text-gray-300'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className="text-sm text-gray-500">
+                  {apunte.valoracion?.cantidadValoraciones || 0} valoraciones
+                </p>
+              </div>
+
+              <div className="border-t border-gray-100 pt-6">
+                <p className="text-sm font-medium text-gray-700 mb-3 text-center">Tu valoración</p>
+                <div className="flex items-center justify-center gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      onClick={() => handleRating(star)}
+                      className="transition-transform hover:scale-125"
+                    >
+                      <Star
+                        className={`w-8 h-8 transition-colors ${
+                          star <= (hoverRating || userRating)
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-300 hover:text-yellow-200'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Estadísticas */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Estadísticas</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Eye className="w-4 h-4" />
+                    <span className="text-sm">Visualizaciones</span>
+                  </div>
+                  <span className="font-bold text-gray-900">{apunte.visualizaciones?.toLocaleString() || 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Download className="w-4 h-4" />
+                    <span className="text-sm">Descargas</span>
+                  </div>
+                  <span className="font-bold text-gray-900">{apunte.descargas?.toLocaleString() || 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <MessageSquare className="w-4 h-4" />
+                    <span className="text-sm">Comentarios</span>
+                  </div>
+                  <span className="font-bold text-gray-900">{comentarios.length}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Información del Autor */}
+            <div className="bg-gradient-to-br from-white to-purple-50 rounded-2xl shadow-sm border border-purple-100 p-6 overflow-hidden relative">
+              <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${getNivelColor(apunte.autorInfo.nivel)} opacity-10 rounded-full -mr-16 -mt-16`}></div>
+              
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 flex items-center gap-2 relative z-10">
+                <Award className="w-4 h-4 text-purple-600" />
+                Autor del Apunte
+              </h3>
+              
+              <div className="relative z-10">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className={`w-16 h-16 bg-gradient-to-br ${getNivelColor(apunte.autorInfo.nivel)} rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg`}>
+                    {apunte.autorInfo.nombreCompleto.charAt(0)}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-bold text-gray-900">{apunte.autorInfo.nombreCompleto}</h4>
+                      <span className={`px-2 py-0.5 bg-gradient-to-r ${getNivelColor(apunte.autorInfo.nivel)} text-white text-xs font-bold rounded-full`}>
+                        {apunte.autorInfo.nivel}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 mb-2">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span className="text-sm font-bold text-gray-900">{apunte.autorInfo.reputacion}</span>
+                      <span className="text-xs text-gray-500">({apunte.autorInfo.totalValoraciones} valoraciones)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-purple-100">
+                    <div className="text-2xl font-bold text-purple-600">{apunte.autorInfo.totalApuntes}</div>
+                    <div className="text-xs text-gray-600">Apuntes subidos</div>
+                  </div>
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-purple-100">
+                    <div className="text-2xl font-bold text-purple-600">{apunte.autorInfo.totalValoraciones}</div>
+                    <div className="text-xs text-gray-600">Valoraciones</div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => handleNavigateToProfile(apunte.rutAutorSubida)}
+                  className="w-full py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all font-medium text-sm flex items-center justify-center gap-2 group"
+                >
+                  Ver Perfil
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
+            </div>
+
+            {/* Reportar */}
+            <button className="w-full py-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all flex items-center justify-center gap-2 border border-red-100 font-medium text-sm">
+              <Flag className="w-4 h-4" />
+              Reportar Apunte
+            </button>
+
+          </div>
+        </div>
+
+        {/* Otros Apuntes del Autor */}
+        <div className="mt-12">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Otros apuntes de {apunte.autorSubida.split(' ')[0]}</h2>
+              <p className="text-sm text-gray-500 mt-1">Más contenido del mismo autor</p>
+            </div>
+            <button className="text-purple-600 hover:text-purple-700 font-medium text-sm flex items-center gap-1 group">
+              Ver todos
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {otrosApuntesAutor.map((apunteItem) => (
+              <div
+                key={apunteItem._id}
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                onClick={() => navigate(`/estudiante/apunte/${apunteItem._id}`)}
+              >
+                <div className="h-2 bg-gradient-to-r from-purple-600 to-indigo-600"></div>
+                <div className="p-6">
+                  <h3 className="font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors line-clamp-2">
+                    {apunteItem.nombre}
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">{apunteItem.asignatura}</p>
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-1 text-gray-500">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-medium">{apunteItem.valoracion?.promedioValoracion?.toFixed(1) || '0.0'}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-gray-500">
+                      <Eye className="w-4 h-4" />
+                      <span>{apunteItem.visualizaciones}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Apuntes Relacionados */}
+        <div className="mt-12 mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Apuntes Relacionados</h2>
+              <p className="text-sm text-gray-500 mt-1">Contenido similar que te puede interesar</p>
+            </div>
+            <button className="text-purple-600 hover:text-purple-700 font-medium text-sm flex items-center gap-1 group">
+              Ver más
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {apuntesRelacionados.map((apunteItem) => (
+              <div
+                key={apunteItem._id}
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                onClick={() => navigate(`/estudiante/apunte/${apunteItem._id}`)}
+              >
+                <div className="h-2 bg-gradient-to-r from-indigo-600 to-purple-600"></div>
+                <div className="p-6">
+                  <h3 className="font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors line-clamp-2">
+                    {apunteItem.nombre}
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-1">{apunteItem.asignatura}</p>
+                  <p className="text-xs text-gray-500 mb-4">por {apunteItem.autor}</p>
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-1 text-gray-500">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-medium">{apunteItem.valoracion?.promedioValoracion?.toFixed(1) || '0.0'}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-gray-500">
+                      <Eye className="w-4 h-4" />
+                      <span>{apunteItem.visualizaciones}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+export default DetalleApunte;

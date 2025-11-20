@@ -5,24 +5,20 @@ import {
     getUserByRut,
     getAllUsers,
     updateUser,
-    deleteUser
+    deleteUser,
+    obtenerAñoIngresoAplicacion
 } from '../controllers/user.controller.js';
 
 const router = Router();
 
-// router.use(authenticateJWT);
+router.use(authenticateJWT);
 
 router
     .post("/", createUser)
     .get("/detail", authorizeRoles("admin", "docente"), getUserByRut)
     .get("/", authorizeRoles("admin"), getAllUsers)
-    .patch("/detail", authorizeRoles("admin"), updateUser)
-    .delete("/detail", authorizeRoles("admin"), deleteUser);
+    .patch("/detail", authorizeRoles("admin", "docente", "estudiante", "ayudante"), updateUser)
+    .delete("/detail", authorizeRoles("admin"), deleteUser)
+    .get("/year-entry", authorizeRoles("admin", "docente", "estudiante", "ayudante"), obtenerAñoIngresoAplicacion);
 
 export default router;
-
-/*
-TODO
-- Pensar en como los usuarios podrán buscar (qué parámetros utilizará en la búsqueda) a otros usuarios
-- Pensar en cómo administrar permisos de autorización correctamente
-*/

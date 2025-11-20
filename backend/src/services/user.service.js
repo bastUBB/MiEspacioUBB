@@ -1,6 +1,6 @@
 import User from "../models/user.model.js";
 import { comparePassword, hashPassword } from '../helpers/bcrypt.helper.js';
-
+import { registrarActualizacionPerfilService } from "./historial.service.js";
 export async function createUserService(dataUser) {
     try {
         const { rut, email } = dataUser;
@@ -93,6 +93,10 @@ export async function updateUserService(query, body) {
 
         if (!userUpdated) return [null, 'Error al actualizar el usuario'];
 
+        const [, errorHistorial] = await registrarActualizacionPerfilService(userUpdated.rut);
+
+        if (errorHistorial) return [null, 'Error al registrar el historial de actualizaciones del perfil'];
+
         return [userUpdated, null];
     } catch (error) {
         console.error('Error al actualizar el usuario:', error);
@@ -115,6 +119,25 @@ export async function deleteUserService(query) {
         return [userDeleted, null];
     } catch (error) {
         console.error('Error al eliminar el usuario:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function obtenerAñoIngresoAplicacionService(query) {
+    try {
+        const { rut } = query;
+
+        const userExist = await User.findOne({ rut });
+
+        if (!userExist) return [null, 'Usuario no encontrado'];
+
+        const fechaCreacion = userExist.createdAt;
+
+        const añoIngreso = fechaCreacion.getFullYear();
+
+        return [añoIngreso, null];
+    } catch (error) {
+        console.error('Error al obtener el año de ingreso del usuario:', error);
         return [null, 'Error interno del servidor'];
     }
 }

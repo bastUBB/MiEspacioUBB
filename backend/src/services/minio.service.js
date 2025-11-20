@@ -35,13 +35,23 @@ export async function uploadFileService(bucketName, objectName, buffer, metadata
     }
 }
 
-export async function generarUrlFirmadaService(filePath, expiresIn = 7200) {
+export async function generarUrlFirmadaService(objectName, expiresIn = 7200, bucketName = null) {
     try {
-        const stats = await minioClient.statObject(BUCKETS.APUNTES, filePath);
+        // Si no se proporciona bucket, mostrar error
+        if (!bucketName) {
+            console.error('Error: No se proporcionó nombre de bucket');
+            return [null, 'No se proporcionó el bucket del archivo'];
+        }
+
+        const targetBucket = bucketName;
+
+        console.log(`Generando URL firmada - Bucket: ${targetBucket}, Object: ${objectName}`);
+        const stats = await minioClient.statObject(targetBucket, objectName);
+        console.log('Stats del archivo:', { size: stats.size, contentType: stats.metaData['content-type'] });
 
         const signedUrl = await minioClient.presignedGetObject(
-            BUCKETS.APUNTES,
-            filePath,
+            targetBucket,
+            objectName,
             expiresIn  // 2 horas por defecto para dar tiempo a previsualizar y descargar
         );
 
@@ -50,7 +60,7 @@ export async function generarUrlFirmadaService(filePath, expiresIn = 7200) {
             metadata: {
                 size: stats.size,
                 contentType: stats.metaData['content-type'] || 'application/octet-stream',
-                originalName: stats.metaData['x-original-name'] || path.basename(filePath),
+                originalName: stats.metaData['x-original-name'] || path.basename(objectName),
                 lastModified: stats.lastModified,
                 expiresAt: new Date(Date.now() + (expiresIn * 1000)).toISOString()
             }

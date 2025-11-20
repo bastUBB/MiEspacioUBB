@@ -112,6 +112,8 @@ export async function numeroApuntesUser(req, res) {
 
         const [numApuntes, errorNumApuntes] = await numeroApuntesUserService(valueQuery.rutUser);
 
+        if (numApuntes === 0) return handleSuccess(res, 200, "El usuario no tiene apuntes", 0);
+
         if (errorNumApuntes) return handleErrorServer(res, 400, "Error al obtener el número de apuntes del usuario", errorNumApuntes);
         
         return handleSuccess(res, 200, "Número de apuntes obtenido con éxito", numApuntes);

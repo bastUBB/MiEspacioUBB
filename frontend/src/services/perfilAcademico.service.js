@@ -106,3 +106,16 @@ export async function obtenerMayoresContribuidoresService() {
         throw error;
     }
 }
+
+export async function actualizarPerfilAcademicoService(rutUser, perfilData) {
+    try {
+        const response = await axios.patch('/api/perfilAcademico/detail', perfilData, {
+            params: { rutUser }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al actualizar perfil académico:", error);
+        throw error;
+    }
+}

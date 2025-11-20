@@ -3,7 +3,8 @@ import {
     getUserByRutService,
     getAllUsersService,
     updateUserService,
-    deleteUserService
+    deleteUserService,
+    obtenerAñoIngresoAplicacionService
 } from '../services/user.service.js';
 import { userQueryValidation, userCreateValidation, userUpdateValidation } from '../validations/user.validation.js';
 import { handleSuccess, handleErrorClient, handleErrorServer } from '../handlers/responseHandlers.js';
@@ -26,7 +27,7 @@ export async function createUser(req, res) {
 
 export async function getUserByRut(req, res) {
     try {
-        const { value, errorQuery } = userQueryValidation.validate(req.query);
+        const { value, error: errorQuery } = userQueryValidation.validate(req.query);
 
         if (errorQuery) return handleErrorClient(res, 400, "Error de validacion", errorQuery.message);
 
@@ -54,11 +55,11 @@ export async function getAllUsers(req, res) {
 
 export async function updateUser(req, res) {
     try {
-        const { valueQuery, errorQuery } = userQueryValidation.validate(req.query);
+        const { value: valueQuery, error: errorQuery } = userQueryValidation.validate(req.query);
 
         if (errorQuery) return handleErrorClient(res, 400, "Error de validacion", errorQuery.message);
 
-        const { valueBody, errorBody } = userUpdateValidation.validate(req.body);
+        const { value: valueBody, error: errorBody } = userUpdateValidation.validate(req.body);
 
         if (errorBody) return handleErrorClient(res, 400, "Error de validacion", errorBody.message);
 
@@ -74,7 +75,7 @@ export async function updateUser(req, res) {
 
 export async function deleteUser(req, res) {
     try {
-        const { value, errorQuery } = userQueryValidation.validate(req.query);
+        const { value, error: errorQuery } = userQueryValidation.validate(req.query);
 
         if (errorQuery) return handleErrorClient(res, 400, "Error de validacion", errorQuery.message);
 
@@ -83,6 +84,22 @@ export async function deleteUser(req, res) {
         if (errorDeletedUser) return handleErrorServer(res, 404, "Error al eliminar el usuario", errorDeletedUser);
 
         return handleSuccess(res, 200, "Usuario eliminado con éxito", deletedUser);
+    } catch (error) {
+        handleErrorServer(res, 500, "Error interno del servidor", error.message);
+    }
+}
+
+export async function obtenerAñoIngresoAplicacion(req, res) {
+    try {
+        const { value, error: errorQuery } = userQueryValidation.validate(req.query);
+
+        if (errorQuery) return handleErrorClient(res, 400, "Error de validacion", errorQuery.message);
+
+        const [añoIngreso, errorAñoIngreso] = await obtenerAñoIngresoAplicacionService(value);
+
+        if (errorAñoIngreso) return handleErrorServer(res, 404, "Error al obtener el año de ingreso del usuario", errorAñoIngreso);
+
+        return handleSuccess(res, 200, "Año de ingreso obtenido con éxito", { añoIngreso });
     } catch (error) {
         handleErrorServer(res, 500, "Error interno del servidor", error.message);
     }

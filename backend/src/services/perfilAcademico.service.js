@@ -2,6 +2,7 @@ import perfilAcademico from "../models/perfilAcademico.model.js";
 import User from "../models/user.model.js";
 import Asignatura from "../models/asignatura.model.js";
 import Apunte from "../models/apunte.model.js";
+import { registrarCreacionPerfilAcademicoService, registrarActualizacionPerfilAcademicoService } from "./historial.service.js";
 
 export async function createPerfilAcademicoService(dataPerfilAcademico) {
     try {
@@ -34,6 +35,10 @@ export async function createPerfilAcademicoService(dataPerfilAcademico) {
         });
 
         await newPerfilAcademico.save();
+
+        const [historial, errorHistorial] = await registrarCreacionPerfilAcademicoService(rutUser);
+
+        if (errorHistorial) return [null, errorHistorial];
 
         return [newPerfilAcademico, null];
     } catch (error) {
@@ -73,15 +78,15 @@ export async function updatePerfilAcademicoService(query, body) {
 
         if (!perfil) return [null, 'No existe un perfil académico para los datos proporcionados'];
 
-        const { rutUser: rutUserBody, asignaturasInteres } = body; 
-
-        const newUserExist = await User.findOne({ rut: rutUserBody });
-
-        if(!newUserExist) return [null, 'No existe un usuario con el nuevo RUT proporcionado'];
+        const { asignaturasInteres: nuevasAsignaturasInteres, asignaturasCursantes: nuevasAsignaturasCursantes } = body; 
         
-        const asignaturasInteresExist = await Asignatura.find({ nombre: { $in: asignaturasInteres } });
+        const asignaturasInteresExist = await Asignatura.find({ nombre: { $in: nuevasAsignaturasInteres } });
 
-        if (!asignaturasInteresExist || asignaturasInteresExist.length === 0) return [null, 'No existen asignaturas con los nombres proporcionados'];
+        if (!asignaturasInteresExist || asignaturasInteresExist.length === 0) return [null, 'No existen asignaturas de interes con los nombres proporcionados'];
+
+        const asignaturasCursantesExist = await Asignatura.find({ nombre: { $in: nuevasAsignaturasCursantes } });
+
+        if (!asignaturasCursantesExist || asignaturasCursantesExist.length === 0) return [null, 'No existen asignaturas cursantes con los nombres proporcionados'];
 
         const perfilUpdated = await perfilAcademico.findOneAndUpdate(
             { _id: perfil._id },
@@ -90,6 +95,10 @@ export async function updatePerfilAcademicoService(query, body) {
         );
 
         if (!perfilUpdated) return [null, 'No se pudo actualizar el perfil académico'];
+
+        const [historial, errorHistorial] = await registrarActualizacionPerfilAcademicoService(rutUserQuery);
+
+        if (errorHistorial) return [null, errorHistorial];
         
         return [perfilUpdated, null];
     } catch (error) {

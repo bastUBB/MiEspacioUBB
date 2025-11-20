@@ -16,13 +16,14 @@ import {
     apuntesMasVisualizadosService,
     obtenerAsignaturasConMasApuntesService,
     obtenerValoracionApunteService,
-    obtenerLinkDescargaApunteURLFirmadaService
+    obtenerLinkDescargaApunteURLFirmadaService,
+    sumarDescargaApunteUsuarioService
 } from '../services/apunte.service.js';
 import { 
     busquedaApuntesMismoAutorService,
     busquedaApuntesMismaAsignaturaService 
 } from '../services/perfilAcademico.service.js';
-import { comentarioCreateValidation } from '../validations/comentario.validation.js';
+import { comentarioCreateValidation, comentarioRespuestaValidation } from '../validations/comentario.validation.js';
 import { apunteQueryValidation, apunteCreateValidation, apunteUpdateValidation, visualizacionValidation,
     valoracionValidation } from '../validations/apunte.validation.js';
 import { busquedaApuntesValidation, perfilAcademicoQueryValidation } from '../validations/perfilAcademico.validation.js';
@@ -196,7 +197,7 @@ export async function crearRespuestaComentarioApunte(req, res) {
 
         if (errorID) return handleErrorClient(res, 400, 'ID de apunte inválido', errorID.message);
 
-        const { value: valueCreate, error: errorCreate } = comentarioCreateValidation.validate(req.body);
+        const { value: valueCreate, error: errorCreate } = comentarioRespuestaValidation.validate(req.body);
 
         if (errorCreate) return handleErrorClient(res, 400, 'Datos de respuesta inválidos', errorCreate.message);
 
@@ -392,6 +393,25 @@ export async function obtenerLinkDescargaApunte(req, res) {
         return handleSuccess(res, 200, 'URL de descarga obtenida exitosamente', fileInfo);
     } catch (error) {
         console.error('Error al obtener URL de descarga:', error);
+        return handleErrorServer(res, 500, 'Error interno del servidor');
+    }
+}
+
+export async function registrarDescargaApunte(req, res) {
+    try {
+        const { value: valueQuery, error: errorQuery } = apunteQueryValidation.validate(req.query);
+
+        if (errorQuery) return handleErrorClient(res, 400, 'ID de apunte inválido', errorQuery.message);
+
+        const rutUsuario = req.user.rut;
+
+        const [descargaRegistrada, descargaError] = await sumarDescargaApunteUsuarioService(valueQuery.apunteID, rutUsuario);
+
+        if (descargaError) return handleErrorServer(res, 500, 'Error al registrar descarga', descargaError);
+
+        return handleSuccess(res, 200, 'Descarga registrada exitosamente', descargaRegistrada);
+    } catch (error) {
+        console.error('Error al registrar descarga:', error);
         return handleErrorServer(res, 500, 'Error interno del servidor');
     }
 }

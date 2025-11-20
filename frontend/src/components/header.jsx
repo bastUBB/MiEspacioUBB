@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Bell, User, BookOpen, BarChart3, FileText, Home, Compass, X, Check, Settings, LogOut } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 
-const Header = ({ notificationCount = 0, notifications = [], onNotificationClick, onMarkAsRead, onClearAll, onProfileClick, onHomeClick, onExplorarClick, onMisApuntesClick, onEstadisticasClick, onLogout, onConfigClick }) => {
+const Header = ({ notificationCount = 0, notifications = [], onNotificationClick, onMarkAsRead, onClearAll, onProfileClick, onHomeClick, onExplorarClick, onMisApuntesClick, onEstadisticasClick, onLogout }) => {
   const location = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -227,16 +227,6 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
                   >
                     <User className="w-4 h-4" />
                     <span className="font-medium">Mi Perfil</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowProfileMenu(false);
-                      onConfigClick && onConfigClick();
-                    }}
-                    className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 text-gray-700 hover:text-purple-600 border-t border-gray-100"
-                  >
-                    <Settings className="w-4 h-4" />
-                    <span className="font-medium">Configuración</span>
                   </button>
                   <button
                     onClick={() => {

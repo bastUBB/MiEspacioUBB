@@ -18,12 +18,22 @@ const comentarioSchema = new mongoose.Schema({
     },
     Likes:  {
         type: Number,
+        default: 0,
         cast: false
     },
     Dislikes: {
         type: Number,
+        default: 0,
         cast: false
     },
+    usuariosLikes: [{
+        type: String,
+        cast: false
+    }],
+    usuariosDislikes: [{
+        type: String,
+        cast: false
+    }],
     respuestas: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Comentario',

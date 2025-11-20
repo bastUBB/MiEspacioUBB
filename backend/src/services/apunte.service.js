@@ -11,7 +11,7 @@ import { normalizarNombres } from '../helpers/ayudasVarias.helper.js';
 import { asignarApunteToPerfilAcademicoService, poseePerfilAcademicoService, sumarDescargaApunteService } from './perfilAcademico.service.js';
 import { realizarComentarioService, realizarComentarioRespuestaService } from "./comentario.service.js";
 import { registrarSubidaApunteService, registrarComentarioService, registrarRespuestaComentarioService,
-    registrarValoracionApunteService } from './historial.service.js';
+    registrarValoracionApunteService, registrarDescargaApunteService as registrarDescargaHistorialService } from './historial.service.js';
 import { notificacionNuevoComentarioApunteService, notificacionRespuestaComentarioService,
     notificacionNuevaValoracionApunteService } from "./notificacion.service.js";
 
@@ -123,13 +123,7 @@ export async function createApunteService(body, file) {
 export async function getApunteByIdService(apunteID) {
     try {
         const apunteExist = await Apunte.findById(apunteID)
-            .populate({
-                path: 'comentarios',
-                populate: {
-                    path: 'rutAutor',
-                    select: 'nombreCompleto'
-                }
-            })
+            .populate('comentarios')
             .populate({
                 path: 'valoracion',
                 select: 'promedioValoracion cantidadValoraciones'
@@ -139,16 +133,42 @@ export async function getApunteByIdService(apunteID) {
 
         if (apunteExist.estado !== 'Activo') return [null, 'El apunte solicitado no está disponible'];
 
+        // Convertir a objeto plano para evitar problemas con Mongoose
+        const apunteObj = apunteExist.toObject();
+
+        // Obtener información de los autores de los comentarios
+        if (apunteObj.comentarios && apunteObj.comentarios.length > 0) {
+            const comentariosConAutor = await Promise.all(
+                apunteObj.comentarios.map(async (comentario) => {
+                    const autor = await User.findOne({ rut: comentario.rutAutor }).select('nombreCompleto');
+                    
+                    return {
+                        _id: comentario._id,
+                        rutAutor: comentario.rutAutor,
+                        comentario: comentario.comentario,
+                        fechaComentario: comentario.fechaComentario,
+                        Likes: comentario.Likes || 0,
+                        Dislikes: comentario.Dislikes || 0,
+                        respuestas: comentario.respuestas || [],
+                        reportes: comentario.reportes || [],
+                        autorNombre: autor ? autor.nombreCompleto : 'Usuario desconocido'
+                    };
+                })
+            );
+            
+            apunteObj.comentarios = comentariosConAutor;
+        }
+
         // Obtener información del autor
-        const autorInfo = await User.findOne({ rut: apunteExist.rutAutorSubida })
+        const autorInfo = await User.findOne({ rut: apunteObj.rutAutorSubida })
             .select('nombreCompleto rut');
 
         if (autorInfo) {
             // Obtener perfil académico del autor
-            const perfilAutor = await perfilAcademico.findOne({ rutUser: apunteExist.rutAutorSubida });
+            const perfilAutor = await perfilAcademico.findOne({ rutUser: apunteObj.rutAutorSubida });
             
             if (perfilAutor) {
-                apunteExist._doc.autorInfo = {
+                apunteObj.autorInfo = {
                     nombreCompleto: autorInfo.nombreCompleto,
                     nivel: perfilAutor.nivel || 'Bronce',
                     reputacion: perfilAutor.reputacion || 0,
@@ -156,7 +176,7 @@ export async function getApunteByIdService(apunteID) {
                     totalValoraciones: perfilAutor.cantidadValoraciones || 0
                 };
             } else {
-                apunteExist._doc.autorInfo = {
+                apunteObj.autorInfo = {
                     nombreCompleto: autorInfo.nombreCompleto,
                     nivel: 'Bronce',
                     reputacion: 0,
@@ -166,18 +186,7 @@ export async function getApunteByIdService(apunteID) {
             }
         }
 
-        // Transformar comentarios para incluir el nombre del autor
-        if (apunteExist.comentarios && apunteExist.comentarios.length > 0) {
-            apunteExist._doc.comentarios = apunteExist.comentarios.map(comentario => ({
-                _id: comentario._id,
-                contenido: comentario.contenido,
-                fecha: comentario.fecha,
-                likes: comentario.likes || 0,
-                autor: comentario.rutAutor?.nombreCompleto || 'Usuario desconocido'
-            }));
-        }
-
-        return [apunteExist, null];
+        return [apunteObj, null];
     } catch (error) {
         console.error('Error al obtener el apunte por ID:', error);
         return [null, 'Error interno del servidor'];
@@ -229,6 +238,37 @@ export async function obtenerLinkDescargaApunteURLFirmadaService(apunteID) {
         return [fileInfo, null];
     } catch (error) {
         console.error('Error al obtener URL firmada del apunte:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function sumarDescargaApunteUsuarioService(apunteID, rutUsuario) {
+    try {
+        const apunteExist = await Apunte.findById(apunteID);
+
+        if (!apunteExist) return [null, 'El apunte no existe'];
+
+        const userExist = await User.findOne({ rut: rutUsuario });
+
+        if (!userExist) return [null, 'El usuario no existe'];
+
+        // Incrementar contador de descargas del apunte
+        apunteExist.descargas = (apunteExist.descargas || 0) + 1;
+        await apunteExist.save();
+
+        // Registrar en el perfil académico del usuario
+        const [descargasUsuario, errorPerfil] = await sumarDescargaApunteService(rutUsuario);
+
+        if (errorPerfil) return [null, errorPerfil];
+
+        // Registrar en el historial del usuario
+        const [historialCreado, errorHistorial] = await registrarDescargaHistorialService(rutUsuario, apunteID);
+
+        if (errorHistorial) return [null, errorHistorial];
+
+        return [{ descargas: apunteExist.descargas }, null];
+    } catch (error) {
+        console.error('Error al registrar descarga:', error);
         return [null, 'Error interno del servidor'];
     }
 }

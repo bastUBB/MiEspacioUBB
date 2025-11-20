@@ -115,6 +115,32 @@ export async function crearRespuestaComentarioApunteService(apunteID, respuestaD
     }
 }
 
+export async function darLikeComentarioService(comentarioID) {
+    try {
+        const response = await axios.post('/api/comentarios/like/detail', {}, {
+            params: { _id: comentarioID }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al dar like al comentario:", error);
+        throw error;
+    }
+}
+
+export async function darDislikeComentarioService(comentarioID) {
+    try {
+        const response = await axios.post('/api/comentarios/dislike/detail', {}, {
+            params: { _id: comentarioID }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al dar dislike al comentario:", error);
+        throw error;
+    }
+}
+
 export async function realizarValoracionApunteService(apunteID, rutUsuarioValoracion, valoracion) {
     try {
         const response = await axios.post('/api/apuntes/valoracion/detail', { 
@@ -261,6 +287,19 @@ export async function obtenerLinkDescargaApunteURLFirmadaService(apunteID) {
         return response.data;
     } catch (error) {
         console.error("Error al obtener link de descarga del apunte:", error);
+        throw error;
+    }
+}
+
+export async function registrarDescargaApunteService(apunteID) {
+    try {
+        const response = await axios.post('/api/apuntes/descarga/detail', {}, {
+            params: { apunteID }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al registrar descarga del apunte:", error);
         throw error;
     }
 }

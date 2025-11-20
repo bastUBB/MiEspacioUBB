@@ -39,7 +39,7 @@ export async function notificacionNuevoComentarioApunteService(rutUsuarioComenta
 
         await usuarioDestinatario.save();
 
-        return [nuevaNotificacion, apunteID, null];
+        return [nuevaNotificacion, null];
     } catch (error) {
         console.error('Error al crear la notificación:', error);
         return [null, 'Error interno del servidor'];

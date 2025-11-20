@@ -106,6 +106,11 @@ const apunteSchema = new mongoose.Schema({
         ref: 'Comentario',
         cast: false
     }],
+    descargas: {
+        type: Number,
+        cast: false,
+        default: 0
+    },
 }, {
     versionKey: false,
     strict: true
@@ -113,6 +118,3 @@ const apunteSchema = new mongoose.Schema({
 
 const Apunte = mongoose.model('Apunte', apunteSchema);
 export default Apunte;
-
-
-//TODO: Falta agregar campo: comentarios, descargas

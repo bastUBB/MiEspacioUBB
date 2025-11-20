@@ -20,7 +20,11 @@ import {
   obtenerApuntePorIdService,
   busquedaApuntesMismoAutorService,
   busquedaApuntesMismaAsignaturaService,
-  obtenerLinkDescargaApunteURLFirmadaService
+  obtenerLinkDescargaApunteURLFirmadaService,
+  darLikeComentarioService,
+  darDislikeComentarioService,
+  crearRespuestaComentarioApunteService,
+  registrarDescargaApunteService
 } from '../services/apunte.service';
 
 // Configurar worker de PDF.js usando CDN
@@ -41,6 +45,10 @@ function DetalleApunte() {
   const [apuntesRelacionados, setApuntesRelacionados] = useState([]);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [visualizacionRegistrada, setVisualizacionRegistrada] = useState(false);
+  const [respuestaActiva, setRespuestaActiva] = useState(null);
+  const [textoRespuesta, setTextoRespuesta] = useState('');
+  const [userLikesMap, setUserLikesMap] = useState({});
+  const [userDislikesMap, setUserDislikesMap] = useState({});
   
   // Estados para el visor PDF
   const [pdfUrl, setPdfUrl] = useState(null);
@@ -81,6 +89,22 @@ function DetalleApunte() {
         // Cargar comentarios del apunte (ya vienen desde el backend)
         if (apunteData.comentarios && apunteData.comentarios.length > 0) {
           setComentarios(apunteData.comentarios);
+          
+          // Crear mapa de likes/dislikes del usuario
+          if (user && user.rut) {
+            const likesMap = {};
+            const dislikesMap = {};
+            apunteData.comentarios.forEach(com => {
+              if (com.usuariosLikes && com.usuariosLikes.includes(user.rut)) {
+                likesMap[com._id] = true;
+              }
+              if (com.usuariosDislikes && com.usuariosDislikes.includes(user.rut)) {
+                dislikesMap[com._id] = true;
+              }
+            });
+            setUserLikesMap(likesMap);
+            setUserDislikesMap(dislikesMap);
+          }
         } else {
           setComentarios([]);
         }
@@ -219,7 +243,7 @@ function DetalleApunte() {
         return;
       }
 
-      toast.info('Preparando descarga...');
+      const toastId = toast.loading('Preparando descarga...');
 
       // Fetch el archivo y crear un blob para descarga directa
       const response = await fetch(downloadUrl);
@@ -241,7 +265,14 @@ function DetalleApunte() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
-      toast.success('Descarga iniciada');
+      // Registrar la descarga en el backend
+      if (user && user.rut) {
+        await registrarDescargaApunteService(id);
+        // Recargar el apunte para actualizar el contador de descargas
+        loadApunte();
+      }
+      
+      toast.success('Descarga iniciada', { id: toastId });
     } catch (error) {
       console.error('Error al descargar:', error);
       toast.error('Error al descargar el archivo');
@@ -369,13 +400,120 @@ function DetalleApunte() {
         comentario: comentario,
         fechaComentario: fechaComentario
       };
-      await crearComentarioApunteService(id, comentarioData);
-      setComentario('');
-      toast.success('Comentario publicado');
-      loadApunte();
+      const response = await crearComentarioApunteService(id, comentarioData);
+      
+      if (response.status === 'Success') {
+        setComentario('');
+        toast.success('Comentario publicado');
+        loadApunte();
+      } else {
+        toast.error(response.message || 'Error al publicar comentario');
+      }
     } catch (error) {
       console.error('Error al publicar comentario:', error);
-      const errorMessage = error.response?.data?.message || 'Error al publicar comentario';
+      const errorMessage = error.response?.data?.details || error.response?.data?.message || error.message || 'Error al publicar comentario';
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleLike = async (comentarioId) => {
+    if (!user) {
+      toast.error('Debes iniciar sesión para dar like');
+      return;
+    }
+
+    try {
+      const response = await darLikeComentarioService(comentarioId);
+      if (response.status === 'Success') {
+        // Actualizar mapas locales
+        setUserLikesMap(prev => ({ ...prev, [comentarioId]: true }));
+        setUserDislikesMap(prev => {
+          const newMap = { ...prev };
+          delete newMap[comentarioId];
+          return newMap;
+        });
+        toast.success('Like agregado');
+        loadApunte();
+      } else if (response.status === 'Client error') {
+        toast.info(response.details || 'Ya has dado like a este comentario');
+      }
+    } catch (error) {
+      console.error('Error al dar like:', error);
+      const errorMsg = error.response?.data?.details || error.response?.data?.message || 'Error al dar like';
+      toast.error(errorMsg);
+    }
+  };
+
+  const handleDislike = async (comentarioId) => {
+    if (!user) {
+      toast.error('Debes iniciar sesión para dar dislike');
+      return;
+    }
+
+    try {
+      const response = await darDislikeComentarioService(comentarioId);
+      if (response.status === 'Success') {
+        // Actualizar mapas locales
+        setUserDislikesMap(prev => ({ ...prev, [comentarioId]: true }));
+        setUserLikesMap(prev => {
+          const newMap = { ...prev };
+          delete newMap[comentarioId];
+          return newMap;
+        });
+        toast.success('Dislike agregado');
+        loadApunte();
+      } else if (response.status === 'Client error') {
+        toast.info(response.details || 'Ya has dado dislike a este comentario');
+      }
+    } catch (error) {
+      console.error('Error al dar dislike:', error);
+      const errorMsg = error.response?.data?.details || error.response?.data?.message || 'Error al dar dislike';
+      toast.error(errorMsg);
+    }
+  };
+
+  const handleResponder = (comentarioId) => {
+    setRespuestaActiva(comentarioId);
+  };
+
+  const handleCancelarRespuesta = () => {
+    setRespuestaActiva(null);
+    setTextoRespuesta('');
+  };
+
+  const handleEnviarRespuesta = async (comentarioId) => {
+    if (!textoRespuesta.trim()) {
+      toast.error('Escribe una respuesta');
+      return;
+    }
+
+    try {
+      const today = new Date();
+      const day = String(today.getDate()).padStart(2, '0');
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const year = today.getFullYear();
+      const fechaComentario = `${day}-${month}-${year}`;
+
+      const respuestaData = {
+        comentarioPadreID: comentarioId,
+        rutAutor: user.rut,
+        comentario: textoRespuesta,
+        fechaComentario: fechaComentario
+      };
+
+      const response = await crearRespuestaComentarioApunteService(id, respuestaData);
+      
+      if (response.status === 'Success') {
+        setTextoRespuesta('');
+        setRespuestaActiva(null);
+        toast.success('Respuesta publicada');
+        loadApunte();
+      } else {
+        toast.error(response.message || 'Error al publicar respuesta');
+      }
+    } catch (error) {
+      console.error('Error al publicar respuesta:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Error al publicar respuesta';
       toast.error(errorMessage);
     }
   };
@@ -680,26 +818,78 @@ function DetalleApunte() {
                       <div key={com._id} className="group bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-all border border-transparent hover:border-purple-100">
                         <div className="flex gap-3">
                           <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-                            {com.autor.charAt(0)}
+                            {com.autorNombre ? com.autorNombre.charAt(0).toUpperCase() : 'U'}
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-semibold text-gray-900">{com.autor}</span>
+                              <span className="font-semibold text-gray-900">{com.autorNombre || 'Usuario desconocido'}</span>
                               <span className="text-xs text-gray-400">•</span>
                               <span className="text-xs text-gray-500">
-                                {new Date(com.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                                {com.fechaComentario || 'Invalid Date'}
                               </span>
                             </div>
-                            <p className="text-gray-700 text-sm leading-relaxed mb-2">{com.contenido}</p>
+                            <p className="text-gray-700 text-sm leading-relaxed mb-2">{com.comentario}</p>
                             <div className="flex items-center gap-4">
-                              <button className="flex items-center gap-1 text-xs text-gray-500 hover:text-purple-600 transition-colors">
-                                <ThumbsUp className="w-3.5 h-3.5" />
-                                <span>{com.likes}</span>
+                              <button 
+                                onClick={() => handleLike(com._id)}
+                                className={`flex items-center gap-1 text-xs transition-all ${
+                                  userLikesMap[com._id]
+                                    ? 'text-green-600 font-semibold scale-110'
+                                    : 'text-gray-500 hover:text-green-600 hover:scale-105'
+                                }`}
+                              >
+                                <ThumbsUp className={`w-3.5 h-3.5 ${
+                                  userLikesMap[com._id] ? 'fill-green-600' : ''
+                                }`} />
+                                <span>{com.Likes || 0}</span>
                               </button>
-                              <button className="text-xs text-gray-500 hover:text-purple-600 transition-colors">
+                              <button 
+                                onClick={() => handleDislike(com._id)}
+                                className={`flex items-center gap-1 text-xs transition-all ${
+                                  userDislikesMap[com._id]
+                                    ? 'text-red-600 font-semibold scale-110'
+                                    : 'text-gray-500 hover:text-red-600 hover:scale-105'
+                                }`}
+                              >
+                                <ThumbsUp className={`w-3.5 h-3.5 rotate-180 ${
+                                  userDislikesMap[com._id] ? 'fill-red-600' : ''
+                                }`} />
+                                <span>{com.Dislikes || 0}</span>
+                              </button>
+                              <button 
+                                onClick={() => handleResponder(com._id)}
+                                className="text-xs text-gray-500 hover:text-purple-600 transition-colors"
+                              >
                                 Responder
                               </button>
                             </div>
+                            
+                            {/* Formulario de respuesta */}
+                            {respuestaActiva === com._id && (
+                              <div className="mt-3 ml-4 border-l-2 border-purple-200 pl-4">
+                                <textarea
+                                  value={textoRespuesta}
+                                  onChange={(e) => setTextoRespuesta(e.target.value)}
+                                  placeholder="Escribe tu respuesta..."
+                                  className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                                  rows="2"
+                                />
+                                <div className="flex gap-2 mt-2">
+                                  <button
+                                    onClick={() => handleEnviarRespuesta(com._id)}
+                                    className="px-3 py-1 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                                  >
+                                    Enviar
+                                  </button>
+                                  <button
+                                    onClick={handleCancelarRespuesta}
+                                    className="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

@@ -37,7 +37,7 @@ export async function getAllReportesPendientesPorFechaService() {
 
 export async function actualizarEstadoReporteService(reporteID, resolucion) {
     try {
-        const response = await axios.put('/api/reportes/actualizarEstado/detail', 
+        const response = await axios.put('/api/reportes/actualizarEstado/detail',
             { resolucion },
             {
                 params: { _id: reporteID }
@@ -47,6 +47,17 @@ export async function actualizarEstadoReporteService(reporteID, resolucion) {
         return response.data;
     } catch (error) {
         console.error("Error al actualizar estado del reporte:", error);
+        throw error;
+    }
+}
+
+export async function obtenerCantidadReportesPendientesService() {
+    try {
+        const response = await axios.get('/api/reportes/cantidad-pendientes');
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al obtener la cantidad de reportes pendientes:", error);
         throw error;
     }
 }

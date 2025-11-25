@@ -3,7 +3,7 @@ import User from "../models/user.model.js";
 import Apunte from "../models/apunte.model.js";
 import Comentario from "../models/comentario.model.js";
 import perfilAcademico from "../models/perfilAcademico.model.js";
-import { fechaActual}  from "../helpers/ayudasVarias.helper.js";
+import { fechaActual } from "../helpers/ayudasVarias.helper.js";
 
 //subida apunte, descarga apunte, realizar comentario, responder comentario, creacion perfil academico, valorar apunte, 
 // editar campos de perfil de usuario, editar campos de perfil academico
@@ -140,7 +140,7 @@ export async function registrarComentarioService(rutUser, apunteID) {
 
         await nuevoHistorial.save();
 
-        return [nuevoHistorial, null];
+        return [historialUsuario, null];
     } catch (error) {
         console.error('Error al registrar el comentario en el historial:', error);
         return [null, 'Error interno del servidor'];
@@ -353,6 +353,23 @@ export async function registrarActualizacionPerfilAcademicoService(rutUser) {
         return [nuevoHistorial, null];
     } catch (error) {
         console.error('Error al registrar la actualización del perfil académico en el historial:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function getHistorialUsuarioService(rutUser) {
+    try {
+        const userExist = await User.findOne({ rut: rutUser });
+
+        if (!userExist) return [null, 'El usuario no existe'];
+
+        const historialUsuario = await HistorialUsuario.findOne({ rutUser: rutUser });
+
+        if (!historialUsuario) return [null, 'El usuario no tiene historial registrado'];
+
+        return [historialUsuario, null];
+    } catch (error) {
+        console.error('Error al obtener el historial del usuario:', error);
         return [null, 'Error interno del servidor'];
     }
 }

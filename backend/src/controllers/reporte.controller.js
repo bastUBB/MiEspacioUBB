@@ -1,8 +1,9 @@
-import{
+import {
     crearReporteUserService,
     obtenerMisReportesService,
     getAllReportesPendientesPorFechaService,
     actualizarEstadoReporteService,
+    obtenerCantidadReportesPendientesService
 } from '../services/reporte.service.js';
 import { reporteQueryValidation, reporteCreateValidation, reporteUpdateValidation, consultaReportesValidation } from '../validations/reporte.validation.js';
 import { handleSuccess, handleErrorClient, handleErrorServer } from '../handlers/responseHandlers.js';
@@ -44,11 +45,11 @@ export async function getAllReportesPendientesPorFecha(req, res) {
         const [reportesPendientes, errorReportesPendientes] = await getAllReportesPendientesPorFechaService();
 
         if (errorReportesPendientes) return handleErrorServer(res, 400, "Error al obtener los reportes pendientes", errorReportesPendientes);
-        
+
         return handleSuccess(res, 200, "Reportes pendientes obtenidos con éxito", reportesPendientes);
     } catch (error) {
         handleErrorServer(res, 500, "Error interno del servidor", error.message);
-    }   
+    }
 }
 
 export async function actualizarEstadoReporte(req, res) {
@@ -66,7 +67,19 @@ export async function actualizarEstadoReporte(req, res) {
         if (errorReporteActualizado) return handleErrorServer(res, 400, "Error al actualizar el estado del reporte", errorReporteActualizado);
 
         return handleSuccess(res, 200, "Estado del reporte actualizado con éxito", reporteActualizado);
-    } catch (error) { 
+    } catch (error) {
+        handleErrorServer(res, 500, "Error interno del servidor", error.message);
+    }
+}
+
+export async function obtenerCantidadReportesPendientes(req, res) {
+    try {
+        const [cantidadReportesPendientes, errorCantidadReportesPendientes] = await obtenerCantidadReportesPendientesService();
+
+        if (errorCantidadReportesPendientes) return handleErrorServer(res, 400, "Error al obtener la cantidad de reportes pendientes", errorCantidadReportesPendientes);
+
+        return handleSuccess(res, 200, "Cantidad de reportes pendientes obtenida con éxito", cantidadReportesPendientes);
+    } catch (error) {
         handleErrorServer(res, 500, "Error interno del servidor", error.message);
     }
 }

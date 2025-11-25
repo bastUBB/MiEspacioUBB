@@ -25,3 +25,14 @@ export async function actualizarUsuarioService(rut, userData) {
         throw error;
     }
 }
+
+export async function obtenerCantidadUsuariosService() {
+    try {
+        const response = await axios.get('/api/users/cantidad-usuarios');
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al obtener la cantidad de usuarios:", error);
+        throw error;
+    }
+}

@@ -28,7 +28,27 @@ const estadisticaSchema = mongoose.Schema({
     numeroTotalUsuarios: {
         type: Number,
         cast: false
-    }
+    },
+    numeroApuntesSubidos: {
+        type: Number,
+        cast: false
+    },
+    numeroComentarios: {
+        type: Number,
+        cast: false
+    },
+    numeroUsuariosCreados: {
+        type: Number,
+        cast: false
+    },
+    numeroPerfilesAcademicosCreados: {
+        type: Number,
+        cast: false
+    },
+    numeroApuntesValorados: {
+        type: Number,
+        cast: false
+    },
 }, {
     versionKey: false,
     strict: true

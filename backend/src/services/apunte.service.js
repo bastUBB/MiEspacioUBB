@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import Apunte from '../models/apunte.model.js';
+import Comentario from '../models/comentario.model.js';
 import User from '../models/user.model.js';
 import Reporte from '../models/reporte.model.js';
 import Asignatura from '../models/asignatura.model.js';
@@ -10,10 +11,14 @@ import { asignarBucket } from '../helpers/asignarBucket.helper.js';
 import { normalizarNombres } from '../helpers/ayudasVarias.helper.js';
 import { asignarApunteToPerfilAcademicoService, poseePerfilAcademicoService, sumarDescargaApunteService } from './perfilAcademico.service.js';
 import { realizarComentarioService, realizarComentarioRespuestaService } from "./comentario.service.js";
-import { registrarSubidaApunteService, registrarComentarioService, registrarRespuestaComentarioService,
-    registrarValoracionApunteService, registrarDescargaApunteService as registrarDescargaHistorialService } from './historial.service.js';
-import { notificacionNuevoComentarioApunteService, notificacionRespuestaComentarioService,
-    notificacionNuevaValoracionApunteService } from "./notificacion.service.js";
+import {
+    registrarSubidaApunteService, registrarComentarioService, registrarRespuestaComentarioService,
+    registrarValoracionApunteService, registrarDescargaApunteService as registrarDescargaHistorialService
+} from './historial.service.js';
+import {
+    notificacionNuevoComentarioApunteService, notificacionRespuestaComentarioService,
+    notificacionNuevaValoracionApunteService
+} from "./notificacion.service.js";
 
 export async function uploadApunteService(file, body) {
     try {
@@ -136,12 +141,33 @@ export async function getApunteByIdService(apunteID) {
         // Convertir a objeto plano para evitar problemas con Mongoose
         const apunteObj = apunteExist.toObject();
 
-        // Obtener información de los autores de los comentarios
+        // Obtener información de los autores de los comentarios y sus respuestas
         if (apunteObj.comentarios && apunteObj.comentarios.length > 0) {
             const comentariosConAutor = await Promise.all(
                 apunteObj.comentarios.map(async (comentario) => {
                     const autor = await User.findOne({ rut: comentario.rutAutor }).select('nombreCompleto');
-                    
+
+                    // Poblar respuestas si existen
+                    let respuestasPobladas = [];
+                    if (comentario.respuestas && comentario.respuestas.length > 0) {
+                        const respuestasDocs = await Comentario.find({ _id: { $in: comentario.respuestas } });
+
+                        respuestasPobladas = await Promise.all(respuestasDocs.map(async (respuesta) => {
+                            const autorRespuesta = await User.findOne({ rut: respuesta.rutAutor }).select('nombreCompleto');
+                            return {
+                                _id: respuesta._id,
+                                rutAutor: respuesta.rutAutor,
+                                comentario: respuesta.comentario,
+                                fechaComentario: respuesta.fechaComentario,
+                                Likes: respuesta.Likes || 0,
+                                Dislikes: respuesta.Dislikes || 0,
+                                usuariosLikes: respuesta.usuariosLikes || [],
+                                usuariosDislikes: respuesta.usuariosDislikes || [],
+                                autorNombre: autorRespuesta ? autorRespuesta.nombreCompleto : 'Usuario desconocido'
+                            };
+                        }));
+                    }
+
                     return {
                         _id: comentario._id,
                         rutAutor: comentario.rutAutor,
@@ -149,13 +175,15 @@ export async function getApunteByIdService(apunteID) {
                         fechaComentario: comentario.fechaComentario,
                         Likes: comentario.Likes || 0,
                         Dislikes: comentario.Dislikes || 0,
-                        respuestas: comentario.respuestas || [],
+                        usuariosLikes: comentario.usuariosLikes || [],
+                        usuariosDislikes: comentario.usuariosDislikes || [],
+                        respuestas: respuestasPobladas,
                         reportes: comentario.reportes || [],
                         autorNombre: autor ? autor.nombreCompleto : 'Usuario desconocido'
                     };
                 })
             );
-            
+
             apunteObj.comentarios = comentariosConAutor;
         }
 
@@ -166,7 +194,7 @@ export async function getApunteByIdService(apunteID) {
         if (autorInfo) {
             // Obtener perfil académico del autor
             const perfilAutor = await perfilAcademico.findOne({ rutUser: apunteObj.rutAutorSubida });
-            
+
             if (perfilAutor) {
                 apunteObj.autorInfo = {
                     nombreCompleto: autorInfo.nombreCompleto,
@@ -221,10 +249,10 @@ export async function obtenerLinkDescargaApunteURLFirmadaService(apunteID) {
 
         // Importar el servicio de MinIO dinámicamente para evitar dependencias circulares
         const minioService = await import('./minio.service.js');
-        
+
         // Generar URL firmada con tiempo de expiración de 2 horas, usando el bucket del apunte
         const [fileInfo, urlError] = await minioService.generarUrlFirmadaService(
-            apunteExist.archivo.objectName, 
+            apunteExist.archivo.objectName,
             7200,
             apunteExist.archivo.bucket
         );
@@ -342,7 +370,7 @@ export async function obtenerMisApuntesByRutService(rutUser) {
     } catch (error) {
         console.error('Error al obtener mis apuntes:', error);
         return [null, 'Error interno del servidor'];
-    }   
+    }
 }
 
 //para admin
@@ -355,6 +383,19 @@ export async function getAllApuntesService() {
         return [allApuntes, null];
     } catch (error) {
         console.error('Error al obtener todos los apuntes:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function obtenerCantidadApuntesService() {
+    try {
+        const cantidadApuntes = await Apunte.find();
+
+        if (!cantidadApuntes || cantidadApuntes.length === 0) return [null, 'No hay apuntes registrados en la BD'];
+
+        return [cantidadApuntes.length, null];
+    } catch (error) {
+        console.error('Error al obtener la cantidad de apuntes:', error);
         return [null, 'Error interno del servidor'];
     }
 }
@@ -397,7 +438,10 @@ export async function sumarVisualizacionUsuariosApunteService(apunteID, rutUsuar
 
         const esDueño = apunte.rutAutorSubida === rutUsuario;
 
-        if (esDueño) return [null, "El autor del apunte no puede sumar visualizaciones a su propio apunte"];
+        // Si es el dueño, no sumamos visualización pero retornamos éxito para evitar error 500 en frontend
+        if (esDueño) {
+            return [apunte, null];
+        }
 
         apunte.visualizaciones += 1;
 
@@ -461,23 +505,30 @@ export async function crearRespuestaComentarioApunteService(apunteID, comentario
 
         if (errorComentario) return [null, errorComentario];
 
-        //Crear notificación para el autor del comentario padre
-        const [notificacionCreada, errorNotificacion] = await notificacionRespuestaComentarioService(
-            rutAutorPadre,
-            apunteExist.rutAutorSubida,
-            apunteID
-        );
+        //Crear notificación para el autor del comentario padre (no bloqueante)
+        try {
+            await notificacionRespuestaComentarioService(
+                rutAutorPadre,
+                apunteExist.rutAutorSubida,
+                apunteID
+            );
+        } catch (notifError) {
+            console.error('Error al crear notificación de respuesta:', notifError);
+        }
 
         apunteExist.comentarios.push(comentarioCreado._id);
 
         await apunteExist.save();
 
-        const [historialCreado, historialError] = await registrarRespuestaComentarioService(
-            dataComentario.rutAutor,
-            apunteID
-        );
-
-        if (historialError) return [null, historialError];
+        // Registrar historial (no bloqueante)
+        try {
+            await registrarRespuestaComentarioService(
+                dataComentario.rutAutor,
+                apunteID
+            );
+        } catch (histError) {
+            console.error('Error al registrar historial de respuesta:', histError);
+        }
 
         return [comentarioCreado, null];
 
@@ -533,20 +584,32 @@ export async function realizarValoracionApunteService(apunteID, rutUserValoracio
         await perfilUsuarioValoracion.save();
         await apunteExist.save();
 
-        const [notificacionCreada, errorNotificacion] = await notificacionNuevaValoracionApunteService(
-            apunteExist.rutAutorSubida,
-            rutUserValoracion,
-            apunteID
-        );
+        // Intentar crear notificación (no debe bloquear si falla)
+        try {
+            const [notificacionCreada, errorNotificacion] = await notificacionNuevaValoracionApunteService(
+                apunteExist.rutAutorSubida,
+                rutUserValoracion,
+                apunteID
+            );
+            if (errorNotificacion) {
+                console.error('Error al crear notificación de valoración:', errorNotificacion);
+            }
+        } catch (error) {
+            console.error('Error al crear notificación de valoración:', error);
+        }
 
-        if (errorNotificacion) return [null, errorNotificacion];
-
-        const [historialCreado, historialError] = await registrarValoracionApunteService(
-            rutUserValoracion,
-            apunteID
-        );
-
-        if (historialError) return [null, historialError];
+        // Intentar registrar en historial (no debe bloquear si falla)
+        try {
+            const [historialCreado, historialError] = await registrarValoracionApunteService(
+                rutUserValoracion,
+                apunteID
+            );
+            if (historialError) {
+                console.error('Error al registrar en historial:', historialError);
+            }
+        } catch (error) {
+            console.error('Error al registrar en historial:', error);
+        }
 
         return [apunteExist, null];
 
@@ -627,7 +690,7 @@ export async function obtenerApuntesMasValoradosService() {
 export async function apuntesMasVisualizadosService() {
     try {
         const apuntes = await Apunte.find({ estado: 'Activo' })
-            .sort({ visualizaciones: -1 })  
+            .sort({ visualizaciones: -1 })
             .limit(5)
             .select('nombre asignatura visualizaciones autorSubida rutAutorSubida');
 
@@ -672,7 +735,8 @@ export async function obtenerValoracionApunteService(apunteID, rutUsuarioValorac
             v => v.apunteID.toString() === apunteID.toString()
         );
 
-        if (!valoracionUsuario) return [null, 'El usuario no ha valorado este apunte'];
+        // Si no ha valorado, retornamos 0 en lugar de error para evitar 404 en frontend
+        if (!valoracionUsuario) return [0, null];
 
         return [valoracionUsuario.valoracion, null];
     } catch (error) {
@@ -727,7 +791,7 @@ export async function actualizarValoracionApunteService(apunteID, rutUserValorac
     }
 }
 
-// export async function generarRecomendacionApuntePersonalizadaService(rutUser) 
+// export async function generarRecomendacionApuntePersonalizadaService(rutUser)
 
 //Servicio para obtener apunte. Este servicio debe entregar el archivo para su posterior previsualización y link de descarga
 // mediante URL firmada.

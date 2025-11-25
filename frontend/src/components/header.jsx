@@ -34,7 +34,7 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
     if (diff < 3600) return `Hace ${Math.floor(diff / 60)} minutos`;
     if (diff < 86400) return `Hace ${Math.floor(diff / 3600)} horas`;
     if (diff < 604800) return `Hace ${Math.floor(diff / 86400)} días`;
-    
+
     return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
@@ -74,46 +74,42 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
 
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <button 
-              onClick={onHomeClick} 
-              className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${
-                location.pathname === '/estudiante/home' 
-                  ? 'text-purple-600 font-semibold' 
-                  : 'text-gray-600 hover:text-purple-600 font-medium'
-              }`}
+            <button
+              onClick={onHomeClick}
+              className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname === '/estudiante/home'
+                ? 'text-purple-600 font-semibold'
+                : 'text-gray-600 hover:text-purple-600 font-medium'
+                }`}
             >
               <Home className="w-4 h-4" />
               <span>Inicio</span>
             </button>
-            <button 
-              onClick={onExplorarClick} 
-              className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${
-                location.pathname === '/estudiante/explorar' 
-                  ? 'text-purple-600 font-semibold' 
-                  : 'text-gray-600 hover:text-purple-600 font-medium'
-              }`}
+            <button
+              onClick={onExplorarClick}
+              className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname === '/estudiante/explorar'
+                ? 'text-purple-600 font-semibold'
+                : 'text-gray-600 hover:text-purple-600 font-medium'
+                }`}
             >
               <BookOpen className="w-4 h-4" />
               <span>Explorar Apuntes</span>
             </button>
-            <button 
-              onClick={onMisApuntesClick} 
-              className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${
-                location.pathname === '/estudiante/mis-apuntes' 
-                  ? 'text-purple-600 font-semibold' 
-                  : 'text-gray-600 hover:text-purple-600 font-medium'
-              }`}
+            <button
+              onClick={onMisApuntesClick}
+              className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname === '/estudiante/mis-apuntes'
+                ? 'text-purple-600 font-semibold'
+                : 'text-gray-600 hover:text-purple-600 font-medium'
+                }`}
             >
               <FileText className="w-4 h-4" />
               <span>Mis Apuntes</span>
             </button>
-            <button 
-              onClick={onEstadisticasClick} 
-              className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${
-                location.pathname === '/estudiante/estadisticas' 
-                  ? 'text-purple-600 font-semibold' 
-                  : 'text-gray-600 hover:text-purple-600 font-medium'
-              }`}
+            <button
+              onClick={onEstadisticasClick}
+              className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname === '/estudiante/estadisticas'
+                ? 'text-purple-600 font-semibold'
+                : 'text-gray-600 hover:text-purple-600 font-medium'
+                }`}
             >
               <BarChart3 className="w-4 h-4" />
               <span>Estadísticas</span>
@@ -121,13 +117,14 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
             <a href="#" className="flex items-center space-x-2 text-gray-600 hover:text-purple-600 transition-all hover:scale-105 cursor-pointer font-medium">
               <Compass className="w-4 h-4" />
               <span>Nuevas funcionalidades</span>
+              {/* * [IDEAS] Módulo para hacer encuestas de tesis/proyecto titulo */}
             </a>
           </nav>
 
           {/* User actions */}
           <div className="flex items-center space-x-4">
             <div className="relative" ref={dropdownRef}>
-              <button 
+              <button
                 onClick={() => setShowNotifications(!showNotifications)}
                 className="relative p-2 text-gray-600 hover:text-purple-600 transition-colors"
               >
@@ -206,7 +203,7 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
             </div>
 
             <div className="relative" ref={profileMenuRef}>
-              <button 
+              <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
                 className="transition-transform hover:scale-110"
               >

@@ -5,10 +5,13 @@ import {
     updateAsignaturaService,
     deleteAsignaturaService,
     getUnidadesAsignaturaService,
-    getAsignaturasSemestreActualService
+    getAsignaturasSemestreActualService,
+    obtenerCantidadAsignaturasService
 } from "../services/asignatura.service.js";
-import { asignaturaQueryValidation, asignaturaCreateValidation, asignaturaUpdateValidation, 
-    asignaturaSemestreActualValidation } from "../validations/asignatura.validation.js";
+import {
+    asignaturaQueryValidation, asignaturaCreateValidation, asignaturaUpdateValidation,
+    asignaturaSemestreActualValidation
+} from "../validations/asignatura.validation.js";
 import { handleSuccess, handleErrorClient, handleErrorServer } from "../handlers/responseHandlers.js";
 
 export async function createAsignatura(req, res) {
@@ -41,6 +44,18 @@ export async function getAsignatura(req, res) {
         if (errorAsignatura) return handleErrorClient(res, 404, "Asignatura no encontrada", errorAsignatura);
 
         handleSuccess(res, 200, "Asignatura encontrada", asignatura);
+    } catch (error) {
+        handleErrorServer(res, 500, error.message);
+    }
+}
+
+export async function obtenerCantidadAsignaturas(req, res) {
+    try {
+        const [cantidadAsignaturas, errorCantidadAsignaturas] = await obtenerCantidadAsignaturasService();
+
+        if (errorCantidadAsignaturas) return handleErrorClient(res, 404, "No hay asignaturas registradas", errorCantidadAsignaturas);
+
+        handleSuccess(res, 200, "Cantidad de asignaturas encontrada", cantidadAsignaturas);
     } catch (error) {
         handleErrorServer(res, 500, error.message);
     }

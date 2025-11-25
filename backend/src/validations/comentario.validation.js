@@ -1,5 +1,14 @@
 import joi from 'joi';
-import { diaActual, fechaActual } from '../helpers/ayudasVarias.helper.js';
+
+import moment from 'moment';
+
+const fechaValidation = (value, helpers) => {
+    const today = moment().format("DD-MM-YYYY");
+    if (value !== today) {
+        return helpers.message(`La fecha debe ser exactamente hoy: ${today}`);
+    }
+    return value;
+};
 
 export const comentarioQueryValidation = joi.object({
     _id: joi.string()
@@ -46,12 +55,11 @@ export const comentarioCreateValidation = joi.object({
     fechaComentario: joi.string()
         .required()
         .pattern(/^([0-2][0-9]|3[0-1])-(0[1-9]|1[0-2])-\d{4}$/)
-        .valid(diaActual)
+        .custom(fechaValidation)
         .messages({
             "string.empty": "La fecha no puede estar vacía.",
             "string.base": "La fecha debe ser de tipo string.",
             "string.pattern.base": "La fecha debe tener el formato DD-MM-AAAA.",
-            "any.only": `La fecha debe ser exactamente hoy: ${diaActual}.`,
             "any.required": "La fecha es obligatoria."
         })
 })
@@ -85,11 +93,10 @@ export const comentarioUpdateValidation = joi.object({
     fechaComentario: joi.string()
         .strict()
         .pattern(/^([0-2][0-9]|3[0-1])-(0[1-9]|1[0-2])-\d{4}$/)
-        .valid(diaActual)
+        .custom(fechaValidation)
         .messages({
             "string.base": "La fecha debe ser de tipo string.",
             "string.pattern.base": "La fecha debe tener el formato DD-MM-AAAA.",
-            "any.only": `La fecha debe ser exactamente hoy: ${diaActual}.`,
         }),
     likes: joi.number()
         .min(0)
@@ -143,7 +150,7 @@ export const comentarioUpdateValidation = joi.object({
             "array.min": "Debe haber al menos un reporte en el arreglo.",
             "array.max": "Solo se permite un reporte en el arreglo.",
         }),
-})  
+})
     .or('rutAutor', 'comentario', 'fechaComentario', 'Likes', 'Dislikes', 'respuestas', 'reportes')
     .unknown(false)
     .messages({
@@ -156,7 +163,7 @@ export const comentarioRespuestaValidation = joi.object({
         .required()
         .pattern(/^[a-fA-F0-9]{24}$/)
         .messages({
-            "string.base": "El ID del comentario padre debe ser de tipo string.",   
+            "string.base": "El ID del comentario padre debe ser de tipo string.",
             "string.empty": "El ID del comentario padre no puede estar vacío.",
             "string.pattern.base": "El ID del comentario padre debe ser un ObjectId válido de MongoDB.",
             "any.required": "El ID del comentario padre es obligatorio.",
@@ -188,13 +195,16 @@ export const comentarioRespuestaValidation = joi.object({
     fechaComentario: joi.string()
         .required()
         .pattern(/^([0-2][0-9]|3[0-1])-(0[1-9]|1[0-2])-\d{4}$/)
-        .valid(diaActual)
+        .custom(fechaValidation)
         .messages({
             "string.empty": "La fecha no puede estar vacía.",
             "string.base": "La fecha debe ser de tipo string.",
             "string.pattern.base": "La fecha debe tener el formato DD-MM-AAAA.",
-            "any.only": `La fecha debe ser exactamente hoy: ${diaActual}.`,
             "any.required": "La fecha es obligatoria."
         })
 })
     .unknown(false)
+    .messages({
+        'object.unknown': 'No se permiten propiedades adicionales en el cuerpo de la solicitud',
+        'object.missing': 'Debe proporcionar todos los campos: comentarioPadreID, rutAutor, comentario y fechaComentario',
+    });

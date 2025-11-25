@@ -10,7 +10,11 @@ const perfilAcademicoSchema = mongoose.Schema({
     asignaturasCursantes: [{
         type: String,
         cast: false,
-        required: true
+    }],
+    //Para ayudantes o docentes
+    asignaturasImpartidasActuales: [{
+        type: String,
+        cast: false,
     }],
     informeCurricular: [{
         asignatura: {
@@ -40,18 +44,16 @@ const perfilAcademicoSchema = mongoose.Schema({
     asignaturasInteres: [{
         type: String,
         cast: false,
-        required: true
     }],
     metodosEstudiosPreferidos: [{
         type: String,
-        required: true,
         cast: false
     }],
     apuntesSubidos: {
         type: Number,
         cast: false
     },
-    valoracionPerfil: {
+    valoracionPromedioApuntes: {
         type: Number,
         cast: false
     },

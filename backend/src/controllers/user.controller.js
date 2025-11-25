@@ -4,13 +4,14 @@ import {
     getAllUsersService,
     updateUserService,
     deleteUserService,
-    obtenerAñoIngresoAplicacionService
+    obtenerAñoIngresoAplicacionService,
+    obtenerCantidadUsuariosService
 } from '../services/user.service.js';
 import { userQueryValidation, userCreateValidation, userUpdateValidation } from '../validations/user.validation.js';
 import { handleSuccess, handleErrorClient, handleErrorServer } from '../handlers/responseHandlers.js';
 
 export async function createUser(req, res) {
-    try {        
+    try {
         const { value: valueBody, error: errorBody } = userCreateValidation.validate(req.body);
 
         if (errorBody) return handleErrorClient(res, 400, "Error de validacion", errorBody.message);
@@ -100,6 +101,18 @@ export async function obtenerAñoIngresoAplicacion(req, res) {
         if (errorAñoIngreso) return handleErrorServer(res, 404, "Error al obtener el año de ingreso del usuario", errorAñoIngreso);
 
         return handleSuccess(res, 200, "Año de ingreso obtenido con éxito", { añoIngreso });
+    } catch (error) {
+        handleErrorServer(res, 500, "Error interno del servidor", error.message);
+    }
+}
+
+export async function obtenerCantidadUsuarios(req, res) {
+    try {
+        const [cantidadUsuarios, errorCantidadUsuarios] = await obtenerCantidadUsuariosService();
+
+        if (errorCantidadUsuarios) return handleErrorServer(res, 500, "Error al obtener la cantidad de usuarios", errorCantidadUsuarios);
+
+        return handleSuccess(res, 200, "Cantidad de usuarios obtenida con éxito", { cantidadUsuarios });
     } catch (error) {
         handleErrorServer(res, 500, "Error interno del servidor", error.message);
     }

@@ -23,23 +23,36 @@ export async function realizarComentarioService(dataComentario) {
 
 export async function realizarComentarioRespuestaService(comentarioPadreID, dataRespuestaComentario) {
     try {
+        console.log('Iniciando respuesta a comentario:', { comentarioPadreID, data: dataRespuestaComentario });
         const { rutAutor } = dataRespuestaComentario;
 
         const existRutAutor = await User.findOne({ rut: rutAutor });
 
-        if (!existRutAutor) return [null, null, 'El usuario autor de la respuesta no existe'];
+        if (!existRutAutor) {
+            console.log('Autor no encontrado:', rutAutor);
+            return [null, null, 'El usuario autor de la respuesta no existe'];
+        }
 
         const comentarioPadre = await Comentario.findById(comentarioPadreID);
 
-        if (!comentarioPadre) return [null, null, 'El comentario al que se desea responder no existe'];
+        if (!comentarioPadre) {
+            console.log('Comentario padre no encontrado:', comentarioPadreID);
+            return [null, null, 'El comentario al que se desea responder no existe'];
+        }
 
         const nuevoComentarioRespuesta = new Comentario(dataRespuestaComentario);
 
         await nuevoComentarioRespuesta.save();
+        console.log('Respuesta guardada:', nuevoComentarioRespuesta._id);
+
+        if (!comentarioPadre.respuestas) {
+            comentarioPadre.respuestas = [];
+        }
 
         comentarioPadre.respuestas.push(nuevoComentarioRespuesta._id);
 
         await comentarioPadre.save();
+        console.log('Comentario padre actualizado con respuesta');
 
         const rutAutorPadre = comentarioPadre.rutAutor;
 
@@ -70,12 +83,15 @@ export async function realizarInteraccionComentarioService(comentarioID, rutUsua
 
         switch (tipoAccion) {
             case 'like':
-                // Verificar si ya dio like
+                // Si ya dio like, quitarlo (toggle)
                 if (comentarioExist.usuariosLikes.includes(rutUsuario)) {
-                    return [null, 'Ya has dado like a este comentario'];
+                    comentarioExist.usuariosLikes = comentarioExist.usuariosLikes.filter(rut => rut !== rutUsuario);
+                    comentarioExist.Likes = Math.max(0, comentarioExist.Likes - 1);
+                    await comentarioExist.save();
+                    return [comentarioExist, null];
                 }
 
-                // Si había dado dislike, removerlo
+                // Si había dado dislike, quitarlo
                 if (comentarioExist.usuariosDislikes.includes(rutUsuario)) {
                     comentarioExist.usuariosDislikes = comentarioExist.usuariosDislikes.filter(rut => rut !== rutUsuario);
                     comentarioExist.Dislikes = Math.max(0, comentarioExist.Dislikes - 1);
@@ -87,22 +103,27 @@ export async function realizarInteraccionComentarioService(comentarioID, rutUsua
 
                 await comentarioExist.save();
 
-                // Crear notificación
-                const [notifLike, errorNotifLike] = await notificacionLikeComentarioService(
-                    comentarioExist.rutAutor, rutUsuario, comentarioID
-                );
-
-                if (errorNotifLike) return [null, errorNotifLike];
+                // Crear notificación (solo si es un nuevo like)
+                try {
+                    await notificacionLikeComentarioService(
+                        comentarioExist.rutAutor, rutUsuario, comentarioID
+                    );
+                } catch (notifError) {
+                    console.error('Error al crear notificación de like:', notifError);
+                }
 
                 return [comentarioExist, null];
 
             case 'dislike':
-                // Verificar si ya dio dislike
+                // Si ya dio dislike, quitarlo (toggle)
                 if (comentarioExist.usuariosDislikes.includes(rutUsuario)) {
-                    return [null, 'Ya has dado dislike a este comentario'];
+                    comentarioExist.usuariosDislikes = comentarioExist.usuariosDislikes.filter(rut => rut !== rutUsuario);
+                    comentarioExist.Dislikes = Math.max(0, comentarioExist.Dislikes - 1);
+                    await comentarioExist.save();
+                    return [comentarioExist, null];
                 }
 
-                // Si había dado like, removerlo
+                // Si había dado like, quitarlo
                 if (comentarioExist.usuariosLikes.includes(rutUsuario)) {
                     comentarioExist.usuariosLikes = comentarioExist.usuariosLikes.filter(rut => rut !== rutUsuario);
                     comentarioExist.Likes = Math.max(0, comentarioExist.Likes - 1);
@@ -114,12 +135,14 @@ export async function realizarInteraccionComentarioService(comentarioID, rutUsua
 
                 await comentarioExist.save();
 
-                // Crear notificación
-                const [notifDislike, errorNotifDislike] = await notificacionDislikeComentarioService(
-                    comentarioExist.rutAutor, rutUsuario, comentarioID
-                );
-
-                if (errorNotifDislike) return [null, errorNotifDislike];
+                // Crear notificación (solo si es un nuevo dislike)
+                try {
+                    await notificacionDislikeComentarioService(
+                        comentarioExist.rutAutor, rutUsuario, comentarioID
+                    );
+                } catch (notifError) {
+                    console.error('Error al crear notificación de dislike:', notifError);
+                }
 
                 return [comentarioExist, null];
 

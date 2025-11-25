@@ -30,7 +30,7 @@ export async function createAsignaturaService(dataAsignatura) {
     }
 }
 
-export async function getAsignaturaService(query){
+export async function getAsignaturaService(query) {
     try {
         const { codigo: codigoQuery } = query;
 
@@ -58,18 +58,31 @@ export async function getAllAsignaturasService() {
     }
 }
 
+export async function obtenerCantidadAsignaturasService() {
+    try {
+        const cantidadAsignaturas = await Asignatura.find();
+
+        if (!cantidadAsignaturas || cantidadAsignaturas.length === 0) return [null, 'No hay asignaturas registradas'];
+
+        return [cantidadAsignaturas.length, null];
+    } catch (error) {
+        console.error('Error al obtener la cantidad de asignaturas:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
 export async function updateAsignaturaService(query, body) {
     try {
-        const { codigo: codigoQuery } = query; 
+        const { codigo: codigoQuery } = query;
 
-        const { codigo: nuevoCodigo, prerrequisitos: nuevosPrerrequisitos } = body; 
+        const { codigo: nuevoCodigo, prerrequisitos: nuevosPrerrequisitos } = body;
 
         const existingAsignatura = await Asignatura.findOne({ codigo: codigoQuery });
 
         if (!existingAsignatura) return [null, 'Asignatura que desea actualizar no existe'];
 
         if (nuevoCodigo && nuevoCodigo !== existingAsignatura.codigo) {
-            
+
             const existingCodigo = await Asignatura.findOne({ codigo: nuevoCodigo });
 
             if (existingCodigo) return [null, 'El código al que desea actualizar ya existe en otra asignatura'];
@@ -89,7 +102,7 @@ export async function updateAsignaturaService(query, body) {
         );
 
         if (!asignaturaUpdated) return [null, 'Error al actualizar la asignatura'];
-        
+
         return [asignaturaUpdated, null];
     } catch (error) {
         console.error('Error al actualizar la asignatura:', error);
@@ -98,8 +111,8 @@ export async function updateAsignaturaService(query, body) {
 }
 
 export async function deleteAsignaturaService(query) {
-    try{
-        const { codigo: codigoQuery } = query;  
+    try {
+        const { codigo: codigoQuery } = query;
 
         const existingAsignatura = await Asignatura.findOne({ codigo: codigoQuery });
 
@@ -110,7 +123,7 @@ export async function deleteAsignaturaService(query) {
         if (!deletedAsignatura) return [null, 'Error al eliminar la asignatura'];
 
         return [deletedAsignatura, null];
-    }catch(error){ 
+    } catch (error) {
         console.error('Error al eliminar la asignatura:', error);
         return [null, 'Error interno del servidor'];
     }

@@ -18,6 +18,24 @@ export async function crearPerfilAcademicoService(dataPerfilAcademico) {
     }
 }
 
+export async function crearPerfilAcademicoDocenteService(dataPerfilAcademico) {
+    try {
+        const response = await axios.post('/api/perfilAcademico/docente', dataPerfilAcademico);
+        return response.data;
+    } catch (error) {
+        return error.response.data;
+    }
+}
+
+export async function crearPerfilAcademicoAyudanteService(dataPerfilAcademico) {
+    try {
+        const response = await axios.post('/api/perfilAcademico/ayudante', dataPerfilAcademico);
+        return response.data;
+    } catch (error) {
+        return error.response.data;
+    }
+}
+
 export async function getPerfilAcademicoService(rutUser) {
     try {
         const response = await axios.get('/api/perfilAcademico/detail', {
@@ -68,7 +86,7 @@ export async function obtenerNumeroDescargasApuntesService(rutUser) {
 
 export async function busquedaApuntesMismoAutorService(rutUser, asignaturaApunteActual) {
     try {
-        const response = await axios.post('/api/perfilAcademico/busquedaMismoAutor', 
+        const response = await axios.post('/api/perfilAcademico/busquedaMismoAutor',
             { asignaturaApunteActual },
             {
                 params: { rutUser }
@@ -83,7 +101,7 @@ export async function busquedaApuntesMismoAutorService(rutUser, asignaturaApunte
 
 export async function busquedaApuntesMismaAsignaturaService(rutUser, asignaturaApunteActual) {
     try {
-        const response = await axios.post('/api/perfilAcademico/busquedaMismaAsignatura', 
+        const response = await axios.post('/api/perfilAcademico/busquedaMismaAsignatura',
             { asignaturaApunteActual },
             {
                 params: { rutUser }
@@ -99,7 +117,7 @@ export async function busquedaApuntesMismaAsignaturaService(rutUser, asignaturaA
 export async function obtenerMayoresContribuidoresService() {
     try {
         const response = await axios.get('/api/perfilAcademico/mayores-contribuidores');
-        
+
         return response.data;
     } catch (error) {
         console.error("Error al obtener mayores contribuidores:", error);

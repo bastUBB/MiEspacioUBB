@@ -3,7 +3,7 @@ import axios from 'axios';
 export async function crearApunteService(apunteData, file) {
     try {
         const formData = new FormData();
-        
+
         formData.append('archivo', file);
         formData.append('nombre', apunteData.nombre);
         formData.append('descripcion', apunteData.descripcion);
@@ -12,21 +12,21 @@ export async function crearApunteService(apunteData, file) {
         formData.append('fechaSubida', apunteData.fechaSubida);
         formData.append('autorSubida', apunteData.autorSubida);
         formData.append('rutAutorSubida', apunteData.rutAutorSubida);
-        
+
         if (apunteData.autores && apunteData.autores.length > 0) {
             apunteData.autores.forEach(autor => {
                 formData.append('autores[]', autor);
             });
         }
-        
+
         if (apunteData.etiquetas && apunteData.etiquetas.length > 0) {
             apunteData.etiquetas.forEach(etiqueta => {
                 formData.append('etiquetas[]', etiqueta);
             });
         }
-    
+
         const response = await axios.post('/api/apuntes/', formData);
-        
+
         return response.data;
     } catch (error) {
         console.error("Error al crear apunte:", error);
@@ -56,7 +56,7 @@ export async function obtenerMisApuntesByRutService(rutAutorSubida) {
 export async function getAllApuntesService() {
     try {
         const response = await axios.get('/api/apuntes/');
-        
+
         return response.data;
     } catch (error) {
         console.error("Error al obtener todos los apuntes:", error);
@@ -77,9 +77,9 @@ export async function sumarVisualizacionInvitadoApunteService(apunteID) {
 
 export async function sumarVisualizacionUsuariosApunteService(apunteID, rutUsuario) {
     try {
-        const response = await axios.post('/api/apuntes/visualizacion-usuario/detail', { 
+        const response = await axios.post('/api/apuntes/visualizacion-usuario/detail', {
             _id: apunteID,
-            rutUsuario 
+            rutUsuario
         });
 
         return response.data;
@@ -143,24 +143,24 @@ export async function darDislikeComentarioService(comentarioID) {
 
 export async function realizarValoracionApunteService(apunteID, rutUsuarioValoracion, valoracion) {
     try {
-        const response = await axios.post('/api/apuntes/valoracion/detail', { 
+        const response = await axios.post('/api/apuntes/valoracion/detail', {
             rutUserValoracion: rutUsuarioValoracion,
-            valoracion 
+            valoracion
         }, {
             params: { apunteID }
-        });    
+        });
 
         return response.data;
     } catch (error) {
         console.error("Error al realizar valoración de apunte:", error);
         throw error;
-    }  
+    }
 }
 
 export async function obtenerValoracionUsuarioApunteService(apunteID, rutUsuario) {
     try {
         const response = await axios.get('/api/apuntes/valoracion/detail', {
-            params: { 
+            params: {
                 apunteID,
                 rutAutorSubida: rutUsuario
             }
@@ -175,18 +175,18 @@ export async function obtenerValoracionUsuarioApunteService(apunteID, rutUsuario
 
 export async function actualizarValoracionApunteService(apunteID, rutUsuarioValoracion, valoracion) {
     try {
-        const response = await axios.put('/api/apuntes/valoracion/detail', { 
+        const response = await axios.put('/api/apuntes/valoracion/detail', {
             rutUserValoracion: rutUsuarioValoracion,
-            valoracion 
+            valoracion
         }, {
             params: { apunteID }
-        });    
+        });
 
         return response.data;
     } catch (error) {
         console.error("Error al actualizar valoración de apunte:", error);
         throw error;
-    }  
+    }
 }
 
 export async function crearReporteApunteService(apunteID, reporteData) {
@@ -250,7 +250,7 @@ export async function obtenerApuntePorIdService(apunteID) {
 
 export async function busquedaApuntesMismoAutorService(rutUser, asignaturaApunteActual) {
     try {
-        const response = await axios.post('/api/apuntes/busqueda-mismo-autor', 
+        const response = await axios.post('/api/apuntes/busqueda-mismo-autor',
             { asignaturaApunteActual },
             {
                 params: { rutUser }
@@ -265,7 +265,7 @@ export async function busquedaApuntesMismoAutorService(rutUser, asignaturaApunte
 
 export async function busquedaApuntesMismaAsignaturaService(rutUser, asignaturaApunteActual) {
     try {
-        const response = await axios.post('/api/apuntes/busqueda-misma-asignatura', 
+        const response = await axios.post('/api/apuntes/busqueda-misma-asignatura',
             { asignaturaApunteActual },
             {
                 params: { rutUser }
@@ -300,6 +300,17 @@ export async function registrarDescargaApunteService(apunteID) {
         return response.data;
     } catch (error) {
         console.error("Error al registrar descarga del apunte:", error);
+        throw error;
+    }
+}
+
+export async function obtenerCantidadApuntesService() {
+    try {
+        const response = await axios.get('/api/apuntes/cantidad-apuntes/');
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al obtener la cantidad de apuntes:", error);
         throw error;
     }
 }

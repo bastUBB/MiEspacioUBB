@@ -20,6 +20,7 @@ import {
     obtenerApuntesMasValorados,
     obtenerApuntesMasVisualizados,
     obtenerAsignaturasConMasApuntes,
+    obtenerCantidadApuntes,
     busquedaApuntesMismoAutor,
     busquedaApuntesMismaAsignatura,
     obtenerValoracionApunte,
@@ -46,6 +47,7 @@ router
     .get('/', authorizeRoles('admin'), getAllApuntes)
     .get('/valoracion/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), obtenerValoracionApunte)
     .get('/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), getApunteById)
+    .get('/cantidad-apuntes/', authorizeRoles('admin'), obtenerCantidadApuntes)
     .get('/url-descarga/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), obtenerLinkDescargaApunte)
     .get('/mas-valorados/', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), obtenerApuntesMasValorados)
     .get('/mas-visualizados/', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), obtenerApuntesMasVisualizados)
@@ -60,7 +62,7 @@ router
     .post('/valoracion/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), realizarValoracionApunte)
     .put('/valoracion/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), actualizarValoracionApunte)
     .post('/reporte/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), crearReporteApunte);
-    
+
 router.use(handleMulterError);
 
 export default router;

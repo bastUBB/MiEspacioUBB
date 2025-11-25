@@ -47,6 +47,82 @@ export async function createPerfilAcademicoService(dataPerfilAcademico) {
     }
 }
 
+export async function createPerfilAcademicoDocenteService(dataPerfilAcademico) {
+    try {
+        const { rutUser: rutDocente, asignaturasImpartidasActuales: asignaturasDocente } = dataPerfilAcademico;
+
+        const userExist = await User.findOne({ rut: rutDocente });
+
+        if (!userExist) return [null, 'No existe un usuario con el RUT proporcionado'];
+
+        const asignaturasDocenteExist = await Asignatura.find({ nombre: { $in: asignaturasDocente } });
+
+        if (!asignaturasDocenteExist || asignaturasDocenteExist.length === 0) return [null, 'No existen asignaturas con los nombres proporcionados'];
+
+        const newPerfilAcademico = new perfilAcademico({
+            ...dataPerfilAcademico,
+        });
+
+        await newPerfilAcademico.save();
+
+        const [historial, errorHistorial] = await registrarCreacionPerfilAcademicoService(rutDocente);
+
+        if (errorHistorial) return [null, errorHistorial];
+
+        return [newPerfilAcademico, null];
+    } catch (error) {
+        console.error('Error al crear el perfil académico:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function createPerfilAcademicoAyudanteService(dataPerfilAcademico) {
+    try {
+        const { rutUser, asignaturasCursantes, asignaturasInteres, asignaturasImpartidasActuales, informeCurricular } = dataPerfilAcademico;
+
+        const userExist = await User.findOne({ rut: rutUser });
+
+        if (!userExist) return [null, 'No existe un usuario con el RUT proporcionado'];
+
+        const asignaturasCursantesExist = await Asignatura.find({ nombre: { $in: asignaturasCursantes } });
+
+        if (!asignaturasCursantesExist || asignaturasCursantesExist.length === 0) return [null, 'No existen asignaturas con los nombres proporcionados'];
+
+        // Solo validar asignaturasInteres si el array no está vacío
+        if (asignaturasInteres && asignaturasInteres.length > 0) {
+            const asignaturasInteresExist = await Asignatura.find({ nombre: { $in: asignaturasInteres } });
+
+            if (!asignaturasInteresExist || asignaturasInteresExist.length === 0) return [null, 'No existen asignaturas de interés con los nombres proporcionados'];
+        }
+
+        //acceder a las asignaturas del informe curricular y verificar que existen
+        for (const informe of informeCurricular) {
+            const asignaturasInformeCurricular = await Asignatura.findOne({ nombre: informe.asignatura });
+
+            if (!asignaturasInformeCurricular) return [null, `No existe la asignatura ${informe.asignatura} en el informe curricular`];
+        }
+
+        const asignaturasImpartidasActualesExist = await Asignatura.find({ nombre: { $in: asignaturasImpartidasActuales } });
+
+        if (!asignaturasImpartidasActualesExist || asignaturasImpartidasActualesExist.length === 0) return [null, 'No existen asignaturas con los nombres proporcionados'];
+
+        const newPerfilAcademico = new perfilAcademico({
+            ...dataPerfilAcademico,
+        });
+
+        await newPerfilAcademico.save();
+
+        const [historial, errorHistorial] = await registrarCreacionPerfilAcademicoService(rutUser);
+
+        if (errorHistorial) return [null, errorHistorial];
+
+        return [newPerfilAcademico, null];
+    } catch (error) {
+        console.error('Error al crear el perfil académico:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
 export async function getPerfilAcademicoService(query) {
     try {
         const { rutUser } = query;
@@ -78,8 +154,8 @@ export async function updatePerfilAcademicoService(query, body) {
 
         if (!perfil) return [null, 'No existe un perfil académico para los datos proporcionados'];
 
-        const { asignaturasInteres: nuevasAsignaturasInteres, asignaturasCursantes: nuevasAsignaturasCursantes } = body; 
-        
+        const { asignaturasInteres: nuevasAsignaturasInteres, asignaturasCursantes: nuevasAsignaturasCursantes } = body;
+
         const asignaturasInteresExist = await Asignatura.find({ nombre: { $in: nuevasAsignaturasInteres } });
 
         if (!asignaturasInteresExist || asignaturasInteresExist.length === 0) return [null, 'No existen asignaturas de interes con los nombres proporcionados'];
@@ -99,7 +175,7 @@ export async function updatePerfilAcademicoService(query, body) {
         const [historial, errorHistorial] = await registrarActualizacionPerfilAcademicoService(rutUserQuery);
 
         if (errorHistorial) return [null, errorHistorial];
-        
+
         return [perfilUpdated, null];
     } catch (error) {
         console.error('Error al actualizar el perfil académico:', error);
@@ -219,7 +295,7 @@ export async function sumarDescargaApunteService(rutUser) {
 }
 
 //hacer controlador
-export async function busquedaApuntesMismoAutorService(rutAutor, asignaturaApunteActual){
+export async function busquedaApuntesMismoAutorService(rutAutor, asignaturaApunteActual) {
     try {
         const userExist = await User.findOne({ rut: rutAutor });
 
@@ -244,7 +320,7 @@ export async function busquedaApuntesMismoAutorService(rutAutor, asignaturaApunt
 }
 
 //hacer controlador
-export async function busquedaApuntesMismaAsignaturaService(rutAutor, asignaturaApunteActual){
+export async function busquedaApuntesMismaAsignaturaService(rutAutor, asignaturaApunteActual) {
     try {
         const userExist = await User.findOne({ rut: rutAutor });
 
@@ -260,7 +336,8 @@ export async function busquedaApuntesMismaAsignaturaService(rutAutor, asignatura
             { $sample: { size: 4 } }
         ]);
 
-        if (apuntesMismaAsignatura.length === 0) return [null, 'No existen apuntes del mismo autor para la misma asignatura'];
+        // Si no hay apuntes, retornamos array vacío en lugar de error
+        if (apuntesMismaAsignatura.length === 0) return [[], null];
 
         return [apuntesMismaAsignatura, null];
 
@@ -272,7 +349,7 @@ export async function busquedaApuntesMismaAsignaturaService(rutAutor, asignatura
 
 // export async function actualizarValoracionPerfilAcademicoService -> aqui deberia de hacer una formula
 
-export async function obtenerValoracionPerfilAcademicoService(rutUser) {
+export async function obtenerValoracionPromedioApuntesService(rutUser) {
     try {
         const userExist = await User.findOne({ rut: rutUser });
 
@@ -282,9 +359,30 @@ export async function obtenerValoracionPerfilAcademicoService(rutUser) {
 
         if (!perfil) return [null, 'No existe un perfil académico para los datos proporcionados'];
 
-        return [perfil.valoracionPerfilAcademico, null];
+        //obtener los apuntes subidos por el usuario
+        const apuntes = await Apunte.find({ rutAutorSubida: rutUser });
+
+        if (!apuntes || apuntes.length === 0) return [0, null];
+
+        const { sumaTotal, cantidadTotal } = apuntes.reduce((acc, apunte) => {
+            const cantidadValoraciones = apunte.valoracion?.cantidadValoraciones || 0;
+
+            const promedioValoracion = apunte.valoracion?.promedioValoracion || 0;
+
+            const sumaApunte = promedioValoracion * cantidadValoraciones;
+
+            return {
+                sumaTotal: acc.sumaTotal + sumaApunte,
+
+                cantidadTotal: acc.cantidadTotal + cantidadValoraciones
+            };
+        }, { sumaTotal: 0, cantidadTotal: 0 });
+
+        const valoracionPromedio = cantidadTotal > 0 ? sumaTotal / cantidadTotal : 0;
+
+        return [valoracionPromedio, null];
     } catch (error) {
-        console.error('Error al obtener la valoración del perfil académico:', error);
+        console.error('Error al obtener la valoración promedio de apuntes:', error);
         return [null, 'Error interno del servidor'];
     }
 }

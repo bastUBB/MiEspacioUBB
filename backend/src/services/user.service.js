@@ -141,3 +141,16 @@ export async function obtenerAñoIngresoAplicacionService(query) {
         return [null, 'Error interno del servidor'];
     }
 }
+
+export async function obtenerCantidadUsuariosService() {
+    try {
+        const cantidadUsuarios = await User.find();
+
+        if (!cantidadUsuarios || cantidadUsuarios.length === 0) return [null, 'No se encontraron usuarios'];
+
+        return [cantidadUsuarios.length, null];
+    } catch (error) {
+        console.error('Error al obtener la cantidad de usuarios:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}

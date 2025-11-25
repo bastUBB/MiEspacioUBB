@@ -1,4 +1,4 @@
-import { 
+import {
     createApunteService,
     updateApunteService,
     deleteApunteService,
@@ -13,19 +13,22 @@ import {
     actualizarValoracionApunteService,
     crearReporteApunteService,
     obtenerApuntesMasValoradosService,
+    obtenerCantidadApuntesService,
     apuntesMasVisualizadosService,
     obtenerAsignaturasConMasApuntesService,
     obtenerValoracionApunteService,
     obtenerLinkDescargaApunteURLFirmadaService,
     sumarDescargaApunteUsuarioService
 } from '../services/apunte.service.js';
-import { 
+import {
     busquedaApuntesMismoAutorService,
-    busquedaApuntesMismaAsignaturaService 
+    busquedaApuntesMismaAsignaturaService
 } from '../services/perfilAcademico.service.js';
 import { comentarioCreateValidation, comentarioRespuestaValidation } from '../validations/comentario.validation.js';
-import { apunteQueryValidation, apunteCreateValidation, apunteUpdateValidation, visualizacionValidation,
-    valoracionValidation } from '../validations/apunte.validation.js';
+import {
+    apunteQueryValidation, apunteCreateValidation, apunteUpdateValidation, visualizacionValidation,
+    valoracionValidation
+} from '../validations/apunte.validation.js';
 import { busquedaApuntesValidation, perfilAcademicoQueryValidation } from '../validations/perfilAcademico.validation.js';
 import { reporteCreateValidation } from '../validations/reporte.validation.js';
 import { handleSuccess, handleErrorClient, handleErrorServer, handleMulterError } from '../handlers/responseHandlers.js';
@@ -37,11 +40,11 @@ export async function createApunte(req, res) {
         if (errorBody) return handleErrorClient(res, 400, 'Datos de entrada inválidos', errorBody.message);
 
         if (!req.file) return handleErrorClient(res, 400, 'No se proporcionó ningún archivo');
-                
+
         const [nuevoApunte, createError] = await createApunteService(valueBody, req.file);
 
         if (createError) return handleErrorServer(res, 500, 'Error al crear apunte', createError);
-    
+
         return handleSuccess(res, 201, 'Apunte creado exitosamente', nuevoApunte);
     } catch (error) {
         console.error('Error al crear apunte:', error);
@@ -87,6 +90,19 @@ export async function updateApunte(req, res) {
     }
 }
 
+export async function obtenerCantidadApuntes(req, res) {
+    try {
+        const [cantidadApuntes, cantidadApuntesError] = await obtenerCantidadApuntesService();
+
+        if (cantidadApuntesError) return handleErrorServer(res, 500, 'Error al obtener la cantidad de apuntes', cantidadApuntesError);
+
+        return handleSuccess(res, 200, 'Cantidad de apuntes obtenida exitosamente', cantidadApuntes);
+    } catch (error) {
+        console.error('Error al obtener la cantidad de apuntes:', error);
+        return handleErrorServer(res, 500, 'Error interno del servidor');
+    }
+}
+
 export async function deleteApunte(req, res) {
     try {
         const { value: valueQuery, error: errorQuery } = apunteQueryValidation.validate(req.query);
@@ -110,7 +126,7 @@ export async function obtenerMisApuntesByRut(req, res) {
 
         if (errorQuery) return handleErrorClient(res, 400, 'RUT de usuario inválido', errorQuery.message);
 
-        const [misApuntes, misApuntesError] = await obtenerMisApuntesByRutService(valueQuery.rutAutorSubida);    
+        const [misApuntes, misApuntesError] = await obtenerMisApuntesByRutService(valueQuery.rutAutorSubida);
 
         if (misApuntesError) return handleErrorServer(res, 500, 'Error al obtener mis apuntes', misApuntesError);
 
@@ -258,7 +274,7 @@ export async function obtenerApuntesMasValorados(req, res) {
     try {
         const [apuntes, apuntesError] = await obtenerApuntesMasValoradosService();
 
-        if (apuntes.length === 0) return handleSuccess(res, 200, 'No hay apuntes disponibles', []); 
+        if (apuntes.length === 0) return handleSuccess(res, 200, 'No hay apuntes disponibles', []);
 
         if (apuntesError) return handleErrorServer(res, 500, 'Error al obtener apuntes más valorados', apuntesError);
 
@@ -274,7 +290,7 @@ export async function obtenerApuntesMasVisualizados(req, res) {
     try {
         const [apuntes, apuntesError] = await apuntesMasVisualizadosService();
 
-        if (apuntes.length === 0) return handleSuccess(res, 200, 'No hay apuntes disponibles', []); 
+        if (apuntes.length === 0) return handleSuccess(res, 200, 'No hay apuntes disponibles', []);
 
         if (apuntesError) return handleErrorServer(res, 500, 'Error al obtener apuntes más visualizados', apuntesError);
 
@@ -294,10 +310,10 @@ export async function obtenerAsignaturasConMasApuntes(req, res) {
         if (asignaturasError) return handleErrorServer(res, 500, 'Error al obtener asignaturas con más apuntes', asignaturasError);
 
         return handleSuccess(res, 200, 'Asignaturas con más apuntes obtenidas exitosamente', asignaturas);
-    } catch (error) {   
+    } catch (error) {
         console.error('Error al obtener asignaturas con más apuntes:', error);
         return handleErrorServer(res, 500, 'Error interno del servidor');
-    }   
+    }
 }
 
 export async function busquedaApuntesMismoAutor(req, res) {

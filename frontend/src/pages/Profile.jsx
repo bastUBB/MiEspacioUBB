@@ -2,9 +2,9 @@ import { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../context/userContextProvider';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { 
-  User, Mail, Shield, BookOpen, Edit2, Save, X, 
-  GraduationCap, Calendar, MapPin, Award, Settings, 
+import {
+  User, Mail, Shield, BookOpen, Edit2, Save, X,
+  GraduationCap, Calendar, MapPin, Award, Settings,
   Activity, ChevronRight, Hash, Layers, Zap, BarChart3, TrendingUp
 } from 'lucide-react';
 import Header from '../components/header';
@@ -116,7 +116,7 @@ function Profile() {
 
       try {
         const response = await getPerfilAcademicoService(user.rut);
-        
+
         if (response.status === 'Success' && response.data) {
           const data = {
             asignaturasCursantes: response.data.asignaturasCursantes || [],
@@ -162,7 +162,7 @@ function Profile() {
       };
 
       const response = await actualizarUsuarioService(user.rut, dataToUpdate);
-      
+
       if (response.status === 'Success') {
         setUserData({ ...tempUserData });
         setIsEditingUser(false);
@@ -198,7 +198,7 @@ function Profile() {
       // XOR: Solo incluir evaluaciones O ordenComplejidad, nunca ambos
       const informeCurricularLimpio = tempPerfilData.informeCurricular.map(item => {
         const tieneEvaluaciones = item.evaluaciones && item.evaluaciones.length > 0;
-        
+
         if (tieneEvaluaciones) {
           // Modo evaluaciones: solo enviar evaluaciones
           return {
@@ -227,7 +227,7 @@ function Profile() {
       };
 
       const response = await actualizarPerfilAcademicoService(user.rut, dataToUpdate);
-      
+
       if (response.status === 'Success') {
         setPerfilData({ ...tempPerfilData });
         setIsEditingPerfil(false);
@@ -256,7 +256,7 @@ function Profile() {
     const updatedInforme = tempPerfilData.informeCurricular.filter(
       item => item.asignatura !== asignatura
     );
-    
+
     setTempPerfilData({
       ...tempPerfilData,
       asignaturasCursantes: tempPerfilData.asignaturasCursantes.filter(a => a !== asignatura),
@@ -304,12 +304,12 @@ function Profile() {
   };
 
   const handleHomeClick = () => navigate('/estudiante/home');
-  const handleProfileClick = () => {};
+  const handleProfileClick = () => { };
   const handleExplorarClick = () => navigate('/estudiante/explorar');
   const handleMisApuntesClick = () => navigate('/estudiante/mis-apuntes');
   const handleEstadisticasClick = () => navigate('/estudiante/estadisticas');
   const handleConfigClick = () => navigate('/estudiante/configuracion');
-  
+
   const handleLogout = () => {
     document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     localStorage.removeItem('user');
@@ -330,7 +330,7 @@ function Profile() {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
-      <Header 
+      <Header
         notificationCount={0}
         notifications={[]}
         onHomeClick={handleHomeClick}
@@ -341,13 +341,13 @@ function Profile() {
         onLogout={handleLogout}
         onConfigClick={handleConfigClick}
       />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
+
         {/* Hero Section */}
         <div className="relative overflow-hidden bg-white rounded-3xl shadow-sm border border-gray-100 mb-8 group hover:shadow-md transition-all duration-300">
-          <div className="absolute top-0 left-0 w-full h-60 bg-gradient-to-r from-purple-400 to-purple-400"></div>
-          
+          <div className="absolute top-0 left-0 w-full h-60 bg-gradient-to-r from-purple-400 to-purple-600"></div>
+
           <div className="relative px-8 pb-8 pt-16">
             <div className="flex flex-col md:flex-row items-start md:items-end gap-6">
               <div className="relative">
@@ -358,7 +358,7 @@ function Profile() {
                 </div>
                 <div className="absolute bottom-2 right-2 w-6 h-6 bg-green-500 border-4 border-white rounded-full" title="Online"></div>
               </div>
-              
+
               <div className="flex-1 mb-2">
                 <div className="flex flex-wrap items-baseline gap-3 mb-2">
                   <h1 className="text-3xl font-bold text-white tracking-tight">{userData.nombreCompleto}</h1>
@@ -390,33 +390,30 @@ function Profile() {
         <div className="flex items-center gap-1 mb-8 border-b border-gray-200">
           <button
             onClick={() => setActiveTab('personal')}
-            className={`px-6 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 ${
-              activeTab === 'personal'
+            className={`px-6 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 ${activeTab === 'personal'
                 ? 'border-purple-600 text-purple-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+              }`}
           >
             <User className="w-4 h-4" />
             Información Personal
           </button>
           <button
             onClick={() => setActiveTab('academic')}
-            className={`px-6 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 ${
-              activeTab === 'academic'
+            className={`px-6 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 ${activeTab === 'academic'
                 ? 'border-purple-600 text-purple-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+              }`}
           >
             <BookOpen className="w-4 h-4" />
             Perfil Académico
           </button>
           <button
             onClick={() => setActiveTab('activity')}
-            className={`px-6 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 ${
-              activeTab === 'activity'
+            className={`px-6 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 ${activeTab === 'activity'
                 ? 'border-purple-600 text-purple-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+              }`}
           >
             <Activity className="w-4 h-4" />
             Actividad Reciente
@@ -424,10 +421,10 @@ function Profile() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* Main Content Area */}
           <div className="lg:col-span-2 space-y-6">
-            
+
             {activeTab === 'personal' && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-fade-in-up">
                 <div className="p-6 border-b border-gray-50 flex justify-between items-center">
@@ -436,7 +433,7 @@ function Profile() {
                     <p className="text-sm text-gray-500">Información básica de tu cuenta</p>
                   </div>
                   {!isEditingUser ? (
-                    <button 
+                    <button
                       onClick={handleEditUser}
                       className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
                     >
@@ -449,7 +446,7 @@ function Profile() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Nombre Completo</label>
@@ -516,7 +513,7 @@ function Profile() {
                       <p className="text-sm text-gray-500">Materias que estás cursando este semestre</p>
                     </div>
                     {!isEditingPerfil ? (
-                      <button 
+                      <button
                         onClick={handleEditPerfil}
                         className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
                       >
@@ -668,14 +665,14 @@ function Profile() {
                         Informe Curricular
                       </h2>
                       <p className="text-sm text-gray-500">
-                        {isEditingPerfil 
+                        {isEditingPerfil
                           ? 'Edita la complejidad o agrega evaluaciones de tus asignaturas'
                           : 'Rendimiento académico de tus asignaturas cursantes'
                         }
                       </p>
                     </div>
                     {!isEditingPerfil ? (
-                      <button 
+                      <button
                         onClick={handleEditPerfil}
                         className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
                       >

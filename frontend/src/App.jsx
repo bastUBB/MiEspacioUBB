@@ -15,8 +15,12 @@ import AyudanteLayout from './layouts/ayudanteLayout.jsx'
 
 // Páginas
 import InicioPerfilAcademicoEstudiante from './pages/estudiante/perfilAcademicoEstudiante.jsx'
-import SubirApunteForm from './pages/subirApunteForm.jsx'
+// import InicioPerfilAcademicoDocente from './pages/docente/perfilAcademicoDocente.jsx'
+// import InicioPerfilAcademicoAyudante from './pages/ayudante/perfilAcademicoAyudante.jsx'
+
 import Home from './pages/Home.jsx'
+import HomeAdmin from './pages/admin/HomeAdmin.jsx'
+
 import Profile from './pages/Profile.jsx'
 import ExplorarApuntes from './pages/ExplorarApuntes.jsx'
 import MisApuntes from './pages/MisApuntes.jsx'
@@ -95,17 +99,24 @@ function App() {
               <AdminLayout />
             </RoleProtectedRoute>
           }>
-            <Route index element={<div>Home Admin - Crear tu página aquí</div>} />
+            <Route index element={<HomeAdmin />} />
+            <Route path="home" element={<HomeAdmin />} />
             {/* Agrega más rutas del admin aquí */}
           </Route>
-
 
           <Route path="/docente" element={
             <RoleProtectedRoute allowedRoles={['docente', 'admin']}>
               <DocenteLayout />
             </RoleProtectedRoute>
           }>
-            <Route index element={<div>Home Docente - Crear tu página aquí</div>} />
+            {/* <Route index element={<InicioPerfilAcademicoDocente />} /> */}
+
+            <Route path="home" element={<Home />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="explorar" element={<ExplorarApuntes />} />
+            <Route path="mis-apuntes" element={<MisApuntes />} />
+            <Route path="estadisticas" element={<Estadisticas />} />
+            <Route path="apunte/:id" element={<DetalleApunte />} />
           </Route>
 
           <Route path="/ayudante" element={
@@ -113,7 +124,14 @@ function App() {
               <AyudanteLayout />
             </RoleProtectedRoute>
           }>
-            <Route index element={<div>Home Ayudante - Crear tu página aquí</div>} />
+            {/* <Route index element={<InicioPerfilAcademicoAyudante />} /> */}
+
+            <Route path="home" element={<Home />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="explorar" element={<ExplorarApuntes />} />
+            <Route path="mis-apuntes" element={<MisApuntes />} />
+            <Route path="estadisticas" element={<Estadisticas />} />
+            <Route path="apunte/:id" element={<DetalleApunte />} />
           </Route>
 
           <Route path="/estudiante" element={
@@ -123,7 +141,6 @@ function App() {
           }>
             <Route index element={<InicioPerfilAcademicoEstudiante />} />
             <Route path="perfil-academico" element={<InicioPerfilAcademicoEstudiante />} />
-            <Route path="subir-apunte" element={<SubirApunteForm />} />
             <Route path="home" element={<Home />} />
             <Route path="profile" element={<Profile />} />
             <Route path="explorar" element={<ExplorarApuntes />} />
@@ -133,7 +150,7 @@ function App() {
           </Route>
 
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
-          
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </UserContextProvider>

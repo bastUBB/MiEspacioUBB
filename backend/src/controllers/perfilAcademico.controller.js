@@ -7,25 +7,61 @@ import {
     numeroApuntesUserService,
     busquedaApuntesMismoAutorService,
     busquedaApuntesMismaAsignaturaService,
-    obtenerValoracionPerfilAcademicoService,
+    obtenerValoracionPromedioApuntesService,
     obtenerNumeroDescargasApuntesService,
+    createPerfilAcademicoDocenteService,
+    createPerfilAcademicoAyudanteService,
     obtenerMayoresContribuidoresService
 } from "../services/perfilAcademico.service.js";
 import {
     perfilAcademicoQueryValidation,
-    perfilAcademicoCreateValidation,
+    perfilAcademicoCreateEstudianteValidation,
     perfilAcademicoUpdateValidation,
-    busquedaApuntesValidation
+    busquedaApuntesValidation,
+    perfilAcademicoCreateDocenteValidation,
+    perfilAcademicoCreateAyudanteValidation
 } from "../validations/perfilAcademico.validation.js";
 import { handleSuccess, handleErrorClient, handleErrorServer } from '../handlers/responseHandlers.js';
 
-export async function createPerfilAcademico(req, res) {
+export async function createPerfilAcademicoEstudiante(req, res) {
     try {
-        const { value: valueCreate, error: errorCreate } = perfilAcademicoCreateValidation.validate(req.body);
+        const { value: valueCreate, error: errorCreate } = perfilAcademicoCreateEstudianteValidation.validate(req.body);
 
         if (errorCreate) return handleErrorClient(res, 400, "Error de validacion", errorCreate.message);
 
         const [newPerfilAcademico, errorNewPerfilAcademico] = await createPerfilAcademicoService(valueCreate);
+
+        if (errorNewPerfilAcademico) return handleErrorServer(res, 400, "Error al crear el perfil academico", errorNewPerfilAcademico);
+
+        return handleSuccess(res, 201, "Perfil academico registrado con éxito", newPerfilAcademico);
+    } catch (error) {
+        handleErrorServer(res, 500, "Error interno del servidor", error.message);
+    }
+}
+
+export async function createPerfilAcademicoDocente(req, res) {
+    try {
+        const { value: valueCreate, error: errorCreate } = perfilAcademicoCreateDocenteValidation.validate(req.body);
+
+        if (errorCreate) return handleErrorClient(res, 400, "Error de validacion", errorCreate.message);
+
+        const [newPerfilAcademico, errorNewPerfilAcademico] = await createPerfilAcademicoDocenteService(valueCreate);
+
+        if (errorNewPerfilAcademico) return handleErrorServer(res, 400, "Error al crear el perfil academico", errorNewPerfilAcademico);
+
+        return handleSuccess(res, 201, "Perfil academico registrado con éxito", newPerfilAcademico);
+    } catch (error) {
+        handleErrorServer(res, 500, "Error interno del servidor", error.message);
+    }
+}
+
+export async function createPerfilAcademicoAyudante(req, res) {
+    try {
+        const { value: valueCreate, error: errorCreate } = perfilAcademicoCreateAyudanteValidation.validate(req.body);
+
+        if (errorCreate) return handleErrorClient(res, 400, "Error de validacion", errorCreate.message);
+
+        const [newPerfilAcademico, errorNewPerfilAcademico] = await createPerfilAcademicoAyudanteService(valueCreate);
 
         if (errorNewPerfilAcademico) return handleErrorServer(res, 400, "Error al crear el perfil academico", errorNewPerfilAcademico);
 
@@ -115,7 +151,7 @@ export async function numeroApuntesUser(req, res) {
         if (numApuntes === 0) return handleSuccess(res, 200, "El usuario no tiene apuntes", 0);
 
         if (errorNumApuntes) return handleErrorServer(res, 400, "Error al obtener el número de apuntes del usuario", errorNumApuntes);
-        
+
         return handleSuccess(res, 200, "Número de apuntes obtenido con éxito", numApuntes);
     } catch (error) {
         handleErrorServer(res, 500, "Error interno del servidor", error.message);
@@ -162,13 +198,13 @@ export async function busquedaApuntesMismaAsignatura(req, res) {
     }
 }
 
-export async function obtenerValoracionPerfilAcademico(req, res) {
+export async function obtenerValoracionPromedioApuntes(req, res) {
     try {
         const { value: valueQuery, error: errorQuery } = perfilAcademicoQueryValidation.validate(req.query);
 
         if (errorQuery) return handleErrorClient(res, 400, "Error de validacion", errorQuery.message);
 
-        const [valoracion, errorValoracion] = await obtenerValoracionPerfilAcademicoService(valueQuery.rutUser);
+        const [valoracion, errorValoracion] = await obtenerValoracionPromedioApuntesService(valueQuery.rutUser);
 
         if (errorValoracion) return handleErrorServer(res, 400, "Error al obtener la valoración del perfil academico", errorValoracion);
 

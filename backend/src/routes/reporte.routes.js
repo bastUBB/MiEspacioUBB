@@ -4,7 +4,8 @@ import {
     createReporteUser,
     obtenerMisReportes,
     getAllReportesPendientesPorFecha,
-    actualizarEstadoReporte
+    actualizarEstadoReporte,
+    obtenerCantidadReportesPendientes
 } from "../controllers/reporte.controller.js";
 
 const router = Router();
@@ -15,6 +16,7 @@ router
     .post("/user", authorizeRoles("admin", "docente", "ayudante", "estudiante"), createReporteUser)
     .get("/mis-reportes/detail", authorizeRoles("admin", "docente", "ayudante", "estudiante"), obtenerMisReportes)
     .get("/pendientes", authorizeRoles("admin"), getAllReportesPendientesPorFecha)
+    .get("/cantidad-pendientes", authorizeRoles("admin"), obtenerCantidadReportesPendientes)
     .put("/actualizarEstado/detail", authorizeRoles("admin"), actualizarEstadoReporte);
 
 export default router;

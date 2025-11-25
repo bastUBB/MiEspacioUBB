@@ -6,7 +6,8 @@ import {
     getAllUsers,
     updateUser,
     deleteUser,
-    obtenerAñoIngresoAplicacion
+    obtenerAñoIngresoAplicacion,
+    obtenerCantidadUsuarios,
 } from '../controllers/user.controller.js';
 
 const router = Router();
@@ -19,6 +20,7 @@ router
     .get("/", authorizeRoles("admin"), getAllUsers)
     .patch("/detail", authorizeRoles("admin", "docente", "estudiante", "ayudante"), updateUser)
     .delete("/detail", authorizeRoles("admin"), deleteUser)
-    .get("/year-entry", authorizeRoles("admin", "docente", "estudiante", "ayudante"), obtenerAñoIngresoAplicacion);
+    .get("/year-entry", authorizeRoles("admin", "docente", "estudiante", "ayudante"), obtenerAñoIngresoAplicacion)
+    .get("/cantidad-usuarios", authorizeRoles("admin"), obtenerCantidadUsuarios);
 
 export default router;

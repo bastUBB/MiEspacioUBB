@@ -8,10 +8,11 @@ import {
   ChevronRight, FileText, Heart, MoreVertical, Flag, Users, Loader2, ChevronLeft
 } from 'lucide-react';
 import Header from '../components/header';
+import ReportModal from '../components/ReportModal';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-import { 
+import {
   sumarVisualizacionUsuariosApunteService,
   realizarValoracionApunteService,
   obtenerValoracionUsuarioApunteService,
@@ -48,7 +49,7 @@ function DetalleApunte() {
   const [textoRespuesta, setTextoRespuesta] = useState('');
   const [userLikesMap, setUserLikesMap] = useState({});
   const [userDislikesMap, setUserDislikesMap] = useState({});
-  
+
   // Estados para el visor PDF
   const [pdfUrl, setPdfUrl] = useState(null);
   const [numPages, setNumPages] = useState(null);
@@ -56,6 +57,7 @@ function DetalleApunte() {
   const [loadingPdf, setLoadingPdf] = useState(false);
   const [pdfError, setPdfError] = useState(null);
   const [downloadUrl, setDownloadUrl] = useState(null);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   useEffect(() => {
     // Validar que el ID existe y no está undefined
@@ -66,11 +68,10 @@ function DetalleApunte() {
       return;
     }
 
-    // Solo cargar si no hemos cargado ya (evitar doble llamada)
-    if (!apunte) {
-      loadApunte();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Cargar apunte cuando cambia el ID
+    loadApunte();
+    window.scrollTo(0, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const loadApunte = async () => {
@@ -79,16 +80,16 @@ function DetalleApunte() {
 
       // Obtener apunte por ID
       const responseApunte = await obtenerApuntePorIdService(id);
-            
+
       // El backend devuelve 'status' no 'state'
       if (responseApunte.status === 'Success' && responseApunte.data) {
         const apunteData = responseApunte.data;
         setApunte(apunteData);
-        
+
         // Cargar comentarios del apunte (ya vienen desde el backend)
         if (apunteData.comentarios && apunteData.comentarios.length > 0) {
           setComentarios(apunteData.comentarios);
-          
+
           // Crear mapa de likes/dislikes del usuario
           if (user && user.rut) {
             const likesMap = {};
@@ -139,7 +140,7 @@ function DetalleApunte() {
         if (otrosApuntesAutor.length === 0 && user?.rut) {
           try {
             const responseOtrosAutor = await busquedaApuntesMismoAutorService(
-              user.rut, 
+              user.rut,
               apunteData.asignatura
             );
             if (responseOtrosAutor.status === 'Success' && responseOtrosAutor.data) {
@@ -182,6 +183,50 @@ function DetalleApunte() {
     }
   };
 
+  // Nueva función para recargar solo los comentarios
+  const loadComentarios = async () => {
+    try {
+      // Obtener apunte por ID para actualizar comentarios
+      const responseApunte = await obtenerApuntePorIdService(id);
+
+      if (responseApunte.status === 'Success' && responseApunte.data) {
+        const apunteData = responseApunte.data;
+
+        // Actualizar solo comentarios
+        if (apunteData.comentarios && apunteData.comentarios.length > 0) {
+          setComentarios(apunteData.comentarios);
+
+          // Actualizar mapa de likes/dislikes del usuario
+          if (user && user.rut) {
+            const likesMap = {};
+            const dislikesMap = {};
+            apunteData.comentarios.forEach(com => {
+              if (com.usuariosLikes && com.usuariosLikes.includes(user.rut)) {
+                likesMap[com._id] = true;
+              }
+              if (com.usuariosDislikes && com.usuariosDislikes.includes(user.rut)) {
+                dislikesMap[com._id] = true;
+              }
+            });
+            setUserLikesMap(likesMap);
+            setUserDislikesMap(dislikesMap);
+          }
+        } else {
+          setComentarios([]);
+        }
+
+        // Actualizar también el objeto apunte para reflejar cambios en contadores
+        setApunte(prevApunte => ({
+          ...prevApunte,
+          comentarios: apunteData.comentarios
+        }));
+      }
+    } catch (error) {
+      console.error('Error al recargar comentarios:', error);
+      // No mostrar error al usuario, es una actualización en segundo plano
+    }
+  };
+
   const handleRating = async (rating) => {
     if (!user) {
       toast.error('Debes iniciar sesión para valorar');
@@ -196,7 +241,7 @@ function DetalleApunte() {
 
     try {
       let response;
-      
+
       // Si ya tiene valoración, actualizar; si no, crear nueva
       if (userRating > 0) {
         response = await actualizarValoracionApunteService(id, user.rut, rating);
@@ -208,14 +253,14 @@ function DetalleApunte() {
       if (response.status === 'Success') {
         // Actualizar el rating del usuario primero
         setUserRating(rating);
-        
+
         // Mostrar mensaje de éxito
         const mensaje = userRating > 0 ? 'Valoración actualizada exitosamente' : 'Valoración registrada exitosamente';
         toast.success(mensaje);
-        
+
         // Recargar apunte para actualizar promedio
         setTimeout(() => {
-          loadApunte();
+          loadComentarios();
         }, 500);
       } else {
         toast.error(response.message || 'Error al procesar valoración');
@@ -223,14 +268,14 @@ function DetalleApunte() {
     } catch (err) {
       console.error('Error en valoración:', err);
       const errorMessage = err.response?.data?.message || err.response?.data?.details || err.message || 'Error al procesar valoración';
-      
+
       // Si el error indica que ya valoró pero tiene status Client error, es un mensaje informativo
       if (errorMessage.includes('ya valoró') || errorMessage.includes('ya has valorado')) {
         // Actualizar el rating del usuario
         setUserRating(rating);
         toast.success(userRating > 0 ? 'Valoración actualizada exitosamente' : 'Valoración registrada exitosamente');
         setTimeout(() => {
-          loadApunte();
+          loadComentarios();
         }, 500);
       } else if (errorMessage.includes('propio apunte')) {
         toast.error('No puedes valorar tu propio apunte');
@@ -257,25 +302,25 @@ function DetalleApunte() {
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      
+
       // Crear un enlace temporal y hacer click para descargar
       const link = document.createElement('a');
       link.href = url;
       link.download = apunte.archivo?.nombreOriginal || 'apunte.pdf';
       document.body.appendChild(link);
       link.click();
-      
+
       // Limpiar
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
+
       // Registrar la descarga en el backend
       if (user && user.rut) {
         await registrarDescargaApunteService(id);
         // Recargar el apunte para actualizar el contador de descargas
-        loadApunte();
+        loadComentarios();
       }
-      
+
       toast.success('Descarga iniciada', { id: toastId });
     } catch (error) {
       console.error('Error al descargar:', error);
@@ -287,17 +332,13 @@ function DetalleApunte() {
     try {
       setLoadingPdf(true);
       setPdfError(null);
-      
-      console.log('Obteniendo URL del PDF para apunte:', id);
+
       const response = await obtenerLinkDescargaApunteURLFirmadaService(id);
-      console.log('Respuesta del servidor:', response);
-      
+
       if (response.status === 'Success' && response.data) {
-        console.log('URL del PDF obtenida:', response.data.url);
         setPdfUrl(response.data.url);
         setDownloadUrl(response.data.url);
       } else {
-        console.error('Respuesta sin éxito:', response);
         setPdfError('No se pudo obtener el PDF');
         toast.error('Error al cargar el PDF');
       }
@@ -312,7 +353,6 @@ function DetalleApunte() {
   };
 
   const onDocumentLoadSuccess = ({ numPages }) => {
-    console.log('PDF cargado exitosamente. Páginas:', numPages);
     setNumPages(numPages);
     setPageNumber(1);
   };
@@ -378,7 +418,7 @@ function DetalleApunte() {
   const handleMisApuntesClick = () => navigate('/estudiante/mis-apuntes');
   const handleEstadisticasClick = () => navigate('/estudiante/estadisticas');
   const handleConfigClick = () => navigate('/estudiante/configuracion');
-  
+
   const handleLogout = () => {
     // Limpiar token y datos del usuario
     document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
@@ -411,11 +451,11 @@ function DetalleApunte() {
         fechaComentario: fechaComentario
       };
       const response = await crearComentarioApunteService(id, comentarioData);
-      
+
       if (response.status === 'Success') {
         setComentario('');
         toast.success('Comentario publicado');
-        loadApunte();
+        loadComentarios();
       } else {
         toast.error(response.message || 'Error al publicar comentario');
       }
@@ -434,7 +474,7 @@ function DetalleApunte() {
 
     // Verificar si ya dio like ANTES de hacer la petición
     if (userLikesMap[comentarioId]) {
-      toast.info('Ya has dado like a este comentario');
+      toast.error('Ya has dado like a este comentario');
       return;
     }
 
@@ -448,7 +488,7 @@ function DetalleApunte() {
           delete newMap[comentarioId];
           return newMap;
         });
-        
+
         // Actualizar el contador localmente para feedback visual inmediato
         setComentarios(prev => prev.map(com => {
           if (com._id === comentarioId) {
@@ -463,17 +503,17 @@ function DetalleApunte() {
           }
           return com;
         }));
-        
+
         toast.success('Like agregado');
       } else if (response.status === 'Client error') {
-        toast.info(response.details || response.message || 'Ya has dado like a este comentario');
+        toast.error(response.details || response.message || 'Ya has dado like a este comentario');
       }
     } catch (error) {
       console.error('Error al dar like:', error);
       const errorMsg = error.response?.data?.details || error.response?.data?.message || error.message || 'Error al dar like';
       // Si el mensaje contiene "ya has dado like" o es un ID, mostrar mensaje amigable
       if (/^[a-f0-9]{24}$/i.test(errorMsg) || errorMsg.includes('ya has dado like') || errorMsg.includes('Ya has dado like')) {
-        toast.info('Ya has dado like a este comentario');
+        toast.error('Ya has dado like a este comentario');
       } else {
         toast.error(errorMsg);
       }
@@ -488,7 +528,7 @@ function DetalleApunte() {
 
     // Verificar si ya dio dislike ANTES de hacer la petición
     if (userDislikesMap[comentarioId]) {
-      toast.info('Ya has dado dislike a este comentario');
+      toast.error('Ya has dado dislike a este comentario');
       return;
     }
 
@@ -502,7 +542,7 @@ function DetalleApunte() {
           delete newMap[comentarioId];
           return newMap;
         });
-        
+
         // Actualizar el contador localmente para feedback visual inmediato
         setComentarios(prev => prev.map(com => {
           if (com._id === comentarioId) {
@@ -517,17 +557,19 @@ function DetalleApunte() {
           }
           return com;
         }));
-        
+
         toast.success('Dislike agregado');
       } else if (response.status === 'Client error') {
-        toast.info(response.details || response.message || 'Ya has dado dislike a este comentario');
+        toast.error(response.details || response.message || 'Ya has dado dislike a este comentario');
       }
     } catch (error) {
       console.error('Error al dar dislike:', error);
       const errorMsg = error.response?.data?.details || error.response?.data?.message || error.message || 'Error al dar dislike';
       // Si el mensaje contiene "ya has dado dislike" o es un ID, mostrar mensaje amigable
       if (/^[a-f0-9]{24}$/i.test(errorMsg) || errorMsg.includes('ya has dado dislike') || errorMsg.includes('Ya has dado dislike')) {
-        toast.info('Ya has dado dislike a este comentario');
+        toast.error('Ya has dado dislike a este comentario');
+      } else if (errorMsg.includes('propio comentario')) {
+        toast.error('No puedes dar dislike a tu propio comentario');
       } else {
         toast.error(errorMsg);
       }
@@ -564,12 +606,12 @@ function DetalleApunte() {
       };
 
       const response = await crearRespuestaComentarioApunteService(id, respuestaData);
-      
+
       if (response.status === 'Success') {
         setTextoRespuesta('');
         setRespuestaActiva(null);
         toast.success('Respuesta publicada');
-        loadApunte();
+        loadComentarios();
       } else {
         toast.error(response.message || 'Error al publicar respuesta');
       }
@@ -592,7 +634,7 @@ function DetalleApunte() {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
-      <Header 
+      <Header
         notificationCount={0}
         notifications={[]}
         onHomeClick={handleHomeClick}
@@ -605,11 +647,11 @@ function DetalleApunte() {
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
+
         {/* Hero Section */}
         <div className="relative overflow-hidden bg-white rounded-3xl shadow-sm border border-gray-100 mb-8 group hover:shadow-md transition-all duration-300">
-          <div className="absolute top-0 left-0 w-full h-48 bg-gradient-to-br from-purple-700 via-purple-600 to-purple-500"></div>
-          
+          <div className="absolute top-0 left-0 w-full h-48 bg-gradient-to-r from-purple-400 to-purple-600"></div>
+
           <div className="relative px-8 pb-8 pt-20">
             <div className="flex flex-col md:flex-row items-start md:items-end gap-6">
               <div className="relative">
@@ -619,7 +661,7 @@ function DetalleApunte() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex-1">
                 <div className="flex flex-wrap items-baseline gap-3 mb-2">
                   <h1 className="text-3xl font-bold text-white tracking-tight">{apunte.nombre}</h1>
@@ -639,7 +681,33 @@ function DetalleApunte() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Calendar className="w-4 h-4" />
-                    {new Date(apunte.fechaSubida).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    {(() => {
+                      if (!apunte.fechaSubida) return 'Fecha desconocida';
+                      try {
+                        // Intentar parsear formato DD-MM-YYYY
+                        if (apunte.fechaSubida.includes('-')) {
+                          const parts = apunte.fechaSubida.split('-');
+                          if (parts.length === 3) {
+                            // Asumir DD-MM-YYYY
+                            const day = parseInt(parts[0], 10);
+                            const month = parseInt(parts[1], 10) - 1;
+                            const year = parseInt(parts[2], 10);
+                            const date = new Date(year, month, day);
+                            if (!isNaN(date.getTime())) {
+                              return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+                            }
+                          }
+                        }
+                        // Intentar parsear como fecha estándar
+                        const date = new Date(apunte.fechaSubida);
+                        if (!isNaN(date.getTime())) {
+                          return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+                        }
+                        return apunte.fechaSubida;
+                      } catch {
+                        return apunte.fechaSubida;
+                      }
+                    })()}
                   </div>
                 </div>
               </div>
@@ -649,10 +717,10 @@ function DetalleApunte() {
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            
+
             {/* Descripción y Contenido */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-8">
@@ -701,9 +769,25 @@ function DetalleApunte() {
                     <FileText className="w-5 h-5 text-purple-600" />
                     Vista Previa del Documento
                   </h3>
-                  <span className="text-sm text-gray-500">{formatBytes(apunte.archivo.tamano)}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-gray-500">{formatBytes(apunte.archivo.tamano)}</span>
+                    <button
+                      onClick={handleDownload}
+                      className="p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all shadow-sm hover:shadow-md group"
+                      title="Descargar PDF"
+                    >
+                      <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    </button>
+                    <button
+                      onClick={handleShare}
+                      className="p-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all group"
+                      title="Compartir"
+                    >
+                      <Share2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    </button>
+                  </div>
                 </div>
-                
+
                 {/* Visor de PDF */}
                 <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200">
                   {loadingPdf && (
@@ -712,13 +796,13 @@ function DetalleApunte() {
                       <p className="text-gray-600">Cargando documento PDF...</p>
                     </div>
                   )}
-                  
+
                   {pdfError && !loadingPdf && (
                     <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-gray-200 rounded-xl">
                       <FileText className="w-16 h-16 text-red-300 mx-auto mb-4" />
                       <p className="text-red-600 mb-2 font-medium">Error al cargar el documento</p>
                       <p className="text-sm text-gray-500">{pdfError}</p>
-                      <button 
+                      <button
                         onClick={loadPdfUrl}
                         className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                       >
@@ -726,7 +810,7 @@ function DetalleApunte() {
                       </button>
                     </div>
                   )}
-                  
+
                   {!loadingPdf && !pdfError && pdfUrl && (
                     <>
                       <div className="flex items-center justify-center bg-gray-100 p-4 overflow-x-auto">
@@ -748,7 +832,7 @@ function DetalleApunte() {
                             </div>
                           }
                         >
-                          <Page 
+                          <Page
                             pageNumber={pageNumber}
                             width={Math.min(window.innerWidth * 0.55, 750)}
                             renderTextLayer={false}
@@ -761,7 +845,7 @@ function DetalleApunte() {
                           />
                         </Document>
                       </div>
-                      
+
                       {/* Controles de navegación del PDF */}
                       {numPages && numPages > 1 && (
                         <div className="flex items-center justify-between bg-gray-50 px-6 py-4 border-t border-gray-200">
@@ -773,7 +857,7 @@ function DetalleApunte() {
                             <ChevronLeft className="w-4 h-4" />
                             Anterior
                           </button>
-                          
+
                           <div className="flex items-center gap-2 text-sm">
                             <span className="text-gray-600">Página</span>
                             <input
@@ -791,7 +875,7 @@ function DetalleApunte() {
                             />
                             <span className="text-gray-600">de {numPages}</span>
                           </div>
-                          
+
                           <button
                             onClick={nextPage}
                             disabled={pageNumber >= numPages}
@@ -802,7 +886,7 @@ function DetalleApunte() {
                           </button>
                         </div>
                       )}
-                      
+
                       <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
                         <p className="text-sm text-gray-500 text-center">
                           {apunte.archivo.nombreOriginal}
@@ -810,7 +894,7 @@ function DetalleApunte() {
                       </div>
                     </>
                   )}
-                  
+
                   {!loadingPdf && !pdfError && !pdfUrl && (
                     <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-gray-200 rounded-xl">
                       <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -827,7 +911,7 @@ function DetalleApunte() {
               <div className="p-6 border-b border-gray-50">
                 <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                   <MessageSquare className="w-5 h-5 text-purple-600" />
-                  Comentarios ({comentarios.length})
+                  Comentarios ({comentarios.length + comentarios.reduce((acc, com) => acc + (com.respuestas ? com.respuestas.length : 0), 0)})
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">Comparte tu opinión sobre este apunte</p>
               </div>
@@ -880,45 +964,67 @@ function DetalleApunte() {
                               <span className="font-semibold text-gray-900">{com.autorNombre || 'Usuario desconocido'}</span>
                               <span className="text-xs text-gray-400">•</span>
                               <span className="text-xs text-gray-500">
-                                {com.fechaComentario || 'Invalid Date'}
+                                {(() => {
+                                  if (!com.fechaComentario) return 'Fecha desconocida';
+                                  try {
+                                    // Intentar parsear formato DD-MM-YYYY
+                                    if (com.fechaComentario.includes('-')) {
+                                      const parts = com.fechaComentario.split('-');
+                                      if (parts.length === 3) {
+                                        // Asumir DD-MM-YYYY
+                                        const day = parseInt(parts[0], 10);
+                                        const month = parseInt(parts[1], 10) - 1;
+                                        const year = parseInt(parts[2], 10);
+                                        const date = new Date(year, month, day);
+                                        if (!isNaN(date.getTime())) {
+                                          return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+                                        }
+                                      }
+                                    }
+                                    // Intentar parsear como fecha estándar
+                                    const date = new Date(com.fechaComentario);
+                                    if (!isNaN(date.getTime())) {
+                                      return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+                                    }
+                                    return com.fechaComentario;
+                                  } catch {
+                                    return com.fechaComentario;
+                                  }
+                                })()}
                               </span>
                             </div>
                             <p className="text-gray-700 text-sm leading-relaxed mb-2">{com.comentario}</p>
                             <div className="flex items-center gap-4">
-                              <button 
+                              <button
                                 onClick={() => handleLike(com._id)}
-                                className={`flex items-center gap-1 text-xs transition-all ${
-                                  userLikesMap[com._id]
-                                    ? 'text-green-600 font-semibold scale-110'
-                                    : 'text-gray-500 hover:text-green-600 hover:scale-105'
-                                }`}
+                                className={`flex items-center gap-1 text-xs transition-all ${userLikesMap[com._id]
+                                  ? 'text-green-600 font-semibold scale-110'
+                                  : 'text-gray-500 hover:text-green-600 hover:scale-105'
+                                  }`}
                               >
-                                <ThumbsUp className={`w-3.5 h-3.5 ${
-                                  userLikesMap[com._id] ? 'fill-green-600' : ''
-                                }`} />
+                                <ThumbsUp className={`w-3.5 h-3.5 ${userLikesMap[com._id] ? 'fill-green-600' : ''
+                                  }`} />
                                 <span>{com.Likes || 0}</span>
                               </button>
-                              <button 
+                              <button
                                 onClick={() => handleDislike(com._id)}
-                                className={`flex items-center gap-1 text-xs transition-all ${
-                                  userDislikesMap[com._id]
-                                    ? 'text-red-600 font-semibold scale-110'
-                                    : 'text-gray-500 hover:text-red-600 hover:scale-105'
-                                }`}
+                                className={`flex items-center gap-1 text-xs transition-all ${userDislikesMap[com._id]
+                                  ? 'text-red-600 font-semibold scale-110'
+                                  : 'text-gray-500 hover:text-red-600 hover:scale-105'
+                                  }`}
                               >
-                                <ThumbsUp className={`w-3.5 h-3.5 rotate-180 ${
-                                  userDislikesMap[com._id] ? 'fill-red-600' : ''
-                                }`} />
+                                <ThumbsUp className={`w-3.5 h-3.5 rotate-180 ${userDislikesMap[com._id] ? 'fill-red-600' : ''
+                                  }`} />
                                 <span>{com.Dislikes || 0}</span>
                               </button>
-                              <button 
+                              <button
                                 onClick={() => handleResponder(com._id)}
                                 className="text-xs text-gray-500 hover:text-purple-600 transition-colors"
                               >
                                 Responder
                               </button>
                             </div>
-                            
+
                             {/* Formulario de respuesta */}
                             {respuestaActiva === com._id && (
                               <div className="mt-3 ml-4 border-l-2 border-purple-200 pl-4">
@@ -945,6 +1051,57 @@ function DetalleApunte() {
                                 </div>
                               </div>
                             )}
+
+                            {/* Lista de Respuestas */}
+                            {com.respuestas && com.respuestas.length > 0 && (
+                              <div className="mt-4 space-y-3 pl-4 border-l-2 border-gray-100">
+                                {com.respuestas.map((resp) => (
+                                  <div key={resp._id} className="bg-white rounded-lg p-3 border border-gray-100">
+                                    <div className="flex gap-2">
+                                      <div className="w-8 h-8 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-xs flex-shrink-0">
+                                        {resp.autorNombre ? resp.autorNombre.charAt(0).toUpperCase() : 'U'}
+                                      </div>
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <span className="font-semibold text-gray-900 text-sm">{resp.autorNombre || 'Usuario desconocido'}</span>
+                                          <span className="text-xs text-gray-400">•</span>
+                                          <span className="text-xs text-gray-500">
+                                            {(() => {
+                                              if (!resp.fechaComentario) return 'Fecha desconocida';
+                                              try {
+                                                // Intentar parsear formato DD-MM-YYYY
+                                                if (resp.fechaComentario.includes('-')) {
+                                                  const parts = resp.fechaComentario.split('-');
+                                                  if (parts.length === 3) {
+                                                    // Asumir DD-MM-YYYY
+                                                    const day = parseInt(parts[0], 10);
+                                                    const month = parseInt(parts[1], 10) - 1;
+                                                    const year = parseInt(parts[2], 10);
+                                                    const date = new Date(year, month, day);
+                                                    if (!isNaN(date.getTime())) {
+                                                      return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+                                                    }
+                                                  }
+                                                }
+                                                // Intentar parsear como fecha estándar
+                                                const date = new Date(resp.fechaComentario);
+                                                if (!isNaN(date.getTime())) {
+                                                  return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+                                                }
+                                                return resp.fechaComentario;
+                                              } catch {
+                                                return resp.fechaComentario;
+                                              }
+                                            })()}
+                                          </span>
+                                        </div>
+                                        <p className="text-gray-700 text-sm leading-relaxed">{resp.comentario}</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -957,26 +1114,7 @@ function DetalleApunte() {
           </div>
 
           {/* Right Column - Sidebar */}
-          <div className="space-y-6">
-            
-            {/* Acciones Principales */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-8">
-              <button
-                onClick={handleDownload}
-                className="w-full py-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-purple-800 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 mb-3 group"
-              >
-                <Download className="w-5 h-5 group-hover:animate-bounce" />
-                Descargar PDF
-              </button>
-              
-              <button
-                onClick={handleShare}
-                className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-all flex items-center justify-center gap-2 border-2 border-transparent"
-              >
-                <Share2 className="w-4 h-4" />
-                Compartir
-              </button>
-            </div>
+          < div className="sticky top-8 space-y-6" >
 
             {/* Sistema de Valoración */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -984,7 +1122,7 @@ function DetalleApunte() {
                 <Star className="w-4 h-4 text-yellow-500" />
                 Valoración
               </h3>
-              
+
               <div className="text-center mb-6">
                 <div className="text-4xl font-bold text-gray-900 mb-1">
                   {apunte.valoracion?.promedioValoracion?.toFixed(1) || '0.0'}
@@ -993,11 +1131,10 @@ function DetalleApunte() {
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star
                       key={star}
-                      className={`w-5 h-5 ${
-                        star <= Math.round(apunte.valoracion?.promedioValoracion || 0)
-                          ? 'fill-yellow-400 text-yellow-400'
-                          : 'text-gray-300'
-                      }`}
+                      className={`w-5 h-5 ${star <= Math.round(apunte.valoracion?.promedioValoracion || 0)
+                        ? 'fill-yellow-400 text-yellow-400'
+                        : 'text-gray-300'
+                        }`}
                     />
                   ))}
                 </div>
@@ -1018,11 +1155,10 @@ function DetalleApunte() {
                       className="transition-transform hover:scale-125"
                     >
                       <Star
-                        className={`w-8 h-8 transition-colors ${
-                          star <= (hoverRating || userRating)
-                            ? 'fill-yellow-400 text-yellow-400'
-                            : 'text-gray-300 hover:text-yellow-200'
-                        }`}
+                        className={`w-8 h-8 transition-colors ${star <= (hoverRating || userRating)
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'text-gray-300 hover:text-yellow-200'
+                          }`}
                       />
                     </button>
                   ))}
@@ -1053,7 +1189,9 @@ function DetalleApunte() {
                     <MessageSquare className="w-4 h-4" />
                     <span className="text-sm">Comentarios</span>
                   </div>
-                  <span className="font-bold text-gray-900">{comentarios.length}</span>
+                  <span className="font-bold text-gray-900">
+                    {comentarios.length + comentarios.reduce((acc, com) => acc + (com.respuestas ? com.respuestas.length : 0), 0)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -1061,12 +1199,12 @@ function DetalleApunte() {
             {/* Información del Autor */}
             <div className="bg-gradient-to-br from-white to-purple-50 rounded-2xl shadow-sm border border-purple-100 p-6 overflow-hidden relative">
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-400 to-purple-600 opacity-10 rounded-full -mr-16 -mt-16"></div>
-              
+
               <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 flex items-center gap-2 relative z-10">
                 <Award className="w-4 h-4 text-purple-600" />
                 Autor del Apunte
               </h3>
-              
+
               <div className="relative z-10">
                 <div className="flex items-start gap-4 mb-4">
                   <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
@@ -1106,7 +1244,10 @@ function DetalleApunte() {
             </div>
 
             {/* Reportar */}
-            <button className="w-full py-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all flex items-center justify-center gap-2 border border-red-100 font-medium text-sm">
+            <button
+              onClick={() => setIsReportModalOpen(true)}
+              className="w-full py-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all flex items-center justify-center gap-2 border border-red-100 font-medium text-sm"
+            >
               <Flag className="w-4 h-4" />
               Reportar Apunte
             </button>
@@ -1161,7 +1302,7 @@ function DetalleApunte() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Apuntes Relacionados</h2>
-              <p className="text-sm text-gray-500 mt-1">Contenido similar que te puede interesar</p>
+              <p className="text-sm text-gray-500 mt-1">Contenido similiar de la misma asignatura</p>
             </div>
             <button className="text-purple-600 hover:text-purple-700 font-medium text-sm flex items-center gap-1 group">
               Ver más
@@ -1200,6 +1341,15 @@ function DetalleApunte() {
         </div>
 
       </div>
+
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        apunteId={id}
+        autorRut={apunte?.rutAutorSubida}
+        userRut={user?.rut}
+      />
     </div>
   );
 }

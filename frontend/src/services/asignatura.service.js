@@ -17,3 +17,13 @@ export async function getAsignaturasSemestreActualService(semestreActual) {
         return error.response.data;
     }
 }
+
+export async function obtenerCantidadAsignaturasService() {
+    try {
+        const response = await axios.get('/api/asignaturas/cantidad-total');
+        return response.data;
+    } catch (error) {
+        console.error("Error al obtener la cantidad de asignaturas:", error);
+        throw error;
+    }
+}

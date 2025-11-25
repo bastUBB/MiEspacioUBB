@@ -94,3 +94,17 @@ export async function actualizarEstadoReporteService(reporteID, resolucion) {
     }
 }
 
+export async function obtenerCantidadReportesPendientesService() {
+    try {
+        const cantidadReportesPendientes = await Reporte.find({ estado: 'Pendiente' });
+
+        if (!cantidadReportesPendientes || cantidadReportesPendientes.length === 0) return [null, 'No hay reportes pendientes'];
+
+        return [cantidadReportesPendientes.length, null];
+    } catch (error) {
+        console.error('Error al obtener la cantidad de reportes pendientes:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+

@@ -9,6 +9,7 @@ import comentarioRoutes from "./comentario.routes.js"
 import notificacionRoutes from "./notificacion.routes.js"
 import recomendacionRoutes from "./recomendacion.routes.js"
 import historialRoutes from "./historial.routes.js"
+import encuestaRoutes from "./encuesta.routes.js"
 
 const router = Router();
 
@@ -22,6 +23,7 @@ router
     .use("/comentarios", comentarioRoutes)
     .use("/notificaciones", notificacionRoutes)
     .use("/recomendaciones", recomendacionRoutes)
-    .use("/historial", historialRoutes);
+    .use("/historial", historialRoutes)
+    .use("/encuestas", encuestaRoutes);
 
 export default router;

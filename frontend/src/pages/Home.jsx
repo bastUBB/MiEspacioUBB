@@ -17,7 +17,7 @@ import { numeroApuntesUserService, obtenerMayoresContribuidoresService } from '.
 function Home() {
   const { user, loading: userLoading } = useContext(UserContext);
   const navigate = useNavigate();
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Estados para datos del backend
@@ -47,7 +47,7 @@ function Home() {
       try {
         setLoadingApuntes(true);
         const response = await obtenerApuntesMasValoradosService();
-        
+
         if (response.status === 'Success' && response.data) {
           setApuntes(response.data);
         }
@@ -90,7 +90,7 @@ function Home() {
         if (misApuntesResponse.status === 'fulfilled' && misApuntesResponse.value?.status === 'Success') {
           misApuntesArray = Array.isArray(misApuntesResponse.value.data) ? misApuntesResponse.value.data : [];
         }
-        
+
         // Obtener número de apuntes subidos (asegurarse que sea un número)
         let notesUploaded = 0;
         if (numApuntesResponse.status === 'fulfilled' && numApuntesResponse.value?.status === 'Success') {
@@ -102,7 +102,7 @@ function Home() {
         let totalRatings = 0;
         if (misApuntesArray.length > 0) {
           totalRatings = misApuntesArray.reduce(
-            (sum, apunte) => sum + (apunte.valoracion?.cantidadValoraciones || 0), 
+            (sum, apunte) => sum + (apunte.valoracion?.cantidadValoraciones || 0),
             0
           );
         }
@@ -116,7 +116,7 @@ function Home() {
 
       } catch (error) {
         if (!isMounted) return;
-        
+
         console.error('Error cargando estadísticas:', error);
         // Establecer valores por defecto en caso de error
         setUserStats({
@@ -143,25 +143,25 @@ function Home() {
     const fetchContribuidores = async () => {
       try {
         const response = await obtenerMayoresContribuidoresService();
-        
+
         if (!isMounted) return;
 
         if (response.status === 'Success' && response.data) {
           const contribuidoresArray = Array.isArray(response.data) ? response.data : [];
-          
+
           // Transformar datos para el componente Sidebar
           const contribuidoresTransformados = contribuidoresArray.map(contrib => ({
             name: contrib.nombreCompleto,
             contributions: contrib.apuntesSubidos
           }));
-          
+
           setTopContributors(contribuidoresTransformados);
         } else {
           setTopContributors([]);
         }
       } catch (error) {
         if (!isMounted) return;
-        
+
         console.error('Error cargando contribuidores:', error);
         setTopContributors([]);
       }
@@ -183,12 +183,12 @@ function Home() {
     const fetchApuntesMasVisualizados = async () => {
       try {
         const response = await obtenerApuntesMasVisualizadosService();
-        
+
         if (!isMounted) return;
 
         if (response.status === 'Success' && response.data) {
           const apuntesArray = Array.isArray(response.data) ? response.data : [];
-          
+
           // Transformar datos para el componente Sidebar
           const apuntesTransformados = apuntesArray.map(apunte => ({
             title: apunte.nombre,
@@ -196,14 +196,14 @@ function Home() {
             subject: apunte.asignatura,
             views: apunte.visualizaciones
           }));
-          
+
           setTopMostViewedNotes(apuntesTransformados);
         } else {
           setTopMostViewedNotes([]);
         }
       } catch (error) {
         if (!isMounted) return;
-        
+
         console.error('Error cargando apuntes más visualizados:', error);
         setTopMostViewedNotes([]);
       }
@@ -225,25 +225,25 @@ function Home() {
     const fetchAsignaturasConMasApuntes = async () => {
       try {
         const response = await obtenerAsignaturasConMasApuntesService();
-        
+
         if (!isMounted) return;
 
         if (response.status === 'Success' && response.data) {
           const asignaturasArray = Array.isArray(response.data) ? response.data : [];
-          
+
           // Transformar datos para el componente Sidebar
           const asignaturasTransformadas = asignaturasArray.map(asignatura => ({
             name: asignatura._id,
             count: asignatura.totalApuntes
           }));
-          
+
           setTopSubjects(asignaturasTransformadas);
         } else {
           setTopSubjects([]);
         }
       } catch (error) {
         if (!isMounted) return;
-        
+
         console.error('Error cargando asignaturas con más apuntes:', error);
         setTopSubjects([]);
       }
@@ -270,7 +270,7 @@ function Home() {
 
       try {
         const response = await obtenerTodasMisNotificacionesService(user.rut);
-        
+
         if (!isMounted) return;
 
         if (response.status === 'Success' && response.data) {
@@ -287,14 +287,14 @@ function Home() {
         // Si hay error, limpiar estado
         setNotifications([]);
         setNotificationCount(0);
-        
+
         console.error('Error cargando notificaciones:', error);
       }
     };
 
     if (user && user.rut) {
       fetchNotifications();
-      
+
       // Recargar notificaciones cada 30 segundos
       interval = setInterval(fetchNotifications, 30000);
     }
@@ -360,7 +360,11 @@ function Home() {
   const handleConfigClick = () => {
     navigate('/estudiante/configuracion');
   };
-  
+
+  const handleEncuestasClick = () => {
+    navigate('/estudiante/encuestas');
+  };
+
   const handleLogout = () => {
     document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     localStorage.removeItem('user');
@@ -374,12 +378,12 @@ function Home() {
 
   const handleNoteClick = (note) => {
     const apunteId = note.id || note._id;
-    
+
     if (!apunteId) {
       toast.error('Error: ID de apunte no encontrado');
       return;
     }
-    
+
     navigate(`/estudiante/apunte/${apunteId}`);
   };
 
@@ -410,11 +414,11 @@ function Home() {
     // Marcar como leída al hacer clic
     try {
       await actualizarEstadoLeidoService(notification._id);
-      
+
       // Actualizar el estado local
       setNotifications(prev => prev.filter(n => n._id !== notification._id));
       setNotificationCount(prev => Math.max(0, prev - 1));
-      
+
       toast.success('Notificación marcada como leída');
     } catch (error) {
       console.error('Error al marcar notificación como leída:', error);
@@ -425,11 +429,11 @@ function Home() {
   const handleMarkAsRead = async (notificationId) => {
     try {
       await actualizarEstadoLeidoService(notificationId);
-      
+
       // Actualizar el estado local
       setNotifications(prev => prev.filter(n => n._id !== notificationId));
       setNotificationCount(prev => Math.max(0, prev - 1));
-      
+
       toast.success('Notificación marcada como leída');
     } catch (error) {
       console.error('Error al marcar notificación como leída:', error);
@@ -444,14 +448,14 @@ function Home() {
       // Primero marcar todas como leídas
       const markPromises = notifications.map(n => actualizarEstadoLeidoService(n._id));
       await Promise.all(markPromises);
-      
+
       // Luego borrar todas las leídas
       await borrarNotificacionesLeidasService(user.rut);
-      
+
       // Actualizar el estado local
       setNotifications([]);
       setNotificationCount(0);
-      
+
       toast.success('Todas las notificaciones han sido marcadas como leídas');
     } catch (error) {
       console.error('Error al limpiar notificaciones:', error);
@@ -471,7 +475,7 @@ function Home() {
   // Vista principal del dashboard
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header 
+      <Header
         notificationCount={notificationCount}
         notifications={notifications}
         onNotificationClick={handleNotificationClick}
@@ -482,34 +486,35 @@ function Home() {
         onExplorarClick={handleExplorarClick}
         onMisApuntesClick={handleMisApuntesClick}
         onEstadisticasClick={handleEstadisticasClick}
+        onEncuestasClick={handleEncuestasClick}
         onLogout={handleLogout}
         onConfigClick={handleConfigClick}
       />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-3">
-            <WelcomeSection 
+            <WelcomeSection
               userName={user?.nombreCompleto || 'Usuario'}
             />
             <SearchSection />
-            
+
             {loadingApuntes ? (
               <div className="flex justify-center items-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
               </div>
             ) : (
-              <RecommendationsSection 
-                notes={transformApuntesForDisplay(apuntes)} 
+              <RecommendationsSection
+                notes={transformApuntesForDisplay(apuntes)}
                 onNoteClick={handleNoteClick}
               />
             )}
           </div>
-          
+
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <Sidebar 
+            <Sidebar
               userStats={userStats}
               topContributors={topContributors}
               topNotes={getTopApuntes()}
@@ -519,11 +524,11 @@ function Home() {
           </div>
         </div>
       </div>
-      
+
       <FloatingActionButton onClick={handleUploadClick} />
-      
+
       {/* Modal para subir apuntes */}
-      <SubirApunteModal 
+      <SubirApunteModal
         isOpen={isModalOpen}
         onClose={handleModalClose}
         onApunteCreated={handleApunteCreated}

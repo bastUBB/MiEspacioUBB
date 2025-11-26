@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bell, User, BookOpen, BarChart3, FileText, Home, Compass, X, Check, Settings, LogOut } from 'lucide-react';
+import { Bell, User, BookOpen, BarChart3, FileText, Home, Compass, X, Check, LogOut, ChevronDown } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 
-const Header = ({ notificationCount = 0, notifications = [], onNotificationClick, onMarkAsRead, onClearAll, onProfileClick, onHomeClick, onExplorarClick, onMisApuntesClick, onEstadisticasClick, onLogout }) => {
+const Header = ({ notificationCount = 0, notifications = [], onNotificationClick, onMarkAsRead, onClearAll, onProfileClick, onHomeClick, onExplorarClick, onMisApuntesClick, onEstadisticasClick, onEncuestasClick, onLogout }) => {
   const location = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showEncuestasMenu, setShowEncuestasMenu] = useState(false);
   const dropdownRef = useRef(null);
   const profileMenuRef = useRef(null);
+  const encuestasMenuRef = useRef(null);
 
   // Cerrar dropdown al hacer clic fuera
   useEffect(() => {
@@ -17,6 +19,9 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
       }
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
         setShowProfileMenu(false);
+      }
+      if (encuestasMenuRef.current && !encuestasMenuRef.current.contains(event.target)) {
+        setShowEncuestasMenu(false);
       }
     };
 
@@ -114,11 +119,41 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
               <BarChart3 className="w-4 h-4" />
               <span>Estadísticas</span>
             </button>
-            <a href="#" className="flex items-center space-x-2 text-gray-600 hover:text-purple-600 transition-all hover:scale-105 cursor-pointer font-medium">
-              <Compass className="w-4 h-4" />
-              <span>Nuevas funcionalidades</span>
-              {/* * [IDEAS] Módulo para hacer encuestas de tesis/proyecto titulo */}
-            </a>
+
+            {/* Dropdown de Nuevas Funcionalidades */}
+            <div className="relative" ref={encuestasMenuRef}>
+              <button
+                onClick={() => setShowEncuestasMenu(!showEncuestasMenu)}
+                className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname === '/estudiante/encuestas'
+                  ? 'text-purple-600 font-semibold'
+                  : 'text-gray-600 hover:text-purple-600 font-medium'
+                  }`}
+              >
+                <Compass className="w-4 h-4" />
+                <span>Nuevas funcionalidades</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${showEncuestasMenu ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Submenu desplegable */}
+              {showEncuestasMenu && (
+                <div className="absolute top-full mt-2 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden min-w-[220px]">
+                  <button
+                    onClick={() => {
+                      setShowEncuestasMenu(false);
+                      onEncuestasClick && onEncuestasClick();
+                    }}
+                    className="w-full px-4 py-3 text-left hover:bg-purple-50 transition-colors flex items-center gap-3 text-gray-700 hover:text-purple-600"
+                  >
+                    <Compass className="w-4 h-4" />
+                    <span className="font-medium">Explora nuevas encuestas</span>
+                  </button>
+                  <div className="w-full px-4 py-3 text-left bg-gray-50 cursor-not-allowed flex items-center gap-3 text-gray-400">
+                    <span className="text-lg">🚀</span>
+                    <span className="font-medium">Pronto nuevas funcionalidades</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* User actions */}

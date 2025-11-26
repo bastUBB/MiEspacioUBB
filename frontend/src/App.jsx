@@ -26,6 +26,9 @@ import ExplorarApuntes from './pages/ExplorarApuntes.jsx'
 import MisApuntes from './pages/MisApuntes.jsx'
 import Estadisticas from './pages/Estadisticas.jsx'
 import DetalleApunte from './pages/DetalleApunte.jsx'
+import ExploradorEncuestas from './pages/ExploradorEncuestas.jsx'
+import MisEncuestas from './pages/admin/MisEncuestas.jsx'
+import CrearEncuesta from './pages/admin/CrearEncuesta.jsx'
 
 import { Toaster } from 'react-hot-toast'
 import { UserContextProvider } from './context/userContextProvider.jsx'
@@ -101,6 +104,8 @@ function App() {
           }>
             <Route index element={<HomeAdmin />} />
             <Route path="home" element={<HomeAdmin />} />
+            <Route path="encuestas" element={<MisEncuestas />} />
+            <Route path="encuestas/crear" element={<CrearEncuesta />} />
             {/* Agrega más rutas del admin aquí */}
           </Route>
 
@@ -116,6 +121,7 @@ function App() {
             <Route path="explorar" element={<ExplorarApuntes />} />
             <Route path="mis-apuntes" element={<MisApuntes />} />
             <Route path="estadisticas" element={<Estadisticas />} />
+            <Route path="encuestas" element={<ExploradorEncuestas />} />
             <Route path="apunte/:id" element={<DetalleApunte />} />
           </Route>
 
@@ -131,6 +137,7 @@ function App() {
             <Route path="explorar" element={<ExplorarApuntes />} />
             <Route path="mis-apuntes" element={<MisApuntes />} />
             <Route path="estadisticas" element={<Estadisticas />} />
+            <Route path="encuestas" element={<ExploradorEncuestas />} />
             <Route path="apunte/:id" element={<DetalleApunte />} />
           </Route>
 
@@ -146,6 +153,7 @@ function App() {
             <Route path="explorar" element={<ExplorarApuntes />} />
             <Route path="mis-apuntes" element={<MisApuntes />} />
             <Route path="estadisticas" element={<Estadisticas />} />
+            <Route path="encuestas" element={<ExploradorEncuestas />} />
             <Route path="apunte/:id" element={<DetalleApunte />} />
           </Route>
 

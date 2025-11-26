@@ -6,6 +6,7 @@ import {
     CONFIG_DIVERSIDAD,
     MAPEO_TIPO_METODO,
     calcularPromedioNotas,
+    inferirRendimientoDesdeComplejidad,
     calcularConfiabilidadValoracion,
     calcularFrescura,
     calcularOverlap,
@@ -26,14 +27,14 @@ export async function generarRecomendacionPersonalizadaService(rutUser, limite =
     try {
         // 1. Obtener contexto del usuario
         const usuario = await perfilAcademico.findOne({ rutUser }).populate('apuntesValorados.apunteID');
-        
+
         if (!usuario) return [null, 'El usuario no posee perfil académico'];
 
         const historial = await HistorialUsuario.findOne({ rutUser });
 
         // 2. Pre-filtrado de candidatos
         const [candidatos, errorCandidatos] = await filtrarApuntesCandidatos(usuario);
-        
+
         if (errorCandidatos) return [null, errorCandidatos];
         if (!candidatos || candidatos.length === 0) {
             return [[], null]; // Retornar array vacío si no hay candidatos
@@ -43,7 +44,7 @@ export async function generarRecomendacionPersonalizadaService(rutUser, limite =
         const apuntesConScore = candidatos.map(apunte => {
             const score = calcularScoreFinal(apunte, usuario, historial);
             const explicacion = generarExplicacionRecomendacion(apunte, usuario, score);
-            
+
             return {
                 apunte,
                 score,
@@ -53,7 +54,7 @@ export async function generarRecomendacionPersonalizadaService(rutUser, limite =
 
         // 4. Aplicar diversificación y ordenamiento
         const recomendacionesDiversificadas = aplicarDiversificacion(
-            apuntesConScore, 
+            apuntesConScore,
             CONFIG_DIVERSIDAD
         );
 
@@ -90,7 +91,7 @@ async function filtrarApuntesCandidatos(usuario) {
         // Agregar asignaturas relacionadas del curricular
         usuario.informeCurricular.forEach(info => {
             const relacionadas = obtenerAsignaturasRelacionadas(
-                usuario.informeCurricular, 
+                usuario.informeCurricular,
                 info.asignatura
             );
             relacionadas.forEach(asig => asignaturasRelevantes.add(asig));
@@ -149,8 +150,8 @@ function calcularScoreFinal(apunte, usuario, historial) {
     ) * PESOS_DIMENSIONES.temporal;
 
     // Sumar dimensiones
-    const scoreBase = scoreRelevancia + scoreRendimiento + scoreMetodo + 
-                     scoreCalidad + scoreTemporal;
+    const scoreBase = scoreRelevancia + scoreRendimiento + scoreMetodo +
+        scoreCalidad + scoreTemporal;
 
     // Aplicar factores multiplicativos
     const boost = calcularBoostFactor(apunte, usuario);
@@ -178,10 +179,10 @@ function calcularRelevanciaAcademica(apunte, usuario) {
 
     // Match con asignaturas relacionadas del curricular
     const relacionadas = obtenerAsignaturasRelacionadas(
-        usuario.informeCurricular, 
+        usuario.informeCurricular,
         apunte.asignatura
     );
-    
+
     if (relacionadas.length > 0) {
         const factorRelacion = relacionadas.length / Math.max(usuario.informeCurricular.length, 1);
         score += 0.20 * Math.min(factorRelacion, 1.0);
@@ -190,7 +191,7 @@ function calcularRelevanciaAcademica(apunte, usuario) {
     // Bonus por match de etiquetas con asignaturas
     if (apunte.etiquetas && apunte.etiquetas.length > 0) {
         const todasAsignaturas = [
-            ...usuario.asignaturasCursantes, 
+            ...usuario.asignaturasCursantes,
             ...usuario.asignaturasInteres
         ];
         const matchEtiquetas = apunte.etiquetas.some(etiqueta =>
@@ -207,6 +208,11 @@ function calcularRelevanciaAcademica(apunte, usuario) {
 /**
  * Dimensión 2: Afinidad por Rendimiento (25%)
  * Ajusta recomendaciones según el desempeño académico del usuario
+ * 
+ * Soporta 3 escenarios:
+ * 1. Usuario tiene notas → calcula promedio y usa matriz
+ * 2. Usuario NO tiene notas pero SÍ tiene ordenComplejidad → infiere rendimiento
+ * 3. Usuario NO tiene ninguno → score neutro (0.5)
  */
 function calcularAfinidadRendimiento(apunte, usuario) {
     // Buscar información de la asignatura en el curricular
@@ -214,24 +220,51 @@ function calcularAfinidadRendimiento(apunte, usuario) {
         info => info.asignatura === apunte.asignatura
     );
 
-    // Si no hay información previa, retornar score neutro
-    if (!infoAsignatura || !infoAsignatura.evaluaciones || 
-        infoAsignatura.evaluaciones.length === 0) {
-        return 0.5;
-    }
+    // Si no hay información previa de la asignatura, retornar score neutro
+    if (!infoAsignatura) return 0.5;
 
-    // Calcular promedio de notas del usuario en esa asignatura
-    const promedio = calcularPromedioNotas(infoAsignatura.evaluaciones);
-
-    // Si no hay complejidad definida en el apunte, usar score neutro
+    // Si el apunte no tiene complejidad definida, usar score neutro
     if (!apunte.complejidad) return 0.5;
 
-    // Mapping: rendimiento bajo → apuntes básicos, alto → apuntes avanzados
+    let nivelRendimiento = null;
+
+    // ESCENARIO 1: Intentar usar notas (prioridad)
+    if (infoAsignatura.evaluaciones && infoAsignatura.evaluaciones.length > 0) {
+        // Verificar si al menos una evaluación tiene nota
+        const hayNotas = infoAsignatura.evaluaciones.some(ev => ev.nota);
+
+        if (hayNotas) {
+            const promedio = calcularPromedioNotas(infoAsignatura.evaluaciones);
+
+            // Solo usar el promedio si es válido (> 0)
+            if (promedio > 0) {
+                if (promedio < 4.5) {
+                    nivelRendimiento = 'bajo';
+                } else if (promedio <= 5.5) {
+                    nivelRendimiento = 'medio';
+                } else {
+                    nivelRendimiento = 'alto';
+                }
+            }
+        }
+    }
+
+    // ESCENARIO 2: Si no hay notas, intentar usar ordenComplejidad
+    if (!nivelRendimiento && infoAsignatura.ordenComplejidad) {
+        nivelRendimiento = inferirRendimientoDesdeComplejidad(
+            infoAsignatura.ordenComplejidad
+        );
+    }
+
+    // ESCENARIO 3: Si no hay ni notas ni complejidad → score neutro
+    if (!nivelRendimiento) return 0.5;
+
+    // Matriz de preferencias: mapea complejidad del apunte con rendimiento del usuario
     const preferencias = {
         'Básico': {
-            bajo: 1.0,    // promedio < 4.5
-            medio: 0.7,   // 4.5 <= promedio <= 5.5
-            alto: 0.4     // promedio > 5.5
+            bajo: 1.0,    // promedio < 4.5 o complejidad 4-5
+            medio: 0.7,   // 4.5 <= promedio <= 5.5 o complejidad 3
+            alto: 0.4     // promedio > 5.5 o complejidad 1-2
         },
         'Intermedio': {
             bajo: 0.7,
@@ -245,12 +278,6 @@ function calcularAfinidadRendimiento(apunte, usuario) {
         }
     };
 
-    // Determinar nivel de rendimiento
-    let nivelRendimiento;
-    if (promedio < 4.5) nivelRendimiento = 'bajo';
-    else if (promedio <= 5.5) nivelRendimiento = 'medio';
-    else nivelRendimiento = 'alto';
-
     return preferencias[apunte.complejidad]?.[nivelRendimiento] || 0.5;
 }
 
@@ -259,7 +286,7 @@ function calcularAfinidadRendimiento(apunte, usuario) {
  * Evalúa compatibilidad entre tipo de apunte y métodos preferidos del usuario
  */
 function calcularMatchMetodoEstudio(apunte, usuario) {
-    if (!usuario.metodosEstudiosPreferidos || 
+    if (!usuario.metodosEstudiosPreferidos ||
         usuario.metodosEstudiosPreferidos.length === 0) {
         return 0.5; // Score neutro si no hay preferencias
     }
@@ -270,7 +297,7 @@ function calcularMatchMetodoEstudio(apunte, usuario) {
 
     // Calcular overlap entre métodos preferidos y compatibles
     const overlap = calcularOverlap(
-        usuario.metodosEstudiosPreferidos, 
+        usuario.metodosEstudiosPreferidos,
         metodosCompatibles
     );
 
@@ -299,8 +326,8 @@ function calcularScoreCalidad(apunte, usuario) {
 
     // Componente 3: Factor de popularidad ajustado (15%)
     // Apuntes con visualizaciones pero sin descargas tienen penalización
-    const ratioDescargasVistas = apunte.visualizaciones > 0 
-        ? (apunte.descargas || 0) / apunte.visualizaciones 
+    const ratioDescargasVistas = apunte.visualizaciones > 0
+        ? (apunte.descargas || 0) / apunte.visualizaciones
         : 0.5;
     score += Math.min(ratioDescargasVistas, 1.0) * 0.15;
 
@@ -327,7 +354,7 @@ function calcularScoreTemporal(apunte, historial) {
                 const diasDesdeAccion = (new Date() - fechaAccion) / (1000 * 60 * 60 * 24);
                 return diasDesdeAccion <= 30; // Últimos 30 días
             });
-        
+
         const factorActividad = Math.min(accionesRecientes.length / 10, 1.0);
         score += factorActividad * 0.35;
     } else {
@@ -394,8 +421,8 @@ function generarExplicacionRecomendacion(apunte, usuario, score) {
 export async function obtenerRecomendacionesGenericasService(limite = 20) {
     try {
         const apuntesPopulares = await Apunte.find({ estado: 'Activo' })
-            .sort({ 
-                'valoracion.promedioValoracion': -1, 
+            .sort({
+                'valoracion.promedioValoracion': -1,
                 'valoracion.cantidadValoraciones': -1,
                 descargas: -1
             })
@@ -429,7 +456,7 @@ export async function obtenerRecomendacionesPorAsignaturaService(rutUser, asigna
             estado: 'Activo',
             asignatura: asignatura,
             _id: { $nin: idsExcluir }
-        }).sort({ 
+        }).sort({
             'valoracion.promedioValoracion': -1,
             descargas: -1
         }).limit(limite);

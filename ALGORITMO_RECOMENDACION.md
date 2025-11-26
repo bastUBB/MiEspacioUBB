@@ -1,6 +1,7 @@
 # 📚 Sistema de Recomendación de Apuntes - MiEspacioUBB
 
 ## 📋 Tabla de Contenidos
+
 - [Visión General](#visión-general)
 - [Arquitectura del Sistema](#arquitectura-del-sistema)
 - [Algoritmo de Scoring](#algoritmo-de-scoring)
@@ -87,13 +88,13 @@ ScoreFinal = (Σ Dimensión_i × Peso_i) × BoostFactor × Penalización
 
 ### Pesos de las Dimensiones
 
-| Dimensión | Peso | Descripción |
-|-----------|------|-------------|
-| **Relevancia Académica** | 35% | Match con asignaturas cursantes/interés |
-| **Rendimiento Contextual** | 25% | Afinidad entre dificultad y desempeño |
-| **Método de Estudio** | 20% | Compatibilidad con preferencias |
-| **Calidad** | 15% | Valoraciones y popularidad |
-| **Temporal** | 5% | Frescura y patrones temporales |
+| Dimensión                  | Peso | Descripción                             |
+| -------------------------- | ---- | --------------------------------------- |
+| **Relevancia Académica**   | 35%  | Match con asignaturas cursantes/interés |
+| **Rendimiento Contextual** | 25%  | Afinidad entre dificultad y desempeño   |
+| **Método de Estudio**      | 20%  | Compatibilidad con preferencias         |
+| **Calidad**                | 15%  | Valoraciones y popularidad              |
+| **Temporal**               | 5%   | Frescura y patrones temporales          |
 
 **Total:** 100%
 
@@ -108,7 +109,7 @@ ScoreFinal = (Σ Dimensión_i × Peso_i) × BoostFactor × Penalización
 **Componentes:**
 
 ```javascript
-ScoreRelevancia = 
+ScoreRelevancia =
   (matchAsignaturasCursantes × 0.50) +      // Cursando actualmente
   (matchAsignaturasInteres × 0.30) +         // Interés declarado
   (relacionPrerequisitos × 0.20)             // Asignaturas relacionadas
@@ -117,10 +118,12 @@ ScoreRelevancia =
 **Lógica de Cálculo:**
 
 1. **Match Directo con Asignaturas Cursantes (50%):**
+
    - Si el apunte es de una asignatura que el usuario está cursando → Score máximo (0.50)
    - Prioridad absoluta para contenido de asignaturas actuales
 
 2. **Match con Asignaturas de Interés (30%):**
+
    - Si el apunte es de una asignatura marcada como interés → Score alto (0.30)
    - Permite exploración de temas futuros
 
@@ -130,6 +133,7 @@ ScoreRelevancia =
    - Score proporcional a la cantidad de relaciones encontradas
 
 **Bonus Adicional:**
+
 - Si las **etiquetas** del apunte coinciden con asignaturas del usuario → +0.10
 
 **Ejemplo Práctico:**
@@ -164,26 +168,54 @@ Apunte: {
 **Objetivo:** Ajustar recomendaciones según el desempeño académico del usuario en cada asignatura.
 
 **Filosofía:**
+
 - **Rendimiento bajo** → Priorizar apuntes **básicos** (fundamentales, claros)
 - **Rendimiento medio** → Balance de todos los niveles
 - **Rendimiento alto** → Priorizar apuntes **avanzados** (complementarios, profundos)
 
-**Matriz de Preferencias:**
+#### 🔄 Tres Escenarios Soportados
 
-| Complejidad Apunte | Promedio < 4.5 | 4.5 ≤ Promedio ≤ 5.5 | Promedio > 5.5 |
-|--------------------|----------------|----------------------|----------------|
-| **Básico** | 1.0 (ideal) | 0.7 (aceptable) | 0.4 (poco útil) |
-| **Intermedio** | 0.7 | 1.0 (ideal) | 0.8 |
-| **Avanzado** | 0.3 (muy difícil) | 0.7 | 1.0 (ideal) |
+El sistema es **flexible** y se adapta a la información disponible del usuario:
 
-**Cálculo del Promedio:**
+**1️⃣ ESCENARIO: Usuario tiene notas registradas** (Prioridad)
+
+Si el usuario registró sus evaluaciones con notas, el sistema calcula el promedio ponderado:
 
 ```javascript
-// Promedio ponderado de evaluaciones
 Promedio = Σ(Nota_i × Porcentaje_i) / Σ(Porcentaje_i)
 ```
 
-**Ejemplo Práctico:**
+**2️⃣ ESCENARIO: Usuario NO tiene notas, pero SÍ tiene complejidad auto-reportada**
+
+Si el usuario optó por NO registrar notas pero indicó la complejidad percibida de sus evaluaciones mediante `ordenComplejidad` (1-5), el sistema **infiere** el rendimiento:
+
+| ordenComplejidad | Rendimiento Inferido | Razón                                  |
+| ---------------- | -------------------- | -------------------------------------- |
+| 1-2 (Fácil)      | **Alto**             | Le pareció fácil → rinde bien          |
+| 3 (Normal)       | **Medio**            | Dificultad normal                      |
+| 4-5 (Difícil)    | **Bajo**             | Le pareció difícil → necesita refuerzo |
+
+**3️⃣ ESCENARIO: Usuario NO tiene notas NI complejidad**
+
+Si no hay información disponible (usuario nuevo o no completó perfil), se usa **score neutro** (0.5).
+
+---
+
+#### Matriz de Preferencias
+
+Una vez determinado el nivel de rendimiento (por notas o complejidad), se usa esta matriz:
+
+| Complejidad Apunte | Rendimiento Bajo  | Rendimiento Medio | Rendimiento Alto |
+| ------------------ | ----------------- | ----------------- | ---------------- |
+| **Básico**         | 1.0 (ideal)       | 0.7 (aceptable)   | 0.4 (poco útil)  |
+| **Intermedio**     | 0.7               | 1.0 (ideal)       | 0.8              |
+| **Avanzado**       | 0.3 (muy difícil) | 0.7               | 1.0 (ideal)      |
+
+---
+
+#### Ejemplos Prácticos
+
+**Ejemplo 1: Usuario con Notas**
 
 ```javascript
 Usuario en "Cálculo II": {
@@ -193,14 +225,43 @@ Usuario en "Cálculo II": {
     { nota: 4.5, porcentaje: 40 }   // Examen
   ]
 }
-// Promedio = (4.2×0.3 + 3.8×0.3 + 4.5×0.4) / 1.0 = 4.2
+// Promedio = (4.2×0.3 + 3.8×0.3 + 4.5×0.4) = 4.2
+// → Rendimiento: BAJO (< 4.5)
 
 Apunte: {
   asignatura: "Cálculo II",
-  complejidad: "Básico"  // Fundamentos de derivadas
+  complejidad: "Básico"
 }
 
 // Score: 1.0 (perfecto para reforzar bases)
+```
+
+**Ejemplo 2: Usuario SIN Notas, CON Complejidad**
+
+```javascript
+Usuario en "Programación Avanzada": {
+  evaluaciones: [],  // Sin notas registradas
+  ordenComplejidad: 5  // Le pareció muy difícil
+}
+// → Rendimiento inferido: BAJO (complejidad 4-5)
+
+Apunte: {
+  asignatura: "Programación Avanzada",
+  complejidad: "Básico"  // Fundamentos
+}
+
+// Score: 1.0 (ideal, necesita material básico)
+```
+
+**Ejemplo 3: Usuario SIN Información**
+
+```javascript
+Usuario nuevo o sin perfil completo: {
+  evaluaciones: [],
+  ordenComplejidad: null
+}
+
+// → Score neutro: 0.5 (sin sesgo)
 ```
 
 ---
@@ -234,11 +295,11 @@ Score = (Métodos Coincidentes) / (Total Métodos Preferidos)
 
 ```javascript
 Usuario: {
-  metodosEstudiosPreferidos: ["visual", "práctica", "esquemas"]
+  metodosEstudiosPreferidos: ["visual", "práctica", "esquemas"];
 }
 
 Apunte: {
-  tipoApunte: "Mapa conceptual"
+  tipoApunte: "Mapa conceptual";
   // Métodos compatibles: ["visual", "esquemas", "diagramas"]
 }
 
@@ -255,7 +316,7 @@ Apunte: {
 **Componentes:**
 
 ```javascript
-ScoreCalidad = 
+ScoreCalidad =
   (valoraciónNormalizada × 0.60) +           // Promedio de estrellas
   (confiabilidadValoración × 0.25) +         // Cantidad de votos
   (ratioDescargasVistas × 0.15)              // Popularidad genuina
@@ -273,24 +334,24 @@ Valoración normalizada = Promedio Valoración / 5.0
 Fórmula sigmoide para dar más peso a apuntes con más votos:
 
 ```javascript
-Confiabilidad = 1 - (1 / (1 + cantidadValoraciones/10))
+Confiabilidad = 1 - 1 / (1 + cantidadValoraciones / 10);
 ```
 
 | Valoraciones | Confiabilidad | Interpretación |
-|--------------|---------------|----------------|
-| 1 | 0.09 | Muy baja |
-| 5 | 0.33 | Baja |
-| 10 | 0.50 | Media |
-| 20 | 0.67 | Alta |
-| 50 | 0.83 | Muy alta |
-| 100+ | 0.91+ | Excelente |
+| ------------ | ------------- | -------------- |
+| 1            | 0.09          | Muy baja       |
+| 5            | 0.33          | Baja           |
+| 10           | 0.50          | Media          |
+| 20           | 0.67          | Alta           |
+| 50           | 0.83          | Muy alta       |
+| 100+         | 0.91+         | Excelente      |
 
 **3. Ratio Descargas/Vistas (15%):**
 
 Detecta apuntes genuinamente útiles vs. clickbait:
 
 ```javascript
-Ratio = Descargas / Visualizaciones
+Ratio = Descargas / Visualizaciones;
 // Ratio alto → Los usuarios que lo ven lo descargan (señal positiva)
 // Ratio bajo → Muchas vistas pero pocas descargas (posible clickbait)
 ```
@@ -322,7 +383,7 @@ Apunte: {
 **Componentes:**
 
 ```javascript
-ScoreTemporal = 
+ScoreTemporal =
   (frescuraApunte × 0.40) +                  // Qué tan nuevo es
   (tendenciaInteracción × 0.35) +            // Actividad reciente del usuario
   (momentoSemestre × 0.25)                    // Época académica
@@ -347,7 +408,8 @@ Score = min(AccionesRecientes / 10, 1.0)
 
 **3. Momento del Semestre (25%):**
 
-*Nota: Actualmente usa score neutro (0.5). Puede refinarse integrando calendario académico real para detectar épocas de:*
+_Nota: Actualmente usa score neutro (0.5). Puede refinarse integrando calendario académico real para detectar épocas de:_
+
 - Inicio de semestre → Priorizar contenido introductorio
 - Pre-certámenes → Priorizar ejercicios y resúmenes
 - Fin de semestre → Priorizar material de repaso
@@ -364,12 +426,12 @@ Amplifican el score cuando se cumplen condiciones especiales:
 BoostTotal = Factor1 × Factor2 × Factor3 × ... (máximo 2.0)
 ```
 
-| Condición | Multiplicador | Razón |
-|-----------|---------------|-------|
-| Asignatura cursante actual | ×1.5 | Máxima prioridad |
-| Match etiquetas-temas débiles | ×1.3 | Refuerzo de áreas débiles |
-| Preferencia única de método | ×1.2 | Usuario tiene estilo definido |
-| Tiene comentarios positivos | ×1.15 | Engagement comunitario |
+| Condición                     | Multiplicador | Razón                         |
+| ----------------------------- | ------------- | ----------------------------- |
+| Asignatura cursante actual    | ×1.5          | Máxima prioridad              |
+| Match etiquetas-temas débiles | ×1.3          | Refuerzo de áreas débiles     |
+| Preferencia única de método   | ×1.2          | Usuario tiene estilo definido |
+| Tiene comentarios positivos   | ×1.15         | Engagement comunitario        |
 
 **Ejemplo:**
 
@@ -386,13 +448,13 @@ Reducen el score cuando hay razones para evitar el apunte:
 PenalizaciónTotal = Factor1 × Factor2 × Factor3 × ... (mínimo 0.1)
 ```
 
-| Condición | Multiplicador | Razón |
-|-----------|---------------|-------|
-| Estado ≠ 'Activo' | ×0.1 | Apunte suspendido/revisión |
-| Ya valorado por usuario | ×0.3 | Evitar repetición |
-| Ya descargado | ×0.4 | Ya lo tiene |
-| Valoración baja con muchas descargas | ×0.6 | Posible clickbait |
-| Asignatura completamente ajena | ×0.7 | Baja relevancia |
+| Condición                            | Multiplicador | Razón                      |
+| ------------------------------------ | ------------- | -------------------------- |
+| Estado ≠ 'Activo'                    | ×0.1          | Apunte suspendido/revisión |
+| Ya valorado por usuario              | ×0.3          | Evitar repetición          |
+| Ya descargado                        | ×0.4          | Ya lo tiene                |
+| Valoración baja con muchas descargas | ×0.6          | Posible clickbait          |
+| Asignatura completamente ajena       | ×0.7          | Baja relevancia            |
 
 **Ejemplo:**
 
@@ -439,6 +501,7 @@ Candidatos = Apuntes donde:
 ```
 
 **Ventajas:**
+
 - ⚡ Reduce carga computacional
 - 🎯 Enfoca el algoritmo en contenido relevante
 - 🚫 Evita recomendar apuntes ya conocidos
@@ -474,19 +537,21 @@ const scoreFinal = scoreBase × boost × penalizacion
 
 ```javascript
 CONFIG_DIVERSIDAD = {
-  maxPorAsignatura: 4,           // Máximo 4 apuntes de la misma asignatura
-  porcentajeSerendipity: 0.15,   // 15% de recomendaciones exploratorias
-  diversidadTipos: true          // Variar tipos de apunte
-}
+  maxPorAsignatura: 4, // Máximo 4 apuntes de la misma asignatura
+  porcentajeSerendipity: 0.15, // 15% de recomendaciones exploratorias
+  diversidadTipos: true, // Variar tipos de apunte
+};
 ```
 
 **Proceso:**
 
 1. **Separar recomendaciones:**
+
    - 85% alta relevancia (ordenadas por score)
    - 15% exploración (scores más bajos pero diversos)
 
 2. **Aplicar restricciones de diversidad:**
+
    - Limitar apuntes por asignatura
    - Variar tipos de apunte
    - Balancear complejidades
@@ -519,6 +584,7 @@ Top 10 = [
 ### Caso 1: Estudiante con Dificultades
 
 **Perfil:**
+
 ```javascript
 {
   rutUser: "20.123.456-7",
@@ -540,6 +606,7 @@ Top 10 = [
 **Recomendaciones Generadas:**
 
 1. **Apunte: "Ejercicios Resueltos de Integrales Básicas"**
+
    - Relevancia: 0.50 (cursante) → ×0.35 = 0.175
    - Rendimiento: 1.0 (básico para bajo) → ×0.25 = 0.250
    - Método: 1.0 (match práctica) → ×0.20 = 0.200
@@ -559,6 +626,7 @@ Top 10 = [
 ### Caso 2: Estudiante Avanzado
 
 **Perfil:**
+
 ```javascript
 {
   asignaturasCursantes: ["Machine Learning"],
@@ -587,6 +655,7 @@ Top 10 = [
 ### Caso 3: Usuario Nuevo (Cold Start)
 
 **Perfil:**
+
 ```javascript
 {
   asignaturasCursantes: ["Introducción a la Programación"],
@@ -596,11 +665,13 @@ Top 10 = [
 ```
 
 **Estrategia:**
+
 - Usar score neutro (0.5) en dimensión de rendimiento
 - Priorizar apuntes con muchas valoraciones (alta confiabilidad)
 - Diversificar tipos para descubrir preferencias
 
 **Recomendaciones:**
+
 1. Apuntes más valorados de la asignatura
 2. Variedad de tipos (resúmenes, ejercicios, mapas)
 3. Enfoque en contenido popular y probado
@@ -615,15 +686,16 @@ Top 10 = [
 
 ```javascript
 export const PESOS_DIMENSIONES = {
-    relevanciaAcademica: 0.35,      // Modificar según necesidad
-    rendimientoContextual: 0.25,
-    metodoEstudio: 0.20,
-    calidad: 0.15,
-    temporal: 0.05
+  relevanciaAcademica: 0.35, // Modificar según necesidad
+  rendimientoContextual: 0.25,
+  metodoEstudio: 0.2,
+  calidad: 0.15,
+  temporal: 0.05,
 };
 ```
 
 **Recomendaciones:**
+
 - Suma debe ser 1.0
 - Aumentar `relevanciaAcademica` → Más foco en asignaturas actuales
 - Aumentar `calidad` → Más conservador, solo contenido bien valorado
@@ -633,9 +705,9 @@ export const PESOS_DIMENSIONES = {
 
 ```javascript
 export const CONFIG_DIVERSIDAD = {
-    maxPorAsignatura: 4,            // Aumentar para más concentración
-    porcentajeSerendipity: 0.15,    // 0.0-0.3 recomendado
-    diversidadTipos: true           // false para no restringir tipos
+  maxPorAsignatura: 4, // Aumentar para más concentración
+  porcentajeSerendipity: 0.15, // 0.0-0.3 recomendado
+  diversidadTipos: true, // false para no restringir tipos
 };
 ```
 
@@ -645,9 +717,9 @@ export const CONFIG_DIVERSIDAD = {
 
 ```javascript
 export const MAPEO_TIPO_METODO = {
-    'Resumen': ['lectura', 'visual', 'síntesis', 'repaso'],
-    // Agregar nuevos tipos o métodos
-    'Tutorial Video': ['audiovisual', 'paso a paso'],
+  Resumen: ["lectura", "visual", "síntesis", "repaso"],
+  // Agregar nuevos tipos o métodos
+  "Tutorial Video": ["audiovisual", "paso a paso"],
 };
 ```
 
@@ -662,6 +734,7 @@ export const MAPEO_TIPO_METODO = {
 **Autenticación:** Requerida (JWT)
 
 **Parámetros:**
+
 ```javascript
 {
   rutUser: "xx.xxx.xxx-x",    // Requerido
@@ -670,6 +743,7 @@ export const MAPEO_TIPO_METODO = {
 ```
 
 **Respuesta:**
+
 ```javascript
 {
   success: true,
@@ -707,13 +781,15 @@ export const MAPEO_TIPO_METODO = {
 **Uso:** Para usuarios sin perfil académico o visitantes.
 
 **Parámetros:**
+
 ```javascript
 {
-  limite: 20  // Opcional (default: 20, max: 50)
+  limite: 20; // Opcional (default: 20, max: 50)
 }
 ```
 
 **Respuesta:**
+
 ```javascript
 {
   success: true,
@@ -741,6 +817,7 @@ export const MAPEO_TIPO_METODO = {
 **Uso:** Para obtener recomendaciones de una asignatura específica.
 
 **Parámetros:**
+
 ```javascript
 {
   asignatura: "Programación Avanzada",  // Requerido
@@ -750,6 +827,7 @@ export const MAPEO_TIPO_METODO = {
 ```
 
 **Respuesta:**
+
 ```javascript
 {
   success: true,
@@ -773,34 +851,44 @@ export const MAPEO_TIPO_METODO = {
 Para evaluar efectividad del sistema de recomendaciones:
 
 #### 1. **Precision@K**
+
 ```
 Precision@10 = (Apuntes recomendados útiles en top 10) / 10
 ```
+
 - **Objetivo:** > 70%
 - **Útil = valorado positivamente o descargado tras recomendación**
 
 #### 2. **Click-Through Rate (CTR)**
+
 ```
 CTR = (Clicks en recomendaciones) / (Recomendaciones mostradas)
 ```
+
 - **Objetivo:** > 15%
 
 #### 3. **Download Rate**
+
 ```
 Download Rate = (Descargas post-recomendación) / (Clicks)
 ```
+
 - **Objetivo:** > 40%
 
 #### 4. **Average Rating of Recommended**
+
 ```
 Promedio valoración de apuntes recomendados vs. generales
 ```
+
 - **Objetivo:** Recomendados > +0.5 vs. promedio general
 
 #### 5. **Coverage**
+
 ```
 Coverage = (Apuntes recomendados al menos 1 vez) / (Total apuntes activos)
 ```
+
 - **Objetivo:** > 60% (evitar "long tail" ignorado)
 
 ### Implementación de Métricas
@@ -826,18 +914,22 @@ Coverage = (Apuntes recomendados al menos 1 vez) / (Total apuntes activos)
 ### Mejoras Sugeridas
 
 1. **Filtrado Colaborativo Profundo:**
+
    - Implementar matriz de similitud entre usuarios
    - "Usuarios como tú también descargaron..."
 
 2. **Machine Learning:**
+
    - Entrenar modelo con datos históricos
    - Aprendizaje de pesos óptimos automático
 
 3. **Feedback Explícito:**
+
    - Permitir "marcar como no útil"
    - Ajustar recomendaciones en tiempo real
 
 4. **Contexto Temporal Avanzado:**
+
    - Integrar calendario académico real
    - Detectar épocas de certámenes/exámenes
 
@@ -901,6 +993,7 @@ Para modificar o extender el sistema:
 ## 📧 Contacto
 
 Para consultas sobre el algoritmo de recomendación:
+
 - **Repositorio:** MiEspacioUBB
 - **Archivo principal:** `backend/src/services/recomendacion.service.js`
 

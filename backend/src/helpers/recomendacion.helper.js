@@ -59,6 +59,35 @@ export function calcularPromedioNotas(evaluaciones) {
 }
 
 /**
+ * Infiere el nivel de rendimiento del usuario basándose en la complejidad
+ * auto-reportada de sus evaluaciones
+ * 
+ * Lógica:
+ * - Si el usuario reporta complejidad BAJA (1-2): Rendimiento ALTO
+ *   (Le pareció fácil → está rindiendo bien)
+ * - Si el usuario reporta complejidad MEDIA (3): Rendimiento MEDIO
+ *   (Dificultad normal)
+ * - Si el usuario reporta complejidad ALTA (4-5): Rendimiento BAJO
+ *   (Le pareció difícil → necesita refuerzo)
+ * 
+ * @param {Number} ordenComplejidad - Complejidad auto-reportada (1-5)
+ * @returns {String} - Nivel de rendimiento: 'bajo', 'medio', o 'alto'
+ */
+export function inferirRendimientoDesdeComplejidad(ordenComplejidad) {
+    if (!ordenComplejidad || ordenComplejidad < 1 || ordenComplejidad > 5) {
+        return 'medio'; // Default neutro
+    }
+
+    if (ordenComplejidad <= 2) {
+        return 'alto';  // Le pareció fácil → buen rendimiento
+    } else if (ordenComplejidad === 3) {
+        return 'medio'; // Dificultad normal → rendimiento medio
+    } else {
+        return 'bajo';  // Le pareció difícil → necesita refuerzo
+    }
+}
+
+/**
  * Normaliza un score a rango [0, 1]
  * @param {Number} valor - Valor a normalizar
  * @param {Number} min - Valor mínimo
@@ -109,15 +138,15 @@ export function calcularFrescura(fechaSubida) {
  */
 export function sonSimilares(str1, str2) {
     if (!str1 || !str2) return false;
-    
+
     const normalize = (str) => str
         .toLowerCase()
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
         .trim();
-    
-    return normalize(str1).includes(normalize(str2)) || 
-           normalize(str2).includes(normalize(str1));
+
+    return normalize(str1).includes(normalize(str2)) ||
+        normalize(str2).includes(normalize(str1));
 }
 
 /**
@@ -150,15 +179,15 @@ export function obtenerAsignaturasRelacionadas(informeCurricular, asignaturaObje
     if (!informeCurricular || !asignaturaObjetivo) return [];
 
     const relacionadas = [];
-    
+
     // Buscar asignaturas con palabras clave similares
     const palabrasClave = extraerPalabrasClave(asignaturaObjetivo);
-    
+
     informeCurricular.forEach(info => {
         if (info.asignatura !== asignaturaObjetivo) {
             const palabrasAsignatura = extraerPalabrasClave(info.asignatura);
             const overlap = calcularOverlap(palabrasClave, palabrasAsignatura);
-            
+
             if (overlap > 0.3) { // 30% de similitud mínima
                 relacionadas.push(info.asignatura);
             }
@@ -175,9 +204,9 @@ export function obtenerAsignaturasRelacionadas(informeCurricular, asignaturaObje
  */
 function extraerPalabrasClave(texto) {
     if (!texto) return [];
-    
+
     const stopWords = ['de', 'del', 'la', 'el', 'los', 'las', 'a', 'ante', 'con', 'para', 'por', 'y', 'e', 'o', 'u'];
-    
+
     return texto
         .toLowerCase()
         .split(/\s+/)
@@ -253,16 +282,16 @@ export function calcularPenalizacion(apunte, usuario) {
     }
 
     // Penalización si tiene valoración baja pero muchas descargas (posible clickbait)
-    if (apunte.valoracion.promedioValoracion < 3.0 && 
-        apunte.descargas > 50 && 
+    if (apunte.valoracion.promedioValoracion < 3.0 &&
+        apunte.descargas > 50 &&
         apunte.valoracion.cantidadValoraciones > 10) {
         penalizacion *= 0.6;
     }
 
     // Penalización si es de asignatura completamente ajena
     const esRelevante = usuario.asignaturasCursantes.includes(apunte.asignatura) ||
-                        usuario.asignaturasInteres.includes(apunte.asignatura);
-    
+        usuario.asignaturasInteres.includes(apunte.asignatura);
+
     if (!esRelevante) {
         const relacionadas = obtenerAsignaturasRelacionadas(usuario.informeCurricular, apunte.asignatura);
         if (relacionadas.length === 0) {
@@ -292,7 +321,7 @@ export function aplicarDiversificacion(apuntesConScore, config = CONFIG_DIVERSID
     // Calcular cuántos apuntes de serendipity incluir
     const cantidadTotal = ordenados.length;
     const cantidadSerendipity = Math.floor(cantidadTotal * config.porcentajeSerendipity);
-    
+
     // Separar apuntes de alta relevancia y de exploración
     const altaRelevancia = ordenados.slice(0, cantidadTotal - cantidadSerendipity);
     const exploracion = ordenados.slice(cantidadTotal - cantidadSerendipity);

@@ -375,7 +375,7 @@ export async function getHistorialUsuarioService(rutUser) {
     }
 }
 
-export async function registrarEncuestaService(rutUser, encuestaID) {
+export async function registrarCreateEncuestaService(rutUser, encuestaID) {
     try {
         const userExist = await User.findOne({ rut: rutUser });
 

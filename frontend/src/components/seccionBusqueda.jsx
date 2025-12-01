@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, BookOpen, Calendar, TrendingUp, Clock } from 'lucide-react';
+import { obtenerAsignaturasConMasApuntesService } from '../services/apunte.service';
 
 const SearchSection = ({ onSearch, onFilterChange }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
-  const [showResults, setShowResults] = useState(false);
+  const [setShowResults] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
 
   const filters = [
     { id: 'all', label: 'Todos', icon: BookOpen },
@@ -14,10 +16,24 @@ const SearchSection = ({ onSearch, onFilterChange }) => {
     { id: 'recent', label: 'Recientes', icon: Clock }
   ];
 
-  const suggestions = [
-    'Cálculo I', 'Programación', 'Química Orgánica', 'Historia del Arte',
-    'Estadística', 'Física II', 'Derecho Civil', 'Microeconomía'
-  ];
+  // Cargar asignaturas populares al montar el componente
+  useEffect(() => {
+    const cargarAsignaturasPopulares = async () => {
+      try {
+        const response = await obtenerAsignaturasConMasApuntesService();
+        if (response?.data && Array.isArray(response.data)) {
+          // El servicio devuelve objetos con _id (nombre asignatura) y totalApuntes
+          const asignaturasNombres = response.data.map(item => item._id);
+          setSuggestions(asignaturasNombres);
+        }
+      } catch (error) {
+        console.error('Error al cargar asignaturas populares:', error);
+        // Si hay error, mantener el array vacío
+      }
+    };
+
+    cargarAsignaturasPopulares();
+  }, []);
 
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -47,7 +63,7 @@ const SearchSection = ({ onSearch, onFilterChange }) => {
         <Search className="w-5 h-5 text-purple-600" />
         <h2 className="text-lg font-semibold text-gray-900">Buscar apuntes</h2>
       </div>
-      
+
       {/* Search Bar */}
       <div className="relative mb-4">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -71,11 +87,10 @@ const SearchSection = ({ onSearch, onFilterChange }) => {
             <button
               key={filter.id}
               onClick={() => handleFilterClick(filter.id)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all cursor-pointer ${
-                activeFilter === filter.id
-                  ? 'bg-purple-100 text-purple-700 border-2 border-purple-200'
-                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border-2 border-transparent'
-              }`}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all cursor-pointer ${activeFilter === filter.id
+                ? 'bg-purple-100 text-purple-700 border-2 border-purple-200'
+                : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border-2 border-transparent'
+                }`}
             >
               <Icon className="w-4 h-4" />
               <span className="text-sm font-medium">{filter.label}</span>
@@ -85,7 +100,7 @@ const SearchSection = ({ onSearch, onFilterChange }) => {
       </div>
 
       {/* Quick Suggestions */}
-      {searchQuery === '' && (
+      {searchQuery === '' && suggestions.length > 0 && (
         <div>
           <p className="text-sm text-gray-600 mb-2">Sugerencias populares:</p>
           <div className="flex flex-wrap gap-2">

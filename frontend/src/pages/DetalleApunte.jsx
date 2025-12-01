@@ -415,7 +415,7 @@ function DetalleApunte() {
   const handleHomeClick = () => navigate('/estudiante/home');
   const handleProfileClick = () => navigate('/estudiante/profile');
   const handleExplorarClick = () => navigate('/estudiante/explorar');
-  const handleMisApuntesClick = () => navigate('/estudiante/mis-apuntes');
+  const handleMisApuntesClick = () => navigate('/estudiante/mis-aportes');
   const handleEstadisticasClick = () => navigate('/estudiante/estadisticas');
   const handleConfigClick = () => navigate('/estudiante/configuracion');
 

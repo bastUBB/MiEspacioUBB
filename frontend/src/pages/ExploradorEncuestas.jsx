@@ -1,6 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
 import { Search, Loader } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../context/userContextProvider';
 import { obtenerTodasEncuestasActivas, obtenerEncuestaPorId } from '../services/encuesta.service.js';
 import { obtenerTodasMisNotificacionesService, actualizarEstadoLeidoService, borrarNotificacionesLeidasService } from '../services/notificacion.service';
@@ -36,9 +35,8 @@ const MOCK_ENCUESTAS = [
     }
 ];
 
-const ExploradorEncuestas = () => {
+const ExploradorEncuestas = ({ embedded = false }) => {
     const { user } = useContext(UserContext);
-    const navigate = useNavigate();
     const [encuestas, setEncuestas] = useState(MOCK_ENCUESTAS);
     const [encuestasFiltradas, setEncuestasFiltradas] = useState(MOCK_ENCUESTAS);
     const [searchTerm, setSearchTerm] = useState('');
@@ -118,44 +116,7 @@ const ExploradorEncuestas = () => {
         }
     };
 
-    // Handlers para el header
-    const handleHomeClick = () => {
-        const role = user?.rol || 'estudiante';
-        navigate(`/${role}/home`);
-    };
-
-    const handleProfileClick = () => {
-        const role = user?.rol || 'estudiante';
-        navigate(`/${role}/profile`);
-    };
-
-    const handleExplorarClick = () => {
-        const role = user?.rol || 'estudiante';
-        navigate(`/${role}/explorar`);
-    };
-
-    const handleMisApuntesClick = () => {
-        const role = user?.rol || 'estudiante';
-        navigate(`/${role}/mis-apuntes`);
-    };
-
-    const handleEstadisticasClick = () => {
-        const role = user?.rol || 'estudiante';
-        navigate(`/${role}/estadisticas`);
-    };
-
-    const handleEncuestasClick = () => {
-        const role = user?.rol || 'estudiante';
-        navigate(`/${role}/encuestas`);
-    };
-
-    const handleLogout = () => {
-        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        localStorage.removeItem('user');
-        toast.success('Sesión cerrada exitosamente');
-        navigate('/login');
-    };
-
+    // Handlers para notificaciones
     const handleNotificationClick = async (notification) => {
         try {
             await actualizarEstadoLeidoService(notification._id);
@@ -194,69 +155,65 @@ const ExploradorEncuestas = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <Header
-                notificationCount={notificationCount}
-                notifications={notifications}
-                onNotificationClick={handleNotificationClick}
-                onMarkAsRead={handleMarkAsRead}
-                onClearAll={handleClearAll}
-                onProfileClick={handleProfileClick}
-                onHomeClick={handleHomeClick}
-                onExplorarClick={handleExplorarClick}
-                onMisApuntesClick={handleMisApuntesClick}
-                onEstadisticasClick={handleEstadisticasClick}
-                onEncuestasClick={handleEncuestasClick}
-                onLogout={handleLogout}
-            />
+        <div className={embedded ? "" : "min-h-screen bg-gray-50"}>
+            {!embedded && (
+                <Header
+                    notificationCount={notificationCount}
+                    notifications={notifications}
+                    onNotificationClick={handleNotificationClick}
+                    onMarkAsRead={handleMarkAsRead}
+                    onClearAll={handleClearAll}
+                />
+            )}
 
-            <div className="bg-gradient-to-br from-purple-50 via-white to-violet-50 py-8 px-4">
-                <div className="max-w-7xl mx-auto">
-                    {/* Header de página */}
-                    <div className="mb-8">
-                        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-violet-600 bg-clip-text text-transparent mb-2">
-                            Explorar Encuestas
-                        </h1>
-                        <p className="text-gray-600">
-                            Participa en encuestas y ayuda a mejorar nuestra comunidad
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Header Section */}
+                <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl p-8 mb-8 shadow-sm">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Explorar Encuestas</h1>
+                    <p className="text-gray-600">Participa en encuestas y ayuda a mejorar nuestra comunidad</p>
+                </div>
+
+                {/* Search Section */}
+                <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl shadow-sm p-6 mb-8">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                        <input
+                            type="text"
+                            placeholder="Buscar encuestas..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        />
+                    </div>
+                </div>
+
+                {/* Results Count */}
+                <div className="mb-4">
+                    <p className="text-gray-600">
+                        Mostrando <span className="font-semibold">{encuestasFiltradas.length}</span> encuestas
+                    </p>
+                </div>
+
+                {/* Grid de encuestas */}
+                {loading ? (
+                    <div className="flex justify-center items-center h-64">
+                        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
+                    </div>
+                ) : encuestasFiltradas.length === 0 ? (
+                    <div className="text-center py-12">
+                        <p className="text-gray-500 text-lg">
+                            {searchTerm ? 'No se encontraron encuestas que coincidan con tu búsqueda' : 'No hay encuestas disponibles en este momento'}
                         </p>
                     </div>
-
-                    {/* Buscador */}
-                    <div className="mb-6">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                            <input
-                                type="text"
-                                placeholder="Buscar encuestas..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                            />
-                        </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {encuestasFiltradas.map(encuesta => (
+                            <div key={encuesta._id} onClick={() => handleClickEncuesta(encuesta)}>
+                                <TarjetaEncuesta encuesta={encuesta} isAdmin={false} />
+                            </div>
+                        ))}
                     </div>
-
-                    {/* Grid de encuestas */}
-                    {loading ? (
-                        <div className="flex justify-center items-center h-64">
-                            <Loader className="w-8 h-8 animate-spin text-purple-600" />
-                        </div>
-                    ) : encuestasFiltradas.length === 0 ? (
-                        <div className="text-center py-12">
-                            <p className="text-gray-500 text-lg">
-                                {searchTerm ? 'No se encontraron encuestas que coincidan con tu búsqueda' : 'No hay encuestas disponibles en este momento'}
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {encuestasFiltradas.map(encuesta => (
-                                <div key={encuesta._id} onClick={() => handleClickEncuesta(encuesta)}>
-                                    <TarjetaEncuesta encuesta={encuesta} isAdmin={false} />
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
+                )}
             </div>
         </div>
     );

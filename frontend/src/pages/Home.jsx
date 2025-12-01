@@ -350,7 +350,7 @@ function Home() {
   };
 
   const handleMisApuntesClick = () => {
-    navigate('/estudiante/mis-apuntes');
+    navigate('/estudiante/mis-aportes');
   };
 
   const handleEstadisticasClick = () => {

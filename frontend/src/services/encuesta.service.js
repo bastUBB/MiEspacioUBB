@@ -63,3 +63,16 @@ export async function eliminarEncuesta(id) {
         throw error;
     }
 }
+
+export async function obtenerEncuestasUsuarioService(rutUser) {
+    try {
+        const response = await axios.get(`/api/encuestas-usuario`, {
+            params: { rutUser }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error('Error al obtener encuestas del usuario:', error);
+        throw error;
+    }
+}

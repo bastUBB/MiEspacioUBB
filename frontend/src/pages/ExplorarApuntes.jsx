@@ -7,7 +7,7 @@ import Header from '../components/header';
 import { obtenerApuntesMasValoradosService } from '../services/apunte.service';
 import { parseCustomDate } from '../helpers/dateFormatter.helper';
 
-function ExplorarApuntes() {
+function ExplorarApuntes({ embedded = false }) {
   const { user, loading: userLoading } = useContext(UserContext);
   const navigate = useNavigate();
 
@@ -37,7 +37,7 @@ function ExplorarApuntes() {
       try {
         setLoading(true);
         const response = await obtenerApuntesMasValoradosService();
-        
+
         if (response.status === 'Success' && response.data) {
           setApuntes(response.data);
           setFilteredApuntes(response.data);
@@ -60,7 +60,7 @@ function ExplorarApuntes() {
 
     // Filtrar por búsqueda
     if (searchQuery) {
-      filtered = filtered.filter(apunte => 
+      filtered = filtered.filter(apunte =>
         apunte.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
         apunte.asignatura.toLowerCase().includes(searchQuery.toLowerCase()) ||
         apunte.autorSubida.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -80,20 +80,6 @@ function ExplorarApuntes() {
     setFilteredApuntes(filtered);
   }, [searchQuery, selectedCategory, sortBy, apuntes]);
 
-  const handleHomeClick = () => navigate('/estudiante/home');
-  const handleProfileClick = () => navigate('/estudiante/profile');
-  const handleExplorarClick = () => {}; // Ya estamos aquí
-  const handleMisApuntesClick = () => navigate('/estudiante/mis-apuntes');
-  const handleEstadisticasClick = () => navigate('/estudiante/estadisticas');
-  const handleConfigClick = () => navigate('/estudiante/configuracion');
-  
-  const handleLogout = () => {
-    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    localStorage.removeItem('user');
-    toast.success('Sesión cerrada exitosamente');
-    navigate('/login');
-  };
-
   if (userLoading || loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -103,19 +89,9 @@ function ExplorarApuntes() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header 
-        notificationCount={0}
-        notifications={[]}
-        onHomeClick={handleHomeClick}
-        onProfileClick={handleProfileClick}
-        onExplorarClick={handleExplorarClick}
-        onMisApuntesClick={handleMisApuntesClick}
-        onEstadisticasClick={handleEstadisticasClick}
-        onLogout={handleLogout}
-        onConfigClick={handleConfigClick}
-      />
-      
+    <div className={embedded ? "" : "min-h-screen bg-gray-50"}>
+      {!embedded && <Header />}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
         <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl p-8 mb-8 shadow-sm">
@@ -136,7 +112,7 @@ function ExplorarApuntes() {
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
             </div>
-            
+
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
@@ -154,11 +130,10 @@ function ExplorarApuntes() {
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`px-4 py-2 rounded-full transition-all cursor-pointer ${
-                  selectedCategory === category.id
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
+                className={`px-4 py-2 rounded-full transition-all cursor-pointer ${selectedCategory === category.id
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
               >
                 {category.name}
               </button>

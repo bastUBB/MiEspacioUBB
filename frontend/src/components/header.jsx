@@ -1,16 +1,20 @@
-import { useState, useRef, useEffect } from 'react';
-import { Bell, User, BookOpen, BarChart3, FileText, Home, Compass, X, Check, LogOut, ChevronDown } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useState, useRef, useEffect, useContext } from 'react';
+import { Bell, User, BookOpen, BarChart3, FileText, Home, Compass, Check, LogOut, ChevronDown } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { UserContext } from '../context/userContextProvider';
+import { toast } from 'react-hot-toast';
 import logoMiEspacioUBB from '../assets/logo_miespacioubb.svg';
 
-const Header = ({ notificationCount = 0, notifications = [], onNotificationClick, onMarkAsRead, onClearAll, onProfileClick, onHomeClick, onExplorarClick, onMisApuntesClick, onEstadisticasClick, onEncuestasClick, onLogout }) => {
+const Header = ({ notificationCount = 0, notifications = [], onNotificationClick, onMarkAsRead, onClearAll }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useContext(UserContext);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showEncuestasMenu, setShowEncuestasMenu] = useState(false);
+  const [showExplorarMenu, setShowExplorarMenu] = useState(false);
   const dropdownRef = useRef(null);
   const profileMenuRef = useRef(null);
-  const encuestasMenuRef = useRef(null);
+  const explorarMenuRef = useRef(null);
 
   // Cerrar dropdown al hacer click fuera
   useEffect(() => {
@@ -21,8 +25,8 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
         setShowProfileMenu(false);
       }
-      if (encuestasMenuRef.current && !encuestasMenuRef.current.contains(event.target)) {
-        setShowEncuestasMenu(false);
+      if (explorarMenuRef.current && !explorarMenuRef.current.contains(event.target)) {
+        setShowExplorarMenu(false);
       }
     };
 
@@ -30,11 +34,34 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Handlers de navegación
+  const role = user?.rol || 'estudiante';
+
+  const handleHomeClick = () => navigate(`/${role}/home`);
+  const handleProfileClick = () => navigate(`/${role}/profile`);
+  const handleExplorarClick = () => {
+    setShowExplorarMenu(false);
+    navigate(`/${role}/explorar`);
+  };
+  const handleMisAportesClick = () => navigate(`/${role}/mis-aportes`);
+  const handleEstadisticasClick = () => navigate(`/${role}/estadisticas`);
+  const handleEncuestasClick = () => {
+    setShowExplorarMenu(false);
+    navigate(`/${role}/encuestas`);
+  };
+
+  const handleLogout = () => {
+    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    localStorage.removeItem('user');
+    toast.success('Sesión cerrada exitosamente');
+    navigate('/login');
+  };
+
   const formatFecha = (fecha) => {
     if (!fecha) return 'Fecha desconocida';
     const date = new Date(fecha);
     const ahora = new Date();
-    const diff = Math.floor((ahora - date) / 1000); // diferencia en segundos
+    const diff = Math.floor((ahora - date) / 1000);
 
     if (diff < 60) return 'Hace un momento';
     if (diff < 3600) return `Hace ${Math.floor(diff / 60)} minutos`;
@@ -76,8 +103,8 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <button
-              onClick={onHomeClick}
-              className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname === '/estudiante/home'
+              onClick={handleHomeClick}
+              className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname.includes(`/${role}/home`)
                 ? 'text-purple-600 font-semibold'
                 : 'text-gray-600 hover:text-purple-600 font-medium'
                 }`}
@@ -85,29 +112,55 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
               <Home className="w-4 h-4" />
               <span>Inicio</span>
             </button>
+
+            {/* Dropdown de Explorar */}
+            <div className="relative" ref={explorarMenuRef}>
+              <button
+                onClick={() => setShowExplorarMenu(!showExplorarMenu)}
+                className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname.includes(`/${role}/explorar`) || location.pathname.includes(`/${role}/encuestas`)
+                  ? 'text-purple-600 font-semibold'
+                  : 'text-gray-600 hover:text-purple-600 font-medium'
+                  }`}
+              >
+                <Compass className="w-4 h-4" />
+                <span>Explorar</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${showExplorarMenu ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Submenu desplegable */}
+              {showExplorarMenu && (
+                <div className="absolute top-full mt-2 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden min-w-[200px]">
+                  <button
+                    onClick={handleExplorarClick}
+                    className="w-full px-4 py-3 text-left hover:bg-purple-50 transition-colors flex items-center gap-3 text-gray-700 hover:text-purple-600"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span className="font-medium">Apuntes</span>
+                  </button>
+                  <button
+                    onClick={handleEncuestasClick}
+                    className="w-full px-4 py-3 text-left hover:bg-purple-50 transition-colors flex items-center gap-3 text-gray-700 hover:text-purple-600"
+                  >
+                    <Compass className="w-4 h-4" />
+                    <span className="font-medium">Encuestas</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
             <button
-              onClick={onExplorarClick}
-              className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname === '/estudiante/explorar'
-                ? 'text-purple-600 font-semibold'
-                : 'text-gray-600 hover:text-purple-600 font-medium'
-                }`}
-            >
-              <BookOpen className="w-4 h-4" />
-              <span>Explorar Apuntes</span>
-            </button>
-            <button
-              onClick={onMisApuntesClick}
-              className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname === '/estudiante/mis-apuntes'
+              onClick={handleMisAportesClick}
+              className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname.includes(`/${role}/mis-aportes`)
                 ? 'text-purple-600 font-semibold'
                 : 'text-gray-600 hover:text-purple-600 font-medium'
                 }`}
             >
               <FileText className="w-4 h-4" />
-              <span>Mis Apuntes</span>
+              <span>Mis Aportes</span>
             </button>
             <button
-              onClick={onEstadisticasClick}
-              className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname === '/estudiante/estadisticas'
+              onClick={handleEstadisticasClick}
+              className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname.includes(`/${role}/estadisticas`)
                 ? 'text-purple-600 font-semibold'
                 : 'text-gray-600 hover:text-purple-600 font-medium'
                 }`}
@@ -115,41 +168,6 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
               <BarChart3 className="w-4 h-4" />
               <span>Estadísticas</span>
             </button>
-
-            {/* Dropdown de Nuevas Funcionalidades */}
-            <div className="relative" ref={encuestasMenuRef}>
-              <button
-                onClick={() => setShowEncuestasMenu(!showEncuestasMenu)}
-                className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname === '/estudiante/encuestas'
-                  ? 'text-purple-600 font-semibold'
-                  : 'text-gray-600 hover:text-purple-600 font-medium'
-                  }`}
-              >
-                <Compass className="w-4 h-4" />
-                <span>Nuevas funcionalidades</span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${showEncuestasMenu ? 'rotate-180' : ''}`} />
-              </button>
-
-              {/* Submenu desplegable */}
-              {showEncuestasMenu && (
-                <div className="absolute top-full mt-2 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden min-w-[220px]">
-                  <button
-                    onClick={() => {
-                      setShowEncuestasMenu(false);
-                      onEncuestasClick && onEncuestasClick();
-                    }}
-                    className="w-full px-4 py-3 text-left hover:bg-purple-50 transition-colors flex items-center gap-3 text-gray-700 hover:text-purple-600"
-                  >
-                    <Compass className="w-4 h-4" />
-                    <span className="font-medium">Explora nuevas encuestas</span>
-                  </button>
-                  <div className="w-full px-4 py-3 text-left bg-gray-50 cursor-not-allowed flex items-center gap-3 text-gray-400">
-                    <span className="text-lg">🚀</span>
-                    <span className="font-medium">Pronto nuevas funcionalidades</span>
-                  </div>
-                </div>
-              )}
-            </div>
           </nav>
 
           {/* User actions */}
@@ -249,7 +267,7 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
                   <button
                     onClick={() => {
                       setShowProfileMenu(false);
-                      onProfileClick && onProfileClick();
+                      handleProfileClick();
                     }}
                     className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 text-gray-700 hover:text-purple-600"
                   >
@@ -259,7 +277,7 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
                   <button
                     onClick={() => {
                       setShowProfileMenu(false);
-                      onLogout && onLogout();
+                      handleLogout();
                     }}
                     className="w-full px-4 py-3 text-left hover:bg-red-50 transition-colors flex items-center gap-3 text-red-600 hover:text-red-700 border-t border-gray-100"
                   >

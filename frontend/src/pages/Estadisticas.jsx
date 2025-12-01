@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { BarChart3, TrendingUp, Award, FileText, Star, Download, Eye, Calendar, Users } from 'lucide-react';
 import Header from '../components/header';
-import { numeroApuntesUserService, obtenerMayoresContribuidoresService } from '../services/perfilAcademico.service';
+import { obtenerMayoresContribuidoresService } from '../services/perfilAcademico.service';
 import { obtenerMisApuntesByRutService } from '../services/apunte.service';
 import { formatDateToLocal } from '../helpers/dateFormatter.helper';
 
@@ -39,7 +39,7 @@ function Estadisticas() {
 
         // Obtener mis apuntes
         const apuntesResponse = await obtenerMisApuntesByRutService(user.rut);
-        
+
         if (apuntesResponse.status === 'Success' && apuntesResponse.data) {
           const apuntes = apuntesResponse.data;
           setMisApuntes(apuntes);
@@ -52,11 +52,11 @@ function Estadisticas() {
             : 0;
 
           const mejorApunte = apuntes.length > 0
-            ? apuntes.reduce((best, current) => 
-                (current.valoracion?.promedioValoracion || 0) > (best.valoracion?.promedioValoracion || 0) 
-                  ? current 
-                  : best
-              )
+            ? apuntes.reduce((best, current) =>
+              (current.valoracion?.promedioValoracion || 0) > (best.valoracion?.promedioValoracion || 0)
+                ? current
+                : best
+            )
             : null;
 
           setStats({
@@ -87,20 +87,6 @@ function Estadisticas() {
     }
   }, [user]);
 
-  const handleHomeClick = () => navigate('/estudiante/home');
-  const handleProfileClick = () => navigate('/estudiante/profile');
-  const handleExplorarClick = () => navigate('/estudiante/explorar');
-  const handleMisApuntesClick = () => navigate('/estudiante/mis-apuntes');
-  const handleEstadisticasClick = () => {}; // Ya estamos aquí
-  const handleConfigClick = () => navigate('/estudiante/configuracion');
-  
-  const handleLogout = () => {
-    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    localStorage.removeItem('user');
-    toast.success('Sesión cerrada exitosamente');
-    navigate('/login');
-  };
-
   if (userLoading || loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -111,18 +97,8 @@ function Estadisticas() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header 
-        notificationCount={0}
-        notifications={[]}
-        onHomeClick={handleHomeClick}
-        onProfileClick={handleProfileClick}
-        onExplorarClick={handleExplorarClick}
-        onMisApuntesClick={handleMisApuntesClick}
-        onEstadisticasClick={handleEstadisticasClick}
-        onLogout={handleLogout}
-        onConfigClick={handleConfigClick}
-      />
-      
+      <Header />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl p-8 mb-8 shadow-sm">
@@ -179,17 +155,17 @@ function Estadisticas() {
               <Award className="w-6 h-6 text-yellow-500" />
               Tu Mejor Apunte
             </h2>
-            
+
             {stats.mejorApunte ? (
               <div className="bg-white rounded-xl p-4">
                 <h3 className="font-bold text-lg text-gray-900 mb-2">{stats.mejorApunte.nombre}</h3>
                 <p className="text-sm text-gray-600 mb-3">{stats.mejorApunte.descripcion}</p>
-                
+
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center gap-2">
                     <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                     <span className="text-gray-600">
-                      {stats.mejorApunte.valoracion?.promedioValoracion?.toFixed(1) || '0.0'} 
+                      {stats.mejorApunte.valoracion?.promedioValoracion?.toFixed(1) || '0.0'}
                       ({stats.mejorApunte.valoracion?.cantidadValoraciones || 0} votos)
                     </span>
                   </div>
@@ -220,24 +196,22 @@ function Estadisticas() {
               <Users className="w-6 h-6 text-purple-600" />
               Ranking de Contribuidores
             </h2>
-            
+
             <div className="space-y-3">
               {topContributors.map((contributor, index) => (
                 <div
                   key={index}
-                  className={`flex items-center justify-between p-4 rounded-xl ${
-                    contributor.nombreCompleto === user?.nombreCompleto
-                      ? 'bg-purple-100 border-2 border-purple-300'
-                      : 'bg-white'
-                  }`}
+                  className={`flex items-center justify-between p-4 rounded-xl ${contributor.nombreCompleto === user?.nombreCompleto
+                    ? 'bg-purple-100 border-2 border-purple-300'
+                    : 'bg-white'
+                    }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                      index === 0 ? 'bg-yellow-100 text-yellow-600' :
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${index === 0 ? 'bg-yellow-100 text-yellow-600' :
                       index === 1 ? 'bg-gray-100 text-gray-600' :
-                      index === 2 ? 'bg-orange-100 text-orange-600' :
-                      'bg-purple-100 text-purple-600'
-                    }`}>
+                        index === 2 ? 'bg-orange-100 text-orange-600' :
+                          'bg-purple-100 text-purple-600'
+                      }`}>
                       {index + 1}
                     </div>
                     <div>
@@ -250,13 +224,12 @@ function Estadisticas() {
                       <p className="text-sm text-gray-500">{contributor.apuntesSubidos} apuntes</p>
                     </div>
                   </div>
-                  
+
                   {index < 3 && (
-                    <Award className={`w-6 h-6 ${
-                      index === 0 ? 'text-yellow-500' :
+                    <Award className={`w-6 h-6 ${index === 0 ? 'text-yellow-500' :
                       index === 1 ? 'text-gray-400' :
-                      'text-orange-500'
-                    }`} />
+                        'text-orange-500'
+                      }`} />
                   )}
                 </div>
               ))}
@@ -270,7 +243,7 @@ function Estadisticas() {
             <Calendar className="w-6 h-6 text-purple-600" />
             Tus Apuntes Recientes
           </h2>
-          
+
           <div className="space-y-3">
             {misApuntes.slice(0, 5).map((apunte) => (
               <div key={apunte._id} className="bg-white rounded-xl p-4 flex items-center justify-between hover:shadow-md transition-shadow">
@@ -278,7 +251,7 @@ function Estadisticas() {
                   <h3 className="font-semibold text-gray-900">{apunte.nombre}</h3>
                   <p className="text-sm text-gray-500">{apunte.asignatura}</p>
                 </div>
-                
+
                 <div className="flex items-center gap-4 text-sm text-gray-600">
                   <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />

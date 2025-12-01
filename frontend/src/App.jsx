@@ -23,6 +23,7 @@ import HomeAdmin from './pages/admin/HomeAdmin.jsx'
 
 import Profile from './pages/Profile.jsx'
 import ExplorarApuntes from './pages/ExplorarApuntes.jsx'
+import MisAportes from './pages/MisAportes.jsx'
 import MisApuntes from './pages/MisApuntes.jsx'
 import Estadisticas from './pages/Estadisticas.jsx'
 import DetalleApunte from './pages/DetalleApunte.jsx'
@@ -151,7 +152,7 @@ function App() {
             <Route path="home" element={<Home />} />
             <Route path="profile" element={<Profile />} />
             <Route path="explorar" element={<ExplorarApuntes />} />
-            <Route path="mis-apuntes" element={<MisApuntes />} />
+            <Route path="mis-aportes" element={<MisAportes />} />
             <Route path="estadisticas" element={<Estadisticas />} />
             <Route path="encuestas" element={<ExploradorEncuestas />} />
             <Route path="apunte/:id" element={<DetalleApunte />} />

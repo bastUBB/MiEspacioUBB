@@ -306,7 +306,7 @@ function Profile() {
   const handleHomeClick = () => navigate('/estudiante/home');
   const handleProfileClick = () => { };
   const handleExplorarClick = () => navigate('/estudiante/explorar');
-  const handleMisApuntesClick = () => navigate('/estudiante/mis-apuntes');
+  const handleMisApuntesClick = () => navigate('/estudiante/mis-aportes');
   const handleEstadisticasClick = () => navigate('/estudiante/estadisticas');
   const handleConfigClick = () => navigate('/estudiante/configuracion');
 
@@ -391,8 +391,8 @@ function Profile() {
           <button
             onClick={() => setActiveTab('personal')}
             className={`px-6 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 ${activeTab === 'personal'
-                ? 'border-purple-600 text-purple-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              ? 'border-purple-600 text-purple-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
           >
             <User className="w-4 h-4" />
@@ -401,8 +401,8 @@ function Profile() {
           <button
             onClick={() => setActiveTab('academic')}
             className={`px-6 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 ${activeTab === 'academic'
-                ? 'border-purple-600 text-purple-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              ? 'border-purple-600 text-purple-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
           >
             <BookOpen className="w-4 h-4" />
@@ -411,8 +411,8 @@ function Profile() {
           <button
             onClick={() => setActiveTab('activity')}
             className={`px-6 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 ${activeTab === 'activity'
-                ? 'border-purple-600 text-purple-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              ? 'border-purple-600 text-purple-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
           >
             <Activity className="w-4 h-4" />

@@ -36,6 +36,7 @@ export async function generarRecomendacionPersonalizadaService(rutUser, limite =
         const [candidatos, errorCandidatos] = await filtrarApuntesCandidatos(usuario);
 
         if (errorCandidatos) return [null, errorCandidatos];
+
         if (!candidatos || candidatos.length === 0) {
             return [[], null]; // Retornar array vacío si no hay candidatos
         }

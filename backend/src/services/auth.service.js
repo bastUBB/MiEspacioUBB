@@ -39,14 +39,16 @@ export async function registerUserService(dataUser) {
       isVerified: false
     });
 
-    const [emailSent, emailError] = await enviarEmailVerificacionService(email, verificationToken);
+    // Enviar correo de forma asíncrona para no bloquear la respuesta
+    enviarEmailVerificacionService(email, verificationToken)
+      .then(([emailSent, emailError]) => {
+        if (!emailSent) {
+          console.error('Error al enviar correo de verificación (background):', emailError);
+        }
+      })
+      .catch(err => console.error('Error inesperado enviando correo:', err));
 
-    if (!emailSent) {
-      console.error('Error al enviar correo de verificación:', emailError);
-      // await User.findByIdAndDelete(user._id);
-      // return [null, "Error al enviar el correo de verificación"];
-    }
-
+    // No esperamos el resultado del correo para responder al cliente
     return [toSafeUser(user), null];
   } catch (error) {
     console.error('Error al registrar el usuario:', error);
@@ -111,14 +113,14 @@ export async function verifyEmailService(token) {
       });
 
       if (recentlyVerified) return [toSafeUser(recentlyVerified), null];
-      
+
       return [null, "Token inválido o expirado. Por favor, solicita un nuevo correo de verificación."];
     }
 
     if (userWithToken.isVerified) return [toSafeUser(userWithToken), null];
 
     if (userWithToken.verificationTokenExpires < new Date()) return [null, "Token expirado. Por favor, solicita un nuevo correo de verificación."];
-    
+
 
     userWithToken.isVerified = true;
 
@@ -159,12 +161,14 @@ export async function resendVerificationEmailService(email) {
     await user.save();
 
     // Enviar correo
-    const [emailSent, emailError] = await enviarEmailVerificacionService(email, verificationToken);
-
-    if (!emailSent) {
-      console.error('Error al reenviar correo de verificación:', emailError);
-      return [null, "Error al enviar el correo de verificación"];
-    }
+    // Enviar correo de forma asíncrona
+    enviarEmailVerificacionService(email, verificationToken)
+      .then(([emailSent, emailError]) => {
+        if (!emailSent) {
+          console.error('Error al reenviar correo de verificación (background):', emailError);
+        }
+      })
+      .catch(err => console.error('Error inesperado reenviando correo:', err));
 
     return [true, null];
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
-import { createEncuesta } from '../../services/encuesta.service.js';
+import { crearEncuesta } from '../../services/encuesta.service.js';
 import toast from 'react-hot-toast';
 
 const CrearEncuesta = () => {
@@ -52,7 +52,7 @@ const CrearEncuesta = () => {
 
         try {
             setSaving(true);
-            await createEncuesta(formData);
+            await crearEncuesta(formData);
             toast.success('Encuesta creada exitosamente');
             navigate('/admin/encuestas');
         } catch (error) {

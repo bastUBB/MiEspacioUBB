@@ -2,12 +2,12 @@ import { Router } from 'express';
 import { authenticateJWT, authorizeRoles } from "../middlewares/auth.middleware.js";
 import {
     crearEncuesta,
-    obtenerTodasEncuestasActivas,
-    obtenerTodasEncuestas,
-    obtenerEncuesta,
     actualizarEncuesta,
     eliminarEncuesta,
-    obtenerCantidadEncuestas
+    obtenerTodasEncuestasActivas,
+    obtenerTodasEncuestas,
+    obtenerEncuestaPorId,
+    obtenerMisEncuestas
 } from "../controllers/encuesta.controller.js";
 
 const router = Router();
@@ -15,12 +15,12 @@ const router = Router();
 router.use(authenticateJWT);
 
 router
-    .post("/", authorizeRoles("admin"), crearEncuesta)
-    .get("/activas", authorizeRoles("admin", "docente", "ayudante", "estudiante"), obtenerTodasEncuestasActivas)
-    .get("/todas", authorizeRoles("admin"), obtenerTodasEncuestas)
-    .get("/cantidad", authorizeRoles("admin", "docente", "ayudante", "estudiante"), obtenerCantidadEncuestas)
-    .get("/:_id", authorizeRoles("admin", "docente", "ayudante", "estudiante"), obtenerEncuesta)
-    .put("/:_id", authorizeRoles("admin"), actualizarEncuesta)
-    .delete("/:_id", authorizeRoles("admin"), eliminarEncuesta);
+    .post("/", authorizeRoles("admin", "docente", "ayudante", "estudiante"), crearEncuesta)
+    .get("/encuestas-activas", authorizeRoles("admin", "docente", "ayudante", "estudiante"), obtenerTodasEncuestasActivas)
+    .get("/all-encuestas", authorizeRoles("admin"), obtenerTodasEncuestas)
+    .get("/detail", authorizeRoles("admin", "docente", "ayudante", "estudiante"), obtenerEncuestaPorId)
+    .get("/mis-encuestas", authorizeRoles("admin", "docente", "ayudante", "estudiante"), obtenerMisEncuestas)
+    .put("/detail", authorizeRoles("admin"), actualizarEncuesta)
+    .delete("/detail", authorizeRoles("admin"), eliminarEncuesta)
 
 export default router;

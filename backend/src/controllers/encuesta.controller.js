@@ -5,12 +5,14 @@ import {
     obtenerEncuestaPorIdService,
     actualizarEncuestaService,
     eliminarEncuestaService,
-    obtenerCantidadEncuestasService
+    obtenerMisEncuestasService
 } from '../services/encuesta.service.js';
 import {
     encuestaCreateValidation,
     encuestaQueryValidation,
-    encuestaUpdateValidation
+    encuestaUpdateValidation,
+    encuestaRutValidation,
+    encuestaPerfilAcademicoIDValidation
 } from '../validations/encuesta.validation.js';
 import { handleSuccess, handleErrorClient, handleErrorServer } from '../handlers/responseHandlers.js';
 
@@ -30,13 +32,53 @@ export async function crearEncuesta(req, res) {
     }
 }
 
+export async function actualizarEncuesta(req, res) {
+    try {
+        const { value: valueQuery, error: errorQuery } = encuestaQueryValidation.validate(req.params);
+
+        if (errorQuery) return handleErrorClient(res, 400, "Error de validación en Query", errorQuery.message);
+
+        const { value: valueUpdate, error: errorUpdate } = encuestaUpdateValidation.validate(req.body);
+
+        if (errorUpdate) return handleErrorClient(res, 400, "Error de validación en Body", errorUpdate.message);
+
+        const [encuestaActualizada, errorEncuestaActualizada] = await actualizarEncuestaService(valueQuery._id, valueUpdate);
+
+        if (errorEncuestaActualizada) return handleErrorServer(res, 400, "Error al actualizar la encuesta", errorEncuestaActualizada);
+
+        return handleSuccess(res, 200, "Encuesta actualizada con éxito", encuestaActualizada);
+    } catch (error) {
+        handleErrorServer(res, 500, "Error interno del servidor", error.message);
+    }
+}
+
+export async function eliminarEncuesta(req, res) {
+    try {
+        const { value: valueQuery, error: errorQuery } = encuestaQueryValidation.validate(req.params);
+
+        if (errorQuery) return handleErrorClient(res, 400, "Error de validación en Query", errorQuery.message);
+
+        const { value: valueRut, error: errorRut } = encuestaRutValidation.validate(req.params);
+
+        if (errorRut) return handleErrorClient(res, 400, "Error de validación en Rut", errorRut.message);
+
+        const [encuestaEliminada, errorEncuestaEliminada] = await eliminarEncuestaService(valueQuery._id, valueRut.rutUser);
+
+        if (errorEncuestaEliminada) return handleErrorServer(res, 400, "Error al eliminar la encuesta", errorEncuestaEliminada);
+
+        return handleSuccess(res, 200, "Encuesta eliminada con éxito", encuestaEliminada);
+    } catch (error) {
+        handleErrorServer(res, 500, "Error interno del servidor", error.message);
+    }
+}
+
 export async function obtenerTodasEncuestasActivas(req, res) {
     try {
         const [encuestasActivas, errorEncuestasActivas] = await obtenerTodasEncuestasActivasService();
 
-        if (errorEncuestasActivas) return handleErrorServer(res, 400, "Error al obtener las encuestas", errorEncuestasActivas);
+        if (errorEncuestasActivas) return handleErrorServer(res, 400, "Error al obtener las encuestas activas", errorEncuestasActivas);
 
-        return handleSuccess(res, 200, "Encuestas obtenidas con éxito", encuestasActivas);
+        return handleSuccess(res, 200, "Encuestas activas obtenidas con éxito", encuestasActivas);
     } catch (error) {
         handleErrorServer(res, 500, "Error interno del servidor", error.message);
     }
@@ -54,11 +96,11 @@ export async function obtenerTodasEncuestas(req, res) {
     }
 }
 
-export async function obtenerEncuesta(req, res) {
+export async function obtenerEncuestaPorId(req, res) {
     try {
         const { value: valueQuery, error: errorQuery } = encuestaQueryValidation.validate(req.params);
 
-        if (errorQuery) return handleErrorClient(res, 400, "Error de validación", errorQuery.message);
+        if (errorQuery) return handleErrorClient(res, 400, "Error de validación en Query", errorQuery.message);
 
         const [encuesta, errorEncuesta] = await obtenerEncuestaPorIdService(valueQuery._id);
 
@@ -70,49 +112,17 @@ export async function obtenerEncuesta(req, res) {
     }
 }
 
-export async function actualizarEncuesta(req, res) {
+export async function obtenerMisEncuestas(req, res) {
     try {
-        const { value: valueQuery, error: errorQuery } = encuestaQueryValidation.validate(req.params);
+        const { value: valueQuery, error: errorQuery } = encuestaPerfilAcademicoIDValidation.validate(req.params);
 
-        if (errorQuery) return handleErrorClient(res, 400, "Error de validación", errorQuery.message);
+        if (errorQuery) return handleErrorClient(res, 400, "Error de validación en Query", errorQuery.message);
 
-        const { value: valueUpdate, error: errorUpdate } = encuestaUpdateValidation.validate(req.body);
+        const [encuestas, errorEncuestas] = await obtenerMisEncuestasService(valueQuery.perfilAcademicoID);
 
-        if (errorUpdate) return handleErrorClient(res, 400, "Error de validación", errorUpdate.message);
+        if (errorEncuestas) return handleErrorServer(res, 400, "Error al obtener las encuestas", errorEncuestas);
 
-        const [encuestaActualizada, errorEncuestaActualizada] = await actualizarEncuestaService(valueQuery._id, valueUpdate);
-
-        if (errorEncuestaActualizada) return handleErrorServer(res, 400, "Error al actualizar la encuesta", errorEncuestaActualizada);
-
-        return handleSuccess(res, 200, "Encuesta actualizada con éxito", encuestaActualizada);
-    } catch (error) {
-        handleErrorServer(res, 500, "Error interno del servidor", error.message);
-    }
-}
-
-export async function eliminarEncuesta(req, res) {
-    try {
-        const { value: valueQuery, error: errorQuery } = encuestaQueryValidation.validate(req.params);
-
-        if (errorQuery) return handleErrorClient(res, 400, "Error de validación", errorQuery.message);
-
-        const [resultado, errorResultado] = await eliminarEncuestaService(valueQuery._id);
-
-        if (errorResultado) return handleErrorServer(res, 400, "Error al eliminar la encuesta", errorResultado);
-
-        return handleSuccess(res, 200, "Encuesta eliminada con éxito", resultado);
-    } catch (error) {
-        handleErrorServer(res, 500, "Error interno del servidor", error.message);
-    }
-}
-
-export async function obtenerCantidadEncuestas(req, res) {
-    try {
-        const [cantidad, errorCantidad] = await obtenerCantidadEncuestasService();
-
-        if (errorCantidad) return handleErrorServer(res, 400, "Error al obtener la cantidad de encuestas", errorCantidad);
-
-        return handleSuccess(res, 200, "Cantidad de encuestas obtenida con éxito", cantidad);
+        return handleSuccess(res, 200, "Encuestas obtenidas con éxito", encuestas);
     } catch (error) {
         handleErrorServer(res, 500, "Error interno del servidor", error.message);
     }

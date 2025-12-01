@@ -3,6 +3,7 @@ import User from "../models/user.model.js";
 import Apunte from "../models/apunte.model.js";
 import Comentario from "../models/comentario.model.js";
 import perfilAcademico from "../models/perfilAcademico.model.js";
+import Encuesta from "../models/encuesta.model.js";
 import { fechaActual } from "../helpers/ayudasVarias.helper.js";
 
 //subida apunte, descarga apunte, realizar comentario, responder comentario, creacion perfil academico, valorar apunte, 
@@ -370,6 +371,132 @@ export async function getHistorialUsuarioService(rutUser) {
         return [historialUsuario, null];
     } catch (error) {
         console.error('Error al obtener el historial del usuario:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function registrarEncuestaService(rutUser, encuestaID) {
+    try {
+        const userExist = await User.findOne({ rut: rutUser });
+
+        if (!userExist) return [null, 'El usuario autor de la encuesta no existe'];
+
+        const encuestaExist = await Encuesta.findById(encuestaID);
+
+        if (!encuestaExist) return [null, 'La encuesta que desea registrar no existe'];
+
+        const historialUsuario = await HistorialUsuario.findOne({ rutUser: rutUser });
+
+        if (historialUsuario) {
+            const nuevaAccion = {
+                tipoAccion: `El usuario ${userExist.nombreCompleto} ha creado la encuesta ${encuestaExist.nombre}.`,
+                fechaAccion: fechaActual
+            };
+
+            historialUsuario.acciones.push(nuevaAccion);
+
+            await historialUsuario.save();
+
+            return [historialUsuario, null];
+        }
+
+        const nuevoHistorial = new HistorialUsuario({
+            rutUser: rutUser,
+            acciones: [{
+                tipoAccion: `El usuario ${userExist.nombreCompleto} ha creado la encuesta ${encuestaExist.nombre}.`,
+                fechaAccion: fechaActual
+            }]
+        });
+
+        await nuevoHistorial.save();
+
+        return [nuevoHistorial, null];
+    } catch (error) {
+        console.error('Error al registrar la encuesta en el historial:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function registrarUpdateEncuestaService(rutUser, encuestaID) {
+    try {
+        const userExist = await User.findOne({ rut: rutUser });
+
+        if (!userExist) return [null, 'El usuario autor de la encuesta no existe'];
+
+        const encuestaExist = await Encuesta.findById(encuestaID);
+
+        if (!encuestaExist) return [null, 'La encuesta que desea actualizar y registrar no existe'];
+
+        const historialUsuario = await HistorialUsuario.findOne({ rutUser: rutUser });
+
+        if (historialUsuario) {
+            const nuevaAccion = {
+                tipoAccion: `El usuario ${userExist.nombreCompleto} ha actualizado la encuesta ${encuestaExist.nombre}.`,
+                fechaAccion: fechaActual
+            };
+
+            historialUsuario.acciones.push(nuevaAccion);
+
+            await historialUsuario.save();
+
+            return [historialUsuario, null];
+        }
+
+        const nuevoHistorial = new HistorialUsuario({
+            rutUser: rutUser,
+            acciones: [{
+                tipoAccion: `El usuario ${userExist.nombreCompleto} ha actualizado la encuesta ${encuestaExist.nombre}.`,
+                fechaAccion: fechaActual
+            }]
+        });
+
+        await nuevoHistorial.save();
+
+        return [nuevoHistorial, null];
+    } catch (error) {
+        console.error('Error al registrar la encuesta en el historial:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function registrarDeleteEncuestaService(rutUser, encuestaID) {
+    try {
+        const userExist = await User.findOne({ rut: rutUser });
+
+        if (!userExist) return [null, 'El usuario autor de la encuesta no existe'];
+
+        const encuestaExist = await Encuesta.findById(encuestaID);
+
+        if (!encuestaExist) return [null, 'La encuesta que desea eliminar y registrar no existe'];
+
+        const historialUsuario = await HistorialUsuario.findOne({ rutUser: rutUser });
+
+        if (historialUsuario) {
+            const nuevaAccion = {
+                tipoAccion: `El usuario ${userExist.nombreCompleto} ha eliminado la encuesta ${encuestaExist.nombre}.`,
+                fechaAccion: fechaActual
+            };
+
+            historialUsuario.acciones.push(nuevaAccion);
+
+            await historialUsuario.save();
+
+            return [historialUsuario, null];
+        }
+
+        const nuevoHistorial = new HistorialUsuario({
+            rutUser: rutUser,
+            acciones: [{
+                tipoAccion: `El usuario ${userExist.nombreCompleto} ha eliminado la encuesta ${encuestaExist.nombre}.`,
+                fechaAccion: fechaActual
+            }]
+        });
+
+        await nuevoHistorial.save();
+
+        return [nuevoHistorial, null];
+    } catch (error) {
+        console.error('Error al registrar la encuesta en el historial:', error);
         return [null, 'Error interno del servidor'];
     }
 }

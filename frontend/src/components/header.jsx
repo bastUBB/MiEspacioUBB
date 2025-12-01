@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Bell, User, BookOpen, BarChart3, FileText, Home, Compass, X, Check, LogOut, ChevronDown } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import logoMiEspacioUBB from '../assets/logo_miespacioubb.svg';
 
 const Header = ({ notificationCount = 0, notifications = [], onNotificationClick, onMarkAsRead, onClearAll, onProfileClick, onHomeClick, onExplorarClick, onMisApuntesClick, onEstadisticasClick, onEncuestasClick, onLogout }) => {
   const location = useLocation();
@@ -11,7 +12,7 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
   const profileMenuRef = useRef(null);
   const encuestasMenuRef = useRef(null);
 
-  // Cerrar dropdown al hacer clic fuera
+  // Cerrar dropdown al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -68,13 +69,8 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-violet-600 rounded-lg flex items-center justify-center">
-              <BookOpen className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-violet-600 bg-clip-text text-transparent">
-              MiEspacioUBB
-            </span>
+          <div className="flex items-center pl-4">
+            <img src={logoMiEspacioUBB} alt="MiEspacioUBB Logo" className="h-32 w-auto" />
           </div>
 
           {/* Navigation */}

@@ -1,9 +1,38 @@
 import Encuesta from '../models/encuesta.model.js';
+import User from '../models/user.model.js';
+import perfilAcademico from "../models/perfilAcademico.model.js";
+import {
+    registrarCreateEncuestaService,
+    registrarUpdateEncuestaService,
+    registrarDeleteEncuestaService,
+} from '../services/historial.service.js';
 
 export async function crearEncuestaService(dataEncuesta) {
     try {
+        const { rutAutor: rutAutorEncuesta } = dataEncuesta;
+
+        const autorExist = await User.findOne({ rutUser: rutAutorEncuesta });
+
+        if (!autorExist) return [null, 'El autor de la encuesta que desea crear no existe'];
+
+        const encuestaExist = await Encuesta.findOne({ enlaceGoogleForm: dataEncuesta.enlaceGoogleForm });
+
+        if (encuestaExist) return [null, 'La encuesta que desea crear ya existe'];
+
         const nuevaEncuesta = new Encuesta(dataEncuesta);
+
         await nuevaEncuesta.save();
+
+        const perfilAutor = await perfilAcademico.findOne({ rutUser: rutAutorEncuesta });
+
+        perfilAutor.encuestasCreadas.push(nuevaEncuesta._id);
+
+        await perfilAutor.save();
+
+        const [historialAutor, errorHistorialAutor] = await registrarCreateEncuestaService(rutAutorEncuesta, nuevaEncuesta._id);
+
+        if (errorHistorialAutor) return [null, errorHistorialAutor];
+
         return [nuevaEncuesta, null];
     } catch (error) {
         console.error('Error al crear la encuesta:', error);
@@ -11,13 +40,67 @@ export async function crearEncuestaService(dataEncuesta) {
     }
 }
 
+export async function actualizarEncuestaService(encuestaId, dataUpdate) {
+    try {
+        const encuestaExist = await Encuesta.findById(encuestaId);
+
+        if (!encuestaExist) return [null, 'Encuesta no encontrada'];
+
+        if (encuestaExist.rutAutor !== dataUpdate.rutAutor) return [null, 'No tienes permiso para actualizar esta encuesta'];
+
+        const encuestaActualizada = await Encuesta.findByIdAndUpdate(encuestaId, dataUpdate, { new: true });
+
+        await encuestaActualizada.save();
+
+        const [historialAutor, errorHistorialAutor] = await registrarUpdateEncuestaService(rutAutorEncuesta, encuestaActualizada._id);
+
+        if (errorHistorialAutor) return [null, errorHistorialAutor];
+
+        return [encuestaActualizada, null];
+    } catch (error) {
+        console.error('Error al actualizar la encuesta:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+//para usuario normal
+export async function eliminarEncuestaService(encuestaId, rutUsuario) {
+    try {
+        const encuestaExist = await Encuesta.findById(encuestaId);
+
+        if (!encuestaExist) return [null, 'Encuesta no encontrada'];
+
+        const perfilAcademicoUsuario = await perfilAcademico.findOne({ rutUser: rutUsuario });
+
+        if (!perfilAcademicoUsuario) return [null, 'Perfil académico no encontrado'];
+
+        const encuestaPertenecePerfilAcademico = perfilAcademicoUsuario.encuestasCreadas.includes(encuestaId);
+
+        if (!encuestaPertenecePerfilAcademico) return [null, 'No tienes permiso para eliminar esta encuesta'];
+
+        await Encuesta.findByIdAndDelete(encuestaId);
+
+        perfilAcademicoUsuario.encuestasCreadas.pull(encuestaId);
+
+        await perfilAcademicoUsuario.save();
+
+        const [historialAutor, errorHistorialAutor] = await registrarDeleteEncuestaService(rutAutorEncuesta, encuestaId);
+
+        if (errorHistorialAutor) return [null, errorHistorialAutor];
+
+        return [null, null];
+    } catch (error) {
+        console.error('Error al eliminar la encuesta:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+//para todos
 export async function obtenerTodasEncuestasActivasService() {
     try {
-        const encuestasActivas = await Encuesta.find({ estado: 'Activo' }).sort({ createdAt: -1 });
+        const encuestasActivas = await Encuesta.find({ estado: 'Activo' }).sort({ createdAt: 1 });
 
-        if (!encuestasActivas || encuestasActivas.length === 0) {
-            return [[], null];
-        }
+        if (!encuestasActivas || encuestasActivas.length === 0) return [[], "No hay encuestas activas"];
 
         return [encuestasActivas, null];
     } catch (error) {
@@ -26,13 +109,12 @@ export async function obtenerTodasEncuestasActivasService() {
     }
 }
 
+//para admin
 export async function obtenerTodasEncuestasService() {
     try {
         const encuestas = await Encuesta.find().sort({ createdAt: -1 });
 
-        if (!encuestas || encuestas.length === 0) {
-            return [[], null];
-        }
+        if (!encuestas || encuestas.length === 0) return [[], "No hay encuestas registradas"];
 
         return [encuestas, null];
     } catch (error) {
@@ -45,13 +127,7 @@ export async function obtenerEncuestaPorIdService(encuestaId) {
     try {
         const encuesta = await Encuesta.findById(encuestaId);
 
-        if (!encuesta) {
-            return [null, 'Encuesta no encontrada'];
-        }
-
-        // Incrementar visualizaciones
-        encuesta.visualizaciones += 1;
-        await encuesta.save();
+        if (!encuesta) return [null, 'Encuesta no encontrada'];
 
         return [encuesta, null];
     } catch (error) {
@@ -60,51 +136,21 @@ export async function obtenerEncuestaPorIdService(encuestaId) {
     }
 }
 
-export async function actualizarEncuestaService(encuestaId, dataActualizar) {
+export async function obtenerMisEncuestasService(perfilAcademicoID) {
     try {
-        const encuesta = await Encuesta.findById(encuestaId);
+        const perfilAcademicoExist = await perfilAcademico.findById(perfilAcademicoID);
 
-        if (!encuesta) {
-            return [null, 'Encuesta no encontrada'];
-        }
+        if (!perfilAcademicoExist) return [null, 'Perfil académico no encontrado'];
 
-        // Actualizar campos
-        Object.keys(dataActualizar).forEach(key => {
-            encuesta[key] = dataActualizar[key];
-        });
+        const encuestasPerfilAcademico = perfilAcademicoExist.encuestasCreadas.sort({ createdAt: -1 });
 
-        const encuestaActualizada = await encuesta.save();
+        if (!encuestasPerfilAcademico || encuestasPerfilAcademico.length === 0) return [[], "No tienes encuestas registradas"];
 
-        return [encuestaActualizada, null];
+        return [encuestasPerfilAcademico, null];
     } catch (error) {
-        console.error('Error al actualizar la encuesta:', error);
+        console.error('Error al obtener las encuestas:', error);
         return [null, 'Error interno del servidor'];
     }
 }
 
-export async function eliminarEncuestaService(encuestaId) {
-    try {
-        const encuesta = await Encuesta.findById(encuestaId);
 
-        if (!encuesta) {
-            return [null, 'Encuesta no encontrada'];
-        }
-
-        await Encuesta.findByIdAndDelete(encuestaId);
-
-        return [{ message: 'Encuesta eliminada exitosamente' }, null];
-    } catch (error) {
-        console.error('Error al eliminar la encuesta:', error);
-        return [null, 'Error interno del servidor'];
-    }
-}
-
-export async function obtenerCantidadEncuestasService() {
-    try {
-        const cantidad = await Encuesta.countDocuments({ estado: 'Activo' });
-        return [cantidad, null];
-    } catch (error) {
-        console.error('Error al obtener la cantidad de encuestas:', error);
-        return [null, 'Error interno del servidor'];
-    }
-}

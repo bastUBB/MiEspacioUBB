@@ -423,21 +423,24 @@ _Nota: Actualmente usa score neutro (0.5). Puede refinarse integrando calendario
 Amplifican el score cuando se cumplen condiciones especiales:
 
 ```javascript
-BoostTotal = Factor1 × Factor2 × Factor3 × ... (máximo 2.0)
+BoostTotal = Factor1 × Factor2 (máximo 2.0)
 ```
 
-| Condición                     | Multiplicador | Razón                         |
-| ----------------------------- | ------------- | ----------------------------- |
-| Asignatura cursante actual    | ×1.5          | Máxima prioridad              |
-| Match etiquetas-temas débiles | ×1.3          | Refuerzo de áreas débiles     |
-| Preferencia única de método   | ×1.2          | Usuario tiene estilo definido |
-| Tiene comentarios positivos   | ×1.15         | Engagement comunitario        |
+| Condición                  | Multiplicador | Razón                                     |
+| -------------------------- | ------------- | ----------------------------------------- |
+| Asignatura cursante actual | ×1.5          | Máxima prioridad para contenido relevante |
+| Alta calidad del contenido | ×1.3          | Promociona apuntes bien valorados         |
+
+**Criterios para Alta Calidad:**
+
+- Promedio de valoración ≥ 4.5 estrellas
+- Mínimo 10 valoraciones (confiabilidad)
 
 **Ejemplo:**
 
 ```javascript
-// Apunte de asignatura cursante (×1.5) con comentarios (×1.15)
-BoostTotal = 1.5 × 1.15 = 1.725
+// Apunte de asignatura cursante (×1.5) con alta calidad (×1.3)
+BoostTotal = 1.5 × 1.3 = 1.95
 ```
 
 ### ⛔ Penalizaciones (Factores Negativos)
@@ -445,23 +448,21 @@ BoostTotal = 1.5 × 1.15 = 1.725
 Reducen el score cuando hay razones para evitar el apunte:
 
 ```javascript
-PenalizaciónTotal = Factor1 × Factor2 × Factor3 × ... (mínimo 0.1)
+PenalizaciónTotal = Factor1 × Factor2 × Factor3 (mínimo 0.1)
 ```
 
-| Condición                            | Multiplicador | Razón                      |
-| ------------------------------------ | ------------- | -------------------------- |
-| Estado ≠ 'Activo'                    | ×0.1          | Apunte suspendido/revisión |
-| Ya valorado por usuario              | ×0.3          | Evitar repetición          |
-| Ya descargado                        | ×0.4          | Ya lo tiene                |
-| Valoración baja con muchas descargas | ×0.6          | Posible clickbait          |
-| Asignatura completamente ajena       | ×0.7          | Baja relevancia            |
+| Condición               | Multiplicador | Razón                         |
+| ----------------------- | ------------- | ----------------------------- |
+| Estado ≠ 'Activo'       | ×0.1          | Apunte suspendido/en revisión |
+| Ya valorado por usuario | ×0.3          | Evitar contenido ya conocido  |
+| Ya descargado           | ×0.4          | Usuario ya posee el apunte    |
 
 **Ejemplo:**
 
 ```javascript
 // Apunte ya valorado (×0.3) y ya descargado (×0.4)
 PenalizaciónTotal = 0.3 × 0.4 = 0.12
-// Score final será muy bajo para evitarlo
+// Score final será muy bajo para evitar recomendar contenido ya visto
 ```
 
 ---
@@ -613,7 +614,7 @@ Top 10 = [
    - Calidad: 0.85 → ×0.15 = 0.128
    - Temporal: 0.70 → ×0.05 = 0.035
    - **Score Base: 0.788**
-   - Boost: 1.5 (cursante) × 1.3 (método) = 1.95
+   - Boost: 1.5 (cursante) × 1.3 (alta calidad: 4.6★, 15 valoraciones) = 1.95
    - **Score Final: 1.537** ⭐ (Top 1)
 
 2. **Apunte: "Formulario Completo de Integrales"**

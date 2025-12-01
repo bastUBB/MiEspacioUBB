@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../context/userContextProvider';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { FileText, Star, Eye, Edit2, Trash2, Filter, Calendar } from 'lucide-react';
+import { FileText, Star, Eye, Edit2, Trash2, Filter, Calendar, Download } from 'lucide-react';
 import Header from '../components/header';
 import { obtenerMisApuntesByRutService } from '../services/apunte.service';
 import { parseCustomDate, formatDateToLocal } from '../helpers/dateFormatter.helper';
@@ -30,7 +30,7 @@ function MisApuntes() {
       try {
         setLoading(true);
         const response = await obtenerMisApuntesByRutService(user.rut);
-        
+
         if (response.status === 'Success' && response.data) {
           setApuntes(response.data);
           setFilteredApuntes(response.data);
@@ -53,7 +53,7 @@ function MisApuntes() {
 
     // Filtrar por estado
     if (filterStatus !== 'all') {
-      filtered = filtered.filter(apunte => 
+      filtered = filtered.filter(apunte =>
         filterStatus === 'active' ? apunte.estado === 'Activo' : apunte.estado !== 'Activo'
       );
     }
@@ -73,10 +73,10 @@ function MisApuntes() {
   const handleHomeClick = () => navigate('/estudiante/home');
   const handleProfileClick = () => navigate('/estudiante/profile');
   const handleExplorarClick = () => navigate('/estudiante/explorar');
-  const handleMisApuntesClick = () => {}; // Ya estamos aquí
+  const handleMisApuntesClick = () => { }; // Ya estamos aquí
   const handleEstadisticasClick = () => navigate('/estudiante/estadisticas');
   const handleConfigClick = () => navigate('/estudiante/configuracion');
-  
+
   const handleLogout = () => {
     document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     localStorage.removeItem('user');
@@ -88,8 +88,8 @@ function MisApuntes() {
     const total = apuntes.length;
     const totalViews = apuntes.reduce((sum, a) => sum + (a.visualizaciones || 0), 0);
     const totalDownloads = apuntes.reduce((sum, a) => sum + (a.descargas || 0), 0);
-    const avgRating = apuntes.length > 0 
-      ? apuntes.reduce((sum, a) => sum + (a.valoracion?.promedioValoracion || 0), 0) / apuntes.length 
+    const avgRating = apuntes.length > 0
+      ? apuntes.reduce((sum, a) => sum + (a.valoracion?.promedioValoracion || 0), 0) / apuntes.length
       : 0;
 
     return { total, totalViews, totalDownloads, avgRating };
@@ -107,7 +107,7 @@ function MisApuntes() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header 
+      <Header
         notificationCount={0}
         notifications={[]}
         onHomeClick={handleHomeClick}
@@ -118,7 +118,7 @@ function MisApuntes() {
         onLogout={handleLogout}
         onConfigClick={handleConfigClick}
       />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl p-8 mb-8 shadow-sm">
@@ -175,31 +175,28 @@ function MisApuntes() {
             <div className="flex gap-2">
               <button
                 onClick={() => setFilterStatus('all')}
-                className={`px-4 py-2 rounded-lg transition-all cursor-pointer ${
-                  filterStatus === 'all'
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
+                className={`px-4 py-2 rounded-lg transition-all cursor-pointer ${filterStatus === 'all'
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
               >
                 Todos
               </button>
               <button
                 onClick={() => setFilterStatus('active')}
-                className={`px-4 py-2 rounded-lg transition-all cursor-pointer ${
-                  filterStatus === 'active'
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
+                className={`px-4 py-2 rounded-lg transition-all cursor-pointer ${filterStatus === 'active'
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
               >
                 Activos
               </button>
               <button
                 onClick={() => setFilterStatus('inactive')}
-                className={`px-4 py-2 rounded-lg transition-all cursor-pointer ${
-                  filterStatus === 'inactive'
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
+                className={`px-4 py-2 rounded-lg transition-all cursor-pointer ${filterStatus === 'inactive'
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
               >
                 Inactivos
               </button>
@@ -228,11 +225,10 @@ function MisApuntes() {
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <h3 className="text-xl font-bold text-gray-900">{apunte.nombre}</h3>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      apunte.estado === 'Activo' 
-                        ? 'bg-green-100 text-green-700' 
-                        : 'bg-gray-100 text-gray-700'
-                    }`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${apunte.estado === 'Activo'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-gray-100 text-gray-700'
+                      }`}>
                       {apunte.estado}
                     </span>
                   </div>

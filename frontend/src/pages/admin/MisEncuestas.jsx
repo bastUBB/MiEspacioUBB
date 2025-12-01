@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Loader, X, Save } from 'lucide-react';
-import { getTodasEncuestas, deleteEncuesta, updateEncuesta } from '../../services/encuesta.service.js';
+import { obtenerTodasEncuestasActivas, eliminarEncuesta, actualizarEncuesta } from '../../services/encuesta.service.js';
 import { useNavigate } from 'react-router-dom';
 import TarjetaEncuesta from '../../components/TarjetaEncuesta.jsx';
 import toast from 'react-hot-toast';
@@ -19,7 +19,7 @@ const MisEncuestas = () => {
     const cargarEncuestas = async () => {
         try {
             setLoading(true);
-            const response = await getTodasEncuestas();
+            const response = await obtenerTodasEncuestasActivas();
             setEncuestas(response.data || []);
         } catch (error) {
             console.error('Error al cargar encuestas:', error);
@@ -47,7 +47,7 @@ const MisEncuestas = () => {
         }
 
         try {
-            await updateEncuesta(encuestaEditando._id, {
+            await actualizarEncuesta(encuestaEditando._id, {
                 nombreEncuesta: encuestaEditando.nombreEncuesta,
                 descripcion: encuestaEditando.descripcion,
                 enlaceGoogleForm: encuestaEditando.enlaceGoogleForm,
@@ -69,7 +69,7 @@ const MisEncuestas = () => {
         }
 
         try {
-            await deleteEncuesta(id);
+            await eliminarEncuesta(id);
             toast.success('Encuesta eliminada exitosamente');
             cargarEncuestas();
         } catch (error) {

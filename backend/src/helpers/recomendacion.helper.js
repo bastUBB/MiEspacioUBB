@@ -217,36 +217,23 @@ function extraerPalabrasClave(texto) {
  * Calcula el boost factor para un apunte según condiciones especiales
  * @param {Object} apunte - Objeto apunte
  * @param {Object} usuario - Objeto perfil académico del usuario
- * @returns {Number} - Factor multiplicador [0.5, 2.0]
+ * @returns {Number} - Factor multiplicador [1.0, 2.0]
  */
 export function calcularBoostFactor(apunte, usuario) {
     let boost = 1.0;
 
-    // Boost si el apunte es de asignatura cursante actual
+    // Boost 1: Asignatura cursante actual (×1.5)
+    // Máxima prioridad para contenido de asignaturas que el usuario está cursando actualmente
     if (usuario.asignaturasCursantes.includes(apunte.asignatura)) {
         boost *= 1.5;
     }
 
-    // Boost si el usuario tiene preferencia fuerte de método (solo 1 método)
-    if (usuario.metodosEstudiosPreferidos.length === 1) {
-        const metodosCompatibles = MAPEO_TIPO_METODO[apunte.tipoApunte] || [];
-        const tieneMatch = usuario.metodosEstudiosPreferidos.some(metodo =>
-            metodosCompatibles.some(compatible => sonSimilares(metodo, compatible))
-        );
-        if (tieneMatch) boost *= 1.3;
-    }
-
-    // Boost si hay match en etiquetas con asignaturas de interés
-    if (apunte.etiquetas && apunte.etiquetas.length > 0) {
-        const matchEtiquetas = apunte.etiquetas.some(etiqueta =>
-            usuario.asignaturasInteres.some(interes => sonSimilares(etiqueta, interes))
-        );
-        if (matchEtiquetas) boost *= 1.2;
-    }
-
-    // Boost si el apunte tiene comentarios (indica engagement)
-    if (apunte.comentarios && apunte.comentarios.length > 0) {
-        boost *= 1.15;
+    // Boost 2: Alta calidad del contenido (×1.3)
+    // Promociona apuntes con alta valoración y suficientes votos para ser confiables
+    const esAltaCalidad = apunte.valoracion.promedioValoracion >= 4.5 &&
+        apunte.valoracion.cantidadValoraciones >= 10;
+    if (esAltaCalidad) {
+        boost *= 1.3;
     }
 
     return Math.min(boost, 2.0); // Cap máximo de 2.0
@@ -261,12 +248,14 @@ export function calcularBoostFactor(apunte, usuario) {
 export function calcularPenalizacion(apunte, usuario) {
     let penalizacion = 1.0;
 
-    // Penalización severa si no está activo
+    // Penalización 1: Estado inactivo (×0.1)
+    // Penalización severa para apuntes suspendidos o en revisión
     if (apunte.estado !== 'Activo') {
         penalizacion *= 0.1;
     }
 
-    // Penalización si ya fue valorado por el usuario
+    // Penalización 2: Ya valorado por el usuario (×0.3)
+    // Evita recomendar contenido con el que ya interactuó
     const yaValorado = usuario.apuntesValorados.some(
         v => v.apunteID.toString() === apunte._id.toString()
     );
@@ -274,29 +263,12 @@ export function calcularPenalizacion(apunte, usuario) {
         penalizacion *= 0.3;
     }
 
-    // Penalización si ya fue descargado
+    // Penalización 3: Ya descargado (×0.4)
+    // Reduce la prioridad de contenido que el usuario ya tiene
     if (usuario.apuntesDescargadosIDs && usuario.apuntesDescargadosIDs.some(
         id => id.toString() === apunte._id.toString()
     )) {
         penalizacion *= 0.4;
-    }
-
-    // Penalización si tiene valoración baja pero muchas descargas (posible clickbait)
-    if (apunte.valoracion.promedioValoracion < 3.0 &&
-        apunte.descargas > 50 &&
-        apunte.valoracion.cantidadValoraciones > 10) {
-        penalizacion *= 0.6;
-    }
-
-    // Penalización si es de asignatura completamente ajena
-    const esRelevante = usuario.asignaturasCursantes.includes(apunte.asignatura) ||
-        usuario.asignaturasInteres.includes(apunte.asignatura);
-
-    if (!esRelevante) {
-        const relacionadas = obtenerAsignaturasRelacionadas(usuario.informeCurricular, apunte.asignatura);
-        if (relacionadas.length === 0) {
-            penalizacion *= 0.7;
-        }
     }
 
     return Math.max(penalizacion, 0.1); // Mínimo de 0.1

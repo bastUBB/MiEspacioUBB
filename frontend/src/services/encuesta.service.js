@@ -1,63 +1,65 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_BASE_URL;
-
-export const getEncuestas = async () => {
+export async function crearEncuesta(encuesta) {
     try {
-        const response = await axios.get(`${API_URL}/encuestas/activas`);
-        return response.data;
-    } catch (error) {
-        console.error('Error al obtener las encuestas:', error);
-        throw error;
-    }
-};
+        const response = await axios.post("/api/encuestas", encuesta);
 
-export const getTodasEncuestas = async () => {
-    try {
-        const response = await axios.get(`${API_URL}/encuestas/todas`);
-        return response.data;
-    } catch (error) {
-        console.error('Error al obtener todas las encuestas:', error);
-        throw error;
-    }
-};
-
-export const getEncuestaById = async (id) => {
-    try {
-        const response = await axios.get(`${API_URL}/encuestas/${id}`);
-        return response.data;
-    } catch (error) {
-        console.error('Error al obtener la encuesta:', error);
-        throw error;
-    }
-};
-
-export const createEncuesta = async (encuesta) => {
-    try {
-        const response = await axios.post(`${API_URL}/encuestas`, encuesta);
         return response.data;
     } catch (error) {
         console.error('Error al crear la encuesta:', error);
         throw error;
     }
-};
+}
 
-export const updateEncuesta = async (id, encuesta) => {
+export async function obtenerTodasEncuestasActivas() {
     try {
-        const response = await axios.put(`${API_URL}/encuestas/${id}`, encuesta);
+        const response = await axios.get("/api/encuestas-activas");
+
+        return response.data;
+    } catch (error) {
+        console.error('Error al obtener las encuestas activas:', error);
+        throw error;
+    }
+}
+
+export async function obtenerTodasEncuestas() {
+    try {
+        const response = await axios.get("/api/all-encuestas");
+        return response.data;
+    } catch (error) {
+        console.error('Error al obtener todas las encuestas:', error);
+        throw error;
+    }
+}
+
+export async function obtenerEncuestaPorId(id) {
+    try {
+        const response = await axios.get(`/api/encuestas/detail/${id}`);
+
+        return response.data;
+    } catch (error) {
+        console.error('Error al obtener la encuesta:', error);
+        throw error;
+    }
+}
+
+export async function actualizarEncuesta(id, encuesta) {
+    try {
+        const response = await axios.put(`/api/encuestas/detail/${id}`, encuesta);
         return response.data;
     } catch (error) {
         console.error('Error al actualizar la encuesta:', error);
         throw error;
     }
-};
+}
 
-export const deleteEncuesta = async (id) => {
+export async function eliminarEncuesta(id) {
     try {
-        const response = await axios.delete(`${API_URL}/encuestas/${id}`);
+        const response = await axios.delete(`/api/encuestas/detail/${id}`);
+
         return response.data;
     } catch (error) {
         console.error('Error al eliminar la encuesta:', error);
         throw error;
     }
-};
+}

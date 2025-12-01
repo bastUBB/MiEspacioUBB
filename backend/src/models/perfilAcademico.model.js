@@ -81,6 +81,11 @@ const perfilAcademicoSchema = mongoose.Schema({
             type: Number,
             cast: false
         }
+    }],
+    encuestas: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Encuesta',
+        cast: false
     }]
 }, {
     versionKey: false,

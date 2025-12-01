@@ -25,3 +25,39 @@ export function generarNombreArchivoForMinIO(metadataArchivo, body, abreviacionA
 
     return `${abreviacionAsignatura}-${nombreArchivoNormalizado}-${autorNormalizado}-${diaActual}${extension}`;
 }
+
+export async function googleFormsUrlValidator(value, helpers) {
+    let url;
+
+    try {
+        url = new URL(value);
+    } catch (e) {
+        return helpers.error("string.uri");
+    }
+
+    const host = url.hostname;
+    const path = url.pathname;
+
+    const esDocs = host === "docs.google.com";
+    const esShort = host === "forms.gle";
+
+    if (esShort) {
+        if (!/^\/[A-Za-z0-9]+$/.test(path)) {
+            return helpers.error("any.invalid");
+        }
+        return value;
+    }
+
+    if (esDocs) {
+        const coincide =
+            /^\/forms\/d\/e\/[A-Za-z0-9_-]+\/viewform$/.test(path) ||
+            /^\/forms\/d\/[A-Za-z0-9_-]+\/viewform$/.test(path);
+
+        if (!coincide) {
+            return helpers.error("any.invalid");
+        }
+        return value;
+    }
+
+    return helpers.error("any.invalid");
+}

@@ -1,5 +1,5 @@
 import joi from 'joi';
-import { diaActual } from '../helpers/ayudasVarias.helper.js';
+import { obtenerDiaActual } from '../helpers/ayudasVarias.helper.js';
 
 export const reporteQueryValidation = joi.object({
     _id: joi.string()
@@ -89,12 +89,12 @@ export const reporteCreateValidation = joi.object({
         .required()
         .strict()
         .pattern(/^([0-2][0-9]|3[0-1])-(0[1-9]|1[0-2])-\d{4}$/)
-        .valid(diaActual)
+        .valid(obtenerDiaActual())
         .messages({
             "string.empty": "La fecha no puede estar vacía.",
             "string.base": "La fecha debe ser de tipo string.",
             "string.pattern.base": "La fecha debe tener el formato DD-MM-AAAA.",
-            "any.only": `La fecha debe ser exactamente hoy: ${diaActual}.`,
+            "any.only": `La fecha debe ser exactamente hoy: ${obtenerDiaActual()}.`,
             "any.required": "La fecha es obligatoria."
         }),
     apunteId: joi.string()
@@ -149,11 +149,11 @@ export const reporteUpdateValidation = joi.object({
     fecha: joi.string()
         .strict()
         .pattern(/^([0-2][0-9]|3[0-1])-(0[1-9]|1[0-2])-\d{4}$/)
-        .valid(diaActual)
+        .valid(obtenerDiaActual())
         .messages({
             "string.base": "La fecha debe ser de tipo string.",
             "string.pattern.base": "La fecha debe tener el formato DD-MM-AAAA.",
-            "any.only": `La fecha debe ser exactamente hoy: ${diaActual}.`,
+            "any.only": `La fecha debe ser exactamente hoy: ${obtenerDiaActual()}.`,
         }),
     estado: joi.string()
         .trim()

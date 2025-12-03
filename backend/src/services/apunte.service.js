@@ -6,7 +6,7 @@ import Reporte from '../models/reporte.model.js';
 import Asignatura from '../models/asignatura.model.js';
 import perfilAcademico from '../models/perfilAcademico.model.js';
 import { uploadFileService } from './minio.service.js';
-import { generarNombreArchivoForMinIO, diaActual } from '../helpers/ayudasVarias.helper.js';
+import { generarNombreArchivoForMinIO, obtenerDiaActual } from '../helpers/ayudasVarias.helper.js';
 import { asignarBucket } from '../helpers/asignarBucket.helper.js';
 import { normalizarNombres } from '../helpers/ayudasVarias.helper.js';
 import { asignarApunteToPerfilAcademicoService, poseePerfilAcademicoService, sumarDescargaApunteService } from './perfilAcademico.service.js';
@@ -35,7 +35,7 @@ export async function uploadApunteService(file, body) {
         const metadata = {
             'Content-Type': file.mimetype,
             'X-Original-Name': normalizeMetadata(file.originalname),
-            'X-Upload-Date': diaActual,
+            'X-Upload-Date': obtenerDiaActual(),
             'X-Asignatura': normalizeMetadata(body.asignatura),
             'X-Tipo-Apunte': normalizeMetadata(body.tipoApunte),
             'X-Autor': body.autores

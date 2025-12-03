@@ -8,18 +8,18 @@ const TablaGestion = ({
   icon = null,
   onEdit = null,
   onDelete = null,
-  onCreate = null, // Nueva prop para manejar creación
-  createButtonText = "Nuevo", // Texto personalizable del botón
+  onCreate = null,
+  createButtonText = "Nuevo",
   searchPlaceholder = "Buscar...",
   itemsPerPage = 10,
   showActions = true,
-  showCreateButton = true, // Nueva prop para mostrar/ocultar botón
-  emptyMessage = "No hay datos disponibles"
+  showCreateButton = true,
+  emptyMessage = "No hay datos disponibles",
+  customActions = null
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Filtrar datos basado en el término de búsqueda
   const filteredData = useMemo(() => {
     if (!searchTerm) return data;
 
@@ -31,13 +31,11 @@ const TablaGestion = ({
     );
   }, [data, searchTerm, columns]);
 
-  // Calcular paginación
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentData = filteredData.slice(startIndex, endIndex);
 
-  // Resetear a página 1 cuando cambie el filtro
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
@@ -79,11 +77,11 @@ const TablaGestion = ({
             className="w-full pl-10 pr-4 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-blue-900 placeholder-blue-400"
           />
         </div>
-        
+
         {showCreateButton && onCreate && (
           <button
             onClick={onCreate}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors whitespace-nowrap"
+            className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:from-blue-600 hover:to-cyan-600 transition-all shadow-md hover:shadow-lg whitespace-nowrap"
           >
             <Plus className="w-5 h-5" />
             {createButtonText}
@@ -100,7 +98,7 @@ const TablaGestion = ({
                 <th
                   key={column.key}
                   className={`border border-blue-200 px-4 py-3 text-blue-900 font-medium text-sm ${column.align === 'center' ? 'text-center' :
-                      column.align === 'right' ? 'text-right' : 'text-left'
+                    column.align === 'right' ? 'text-right' : 'text-left'
                     }`}
                 >
                   {column.title}
@@ -121,7 +119,7 @@ const TablaGestion = ({
                     <td
                       key={column.key}
                       className={`px-4 py-4 border-r border-blue-200 text-sm ${column.align === 'center' ? 'text-center' :
-                          column.align === 'right' ? 'text-right' : 'text-left'
+                        column.align === 'right' ? 'text-right' : 'text-left'
                         } ${column.className || 'text-blue-700'}`}
                     >
                       {renderCellContent(item, column)}
@@ -130,6 +128,7 @@ const TablaGestion = ({
                   {showActions && (
                     <td className="px-4 py-4 text-center">
                       <div className="flex items-center justify-center gap-2">
+                        {customActions && customActions(item)}
                         {onEdit && (
                           <button
                             onClick={() => onEdit(item)}

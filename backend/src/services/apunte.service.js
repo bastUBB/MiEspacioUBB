@@ -223,27 +223,17 @@ export async function getApunteByIdService(apunteID) {
 
 export async function obtenerLinkDescargaApunteURLFirmadaService(apunteID) {
     try {
-        console.log('Obteniendo URL firmada para apunte:', apunteID);
         const apunteExist = await Apunte.findById(apunteID);
 
         if (!apunteExist) {
-            console.log('Apunte no encontrado:', apunteID);
             return [null, 'El apunte solicitado no existe'];
         }
 
         if (apunteExist.estado !== 'Activo') {
-            console.log('Apunte no está activo:', apunteExist.estado);
             return [null, 'El apunte solicitado no está disponible'];
         }
 
-        console.log('Información del archivo:', {
-            objectName: apunteExist.archivo?.objectName,
-            bucket: apunteExist.archivo?.bucket,
-            nombreOriginal: apunteExist.archivo?.nombreOriginal
-        });
-
         if (!apunteExist.archivo || !apunteExist.archivo.objectName || !apunteExist.archivo.bucket) {
-            console.log('Archivo incompleto en el apunte');
             return [null, 'El apunte no tiene un archivo asociado'];
         }
 
@@ -258,11 +248,9 @@ export async function obtenerLinkDescargaApunteURLFirmadaService(apunteID) {
         );
 
         if (urlError) {
-            console.log('Error al generar URL firmada:', urlError);
             return [null, urlError];
         }
 
-        console.log('URL firmada generada exitosamente');
         return [fileInfo, null];
     } catch (error) {
         console.error('Error al obtener URL firmada del apunte:', error);
@@ -654,7 +642,13 @@ export async function crearReporteApunteService(apunteID, dataReporte) {
 
         if (!apunteExist) return [null, 'El apunte que desea reportar no existe'];
 
-        const nuevoReporte = new Reporte(dataReporte);
+        // Agregar apunteId al reporte
+        const reporteConApunte = {
+            ...dataReporte,
+            apunteId: apunteID
+        };
+
+        const nuevoReporte = new Reporte(reporteConApunte);
 
         await nuevoReporte.save();
 
@@ -791,12 +785,45 @@ export async function actualizarValoracionApunteService(apunteID, rutUserValorac
     }
 }
 
-// export async function generarRecomendacionApuntePersonalizadaService(rutUser)
+/*
+Crear funcion para obtener el mejor apunte del usuario. Esto mediante la siguiente formula:
+Apunte seleccionado debe ser el mejor puntaje obtenido por:
+Valoracion + comentarios +  visualizaciones + (descargas / 1) + reportes
+*/
 
-//Servicio para obtener apunte. Este servicio debe entregar el archivo para su posterior previsualización y link de descarga
-// mediante URL firmada.
-// export async function getApunteByIdService(apunteID)
+export async function obtenerMejorApunteUserService(rutUser) {
+    try {
 
-// export async function getApuntesRecommendations(){}
+        const userExist = await User.findOne({ rut: rutUser });
 
-// export async function
+        if (!userExist) return [null, 'El usuario no existe'];
+
+        const perfilUsuario = await perfilAcademico.findOne({ rutUser: rutUser }).populate('apuntesIDs');
+
+        if (!perfilUsuario) return [null, 'El usuario no posee perfil académico'];
+
+        if (!perfilUsuario.apuntesIDs || perfilUsuario.apuntesIDs.length === 0) return [null, 'El usuario no ha subido apuntes'];
+
+        const calcularScore = (apunte) => {
+            const val = apunte.valoracion?.promedioValoracion || 0;
+            const com = apunte.comentarios?.length || 0;
+            const vis = apunte.visualizaciones || 0;
+            const des = apunte.descargas || 0;
+            const rep = apunte.reportes?.length || 0;
+
+            return (val + com + vis + des) - (rep * 2);
+        };
+
+        const apunteMejorPuntaje = perfilUsuario.apuntesIDs.reduce((apunteGanador, apunteActual) => {
+            const scoreGanador = calcularScore(apunteGanador);
+            const scoreActual = calcularScore(apunteActual);
+            return scoreActual > scoreGanador ? apunteActual : apunteGanador;
+        });
+
+        return [apunteMejorPuntaje, null];
+
+    } catch (error) {
+        console.error('Error al obtener el mejor apunte del usuario:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}

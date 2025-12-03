@@ -1,49 +1,15 @@
 import { TrendingUp, Award, Users, FileText, Star, Trophy, Eye, BookOpen } from 'lucide-react';
 
-const Sidebar = ({ userStats, topContributors, topNotes, topMostViewedNotes = [], topSubjects = [] }) => {
+const Sidebar = ({ topContributors, topNotes, topMostViewedNotes = [], topSubjects = [] }) => {
   return (
     <div className="space-y-6">
-      {/* User Statistics */}
-      <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl shadow-sm p-6">
-        <div className="flex items-center space-x-2 mb-4">
-          <TrendingUp className="w-5 h-5 text-purple-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Tus estadísticas</h3>
-        </div>
-        
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <FileText className="w-4 h-4 text-purple-600" />
-              <span className="text-sm text-gray-600">Apuntes subidos</span>
-            </div>
-            <span className="text-lg font-bold text-purple-600">{userStats.notesUploaded}</span>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Star className="w-4 h-4 text-yellow-500" />
-              <span className="text-sm text-gray-600">Valoraciones recibidas</span>
-            </div>
-            <span className="text-lg font-bold text-yellow-500">{userStats.ratingsReceived}</span>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Award className="w-4 h-4 text-indigo-600" />
-              <span className="text-sm text-gray-600">Reputación</span>
-            </div>
-            <span className="text-lg font-bold text-indigo-600">{userStats.reputation}</span>
-          </div>
-        </div>
-      </div>
-
       {/* Top Contributors */}
       <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl shadow-sm p-6">
         <div className="flex items-center space-x-2 mb-4">
           <Trophy className="w-5 h-5 text-yellow-500" />
           <h3 className="text-lg font-semibold text-gray-900">Top contribuidores</h3>
         </div>
-        
+
         <div className="space-y-3">
           {topContributors.map((contributor, index) => (
             <div key={index} className="flex items-center space-x-3">
@@ -70,7 +36,7 @@ const Sidebar = ({ userStats, topContributors, topNotes, topMostViewedNotes = []
           <Star className="w-5 h-5 text-yellow-500" />
           <h3 className="text-lg font-semibold text-gray-900">Apuntes más valorados</h3>
         </div>
-        
+
         <div className="space-y-3">
           {topNotes.length > 0 ? (
             topNotes.map((note, index) => (
@@ -97,7 +63,7 @@ const Sidebar = ({ userStats, topContributors, topNotes, topMostViewedNotes = []
           <Eye className="w-5 h-5 text-blue-500" />
           <h3 className="text-lg font-semibold text-gray-900">Apuntes más vistos</h3>
         </div>
-        
+
         <div className="space-y-3">
           {topMostViewedNotes.length > 0 ? (
             topMostViewedNotes.map((note, index) => (
@@ -124,7 +90,7 @@ const Sidebar = ({ userStats, topContributors, topNotes, topMostViewedNotes = []
           <BookOpen className="w-5 h-5 text-green-500" />
           <h3 className="text-lg font-semibold text-gray-900">Asignaturas populares</h3>
         </div>
-        
+
         <div className="space-y-3">
           {topSubjects.length > 0 ? (
             topSubjects.map((subject, index) => (

@@ -10,10 +10,7 @@ import {
 } from '../validations/recomendacion.validation.js';
 import { handleSuccess, handleErrorClient, handleErrorServer } from '../handlers/responseHandlers.js';
 
-/**
- * Controlador para obtener recomendaciones personalizadas
- * GET /api/recomendaciones/personalizadas?rutUser=xx.xxx.xxx-x&limite=20
- */
+
 export async function obtenerRecomendacionesPersonalizadas(req, res) {
     try {
         const { value, error } = recomendacionPersonalizadaValidation.validate(req.query);
@@ -21,9 +18,10 @@ export async function obtenerRecomendacionesPersonalizadas(req, res) {
         if (error) return handleErrorClient(res, 400, 'Parámetros de consulta inválidos', error.message);
 
         const { rutUser, limite } = value;
+        const rutFinal = rutUser || req.user.rut;
 
         const [recomendaciones, serviceError] = await generarRecomendacionPersonalizadaService(
-            rutUser, 
+            rutFinal,
             limite
         );
 
@@ -34,9 +32,9 @@ export async function obtenerRecomendacionesPersonalizadas(req, res) {
         }
 
         return handleSuccess(
-            res, 
-            200, 
-            `Recomendaciones generadas exitosamente (${recomendaciones.length} apuntes)`, 
+            res,
+            200,
+            `Recomendaciones generadas exitosamente (${recomendaciones.length} apuntes)`,
             recomendaciones
         );
 
@@ -46,10 +44,6 @@ export async function obtenerRecomendacionesPersonalizadas(req, res) {
     }
 }
 
-/**
- * Controlador para obtener recomendaciones genéricas (sin perfil académico)
- * GET /api/recomendaciones/genericas?limite=20
- */
 export async function obtenerRecomendacionesGenericas(req, res) {
     try {
         const { value, error } = recomendacionGenericaValidation.validate(req.query);
@@ -79,10 +73,6 @@ export async function obtenerRecomendacionesGenericas(req, res) {
     }
 }
 
-/**
- * Controlador para obtener recomendaciones por asignatura específica
- * GET /api/recomendaciones/por-asignatura?asignatura=Matematicas&rutUser=xx.xxx.xxx-x&limite=10
- */
 export async function obtenerRecomendacionesPorAsignatura(req, res) {
     try {
         const { value, error } = recomendacionPorAsignaturaValidation.validate(req.query);
@@ -101,9 +91,9 @@ export async function obtenerRecomendacionesPorAsignatura(req, res) {
 
         if (!recomendaciones || recomendaciones.length === 0) {
             return handleSuccess(
-                res, 
-                200, 
-                `No hay apuntes disponibles para la asignatura "${asignatura}"`, 
+                res,
+                200,
+                `No hay apuntes disponibles para la asignatura "${asignatura}"`,
                 []
             );
         }

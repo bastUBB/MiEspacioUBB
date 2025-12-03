@@ -4,11 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import Header from '../components/header';
 import WelcomeSection from '../components/seccionBienvenido';
-import SearchSection from '../components/seccionBusqueda';
-import RecommendationsSection from '../components/seccionRecomendacion';
+import HomeStatistics from '../components/HomeStatistics';
+import GeneradorRecomendaciones from '../components/GeneradorRecomendaciones';
 import Sidebar from '../components/sidebar';
 import FloatingActionButton from '../components/botonAccionFlotante';
 import SubirApunteModal from '../components/SubirApunteModal';
+import SubirEncuestaModal from '../components/SubirEncuestaModal';
 import { obtenerApuntesMasValoradosService, obtenerApuntesMasVisualizadosService, obtenerAsignaturasConMasApuntesService } from '../services/apunte.service';
 import { obtenerMisApuntesByRutService } from '../services/apunte.service';
 import { obtenerTodasMisNotificacionesService, actualizarEstadoLeidoService, borrarNotificacionesLeidasService } from '../services/notificacion.service';
@@ -19,10 +20,11 @@ function Home() {
   const navigate = useNavigate();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEncuestaModalOpen, setIsEncuestaModalOpen] = useState(false);
 
   // Estados para datos del backend
   const [apuntes, setApuntes] = useState([]);
-  const [loadingApuntes, setLoadingApuntes] = useState(true);
+
   const [notifications, setNotifications] = useState([]);
   const [notificationCount, setNotificationCount] = useState(0);
   const [userStats, setUserStats] = useState({
@@ -45,7 +47,6 @@ function Home() {
   useEffect(() => {
     const fetchApuntes = async () => {
       try {
-        setLoadingApuntes(true);
         const response = await obtenerApuntesMasValoradosService();
 
         if (response.status === 'Success' && response.data) {
@@ -54,8 +55,6 @@ function Home() {
       } catch (error) {
         console.error('Error cargando apuntes más valorados:', error);
         toast.error('Error al cargar los apuntes');
-      } finally {
-        setLoadingApuntes(false);
       }
     };
 
@@ -305,20 +304,7 @@ function Home() {
     };
   }, [user]);
 
-  // Transformar apuntes del backend al formato del frontend
-  const transformApuntesForDisplay = (apuntesData) => {
-    return apuntesData.map(apunte => ({
-      id: apunte._id,
-      title: apunte.nombre,
-      author: apunte.autorSubida,
-      subject: apunte.asignatura,
-      rating: apunte.valoracion?.promedioValoracion || 0,
-      downloads: apunte.visualizaciones || 0,
-      preview: apunte.descripcion,
-      tags: apunte.etiquetas || [],
-      fullData: apunte // Guardar todos los datos para vista detallada
-    }));
-  };
+
 
   // Obtener top apuntes por valoración
   const getTopApuntes = () => {
@@ -376,6 +362,10 @@ function Home() {
     setIsModalOpen(true);
   };
 
+  const handleCreateSurveyClick = () => {
+    setIsEncuestaModalOpen(true);
+  };
+
   const handleNoteClick = (note) => {
     const apunteId = note.id || note._id;
 
@@ -389,6 +379,10 @@ function Home() {
 
   const handleModalClose = () => {
     setIsModalOpen(false);
+  };
+
+  const handleEncuestaModalClose = () => {
+    setIsEncuestaModalOpen(false);
   };
 
   const handleApunteCreated = async () => {
@@ -498,18 +492,11 @@ function Home() {
             <WelcomeSection
               userName={user?.nombreCompleto || 'Usuario'}
             />
-            <SearchSection />
+            <HomeStatistics />
 
-            {loadingApuntes ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-              </div>
-            ) : (
-              <RecommendationsSection
-                notes={transformApuntesForDisplay(apuntes)}
-                onNoteClick={handleNoteClick}
-              />
-            )}
+            <HomeStatistics />
+
+            <GeneradorRecomendaciones onNoteClick={handleNoteClick} />
           </div>
 
           {/* Sidebar */}
@@ -525,13 +512,25 @@ function Home() {
         </div>
       </div>
 
-      <FloatingActionButton onClick={handleUploadClick} />
+      <FloatingActionButton
+        onUploadClick={handleUploadClick}
+        onCreateSurveyClick={handleCreateSurveyClick}
+      />
 
       {/* Modal para subir apuntes */}
       <SubirApunteModal
         isOpen={isModalOpen}
         onClose={handleModalClose}
         onApunteCreated={handleApunteCreated}
+      />
+
+      {/* Modal para crear encuestas */}
+      <SubirEncuestaModal
+        isOpen={isEncuestaModalOpen}
+        onClose={handleEncuestaModalClose}
+        onEncuestaCreated={() => {
+          // Opcional: Recargar algo si es necesario
+        }}
       />
     </div>
   );

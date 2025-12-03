@@ -34,6 +34,10 @@ const reporteSchema = new mongoose.Schema({
     resolucion: {
         type: String,
         cast: false
+    },
+    apunteId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Apunte',
     }
 }, {
     versionKey: false,

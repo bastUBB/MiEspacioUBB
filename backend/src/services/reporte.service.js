@@ -32,7 +32,8 @@ export async function crearReporteUserService(dataReporte) {
 //para todos
 export async function obtenerMisReportesService(rutUsuarioReporte) {
     try {
-        const misReportes = await Reporte.find({ rutUsuarioReporte: rutUsuarioReporte });
+        const misReportes = await Reporte.find({ rutUsuarioReporte: rutUsuarioReporte })
+            .populate('apunteId', 'nombre descripcion asignatura estado');
 
         if (!misReportes || misReportes.length === 0) return [null, 'No tienes reportes realizados'];
 

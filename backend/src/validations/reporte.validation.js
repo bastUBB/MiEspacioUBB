@@ -97,14 +97,14 @@ export const reporteCreateValidation = joi.object({
             "any.only": `La fecha debe ser exactamente hoy: ${diaActual}.`,
             "any.required": "La fecha es obligatoria."
         }),
-    apunteID: joi.string()
+    apunteId: joi.string()
+        .optional()
         .pattern(/^[a-fA-F0-9]{24}$/)
         .messages({
-            "string.base": "El ID del comentario debe ser de tipo string.",
-            "string.pattern.base": "El ID del comentario debe ser un ObjectId válido de MongoDB.",
+            "string.base": "El ID del apunte debe ser de tipo string.",
+            "string.pattern.base": "El ID del apunte debe ser un ObjectId válido de MongoDB.",
         }),
 })
-    .or('apunteID')
     .unknown(false)
     .messages({
         'object.unknown': 'No se permiten propiedades adicionales en el cuerpo de la solicitud',

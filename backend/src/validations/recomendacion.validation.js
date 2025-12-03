@@ -1,11 +1,7 @@
 import joi from 'joi';
 
-/**
- * Validación para obtener recomendaciones personalizadas
- */
 export const recomendacionPersonalizadaValidation = joi.object({
     rutUser: joi.string()
-        .required()
         .min(9)
         .max(12)
         .trim()
@@ -16,7 +12,6 @@ export const recomendacionPersonalizadaValidation = joi.object({
             "string.min": "El rut debe tener como mínimo 9 caracteres.",
             "string.max": "El rut debe tener como máximo 12 caracteres.",
             "string.pattern.base": "Formato rut inválido, debe ser xx.xxx.xxx-x o xxxxxxxx-x.",
-            "any.required": "El rut es obligatorio.",
         }),
     limite: joi.number()
         .integer()
@@ -35,9 +30,6 @@ export const recomendacionPersonalizadaValidation = joi.object({
         'object.unknown': 'No se permiten propiedades adicionales en la consulta',
     });
 
-/**
- * Validación para obtener recomendaciones por asignatura
- */
 export const recomendacionPorAsignaturaValidation = joi.object({
     rutUser: joi.string()
         .min(9)
@@ -81,9 +73,6 @@ export const recomendacionPorAsignaturaValidation = joi.object({
         'object.unknown': 'No se permiten propiedades adicionales en la consulta',
     });
 
-/**
- * Validación para obtener recomendaciones genéricas
- */
 export const recomendacionGenericaValidation = joi.object({
     limite: joi.number()
         .integer()

@@ -20,12 +20,23 @@ export const apunteQueryValidation = joi.object({
             "string.max": "El rut debe tener como máximo 12 caracteres.",
             "string.pattern.base": "Formato rut inválido, debe ser xx.xxx.xxx-x.",
         }),
-})  
-    .or("apunteID", "rutAutorSubida")
+    rutUser: joi.string()
+        .trim()
+        .min(9)
+        .max(12)
+        .pattern(/^[0-9]{1,2}\.[0-9]{3}\.[0-9]{3}-[0-9kK]$/)
+        .messages({
+            "string.base": "El rut debe ser de tipo string.",
+            "string.min": "El rut debe tener como mínimo 9 caracteres.",
+            "string.max": "El rut debe tener como máximo 12 caracteres.",
+            "string.pattern.base": "Formato rut inválido, debe ser xx.xxx.xxx-x.",
+        }),
+})
+    .or("apunteID", "rutAutorSubida", "rutUser")
     .unknown(false)
     .messages({
         'object.unknown': 'No se permiten propiedades adicionales en la consulta',
-        'object.missing': 'Debe proporcionar al menos uno de los campos: apunteID o rutAutorSubida',
+        'object.missing': 'Debe proporcionar al menos uno de los campos: apunteID, rutAutorSubida o rutUser',
     });
 
 export const apunteCreateValidation = joi.object({

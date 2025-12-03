@@ -22,6 +22,7 @@ import Home from './pages/Home.jsx'
 import HomeAdmin from './pages/admin/HomeAdmin.jsx'
 
 import Profile from './pages/Profile.jsx'
+import GestionUsuarios from './pages/admin/GestionUsuarios.jsx'
 import ExplorarApuntes from './pages/ExplorarApuntes.jsx'
 import MisAportes from './pages/MisAportes.jsx'
 import MisApuntes from './pages/MisApuntes.jsx'
@@ -107,6 +108,7 @@ function App() {
             <Route path="home" element={<HomeAdmin />} />
             <Route path="encuestas" element={<MisEncuestas />} />
             <Route path="encuestas/crear" element={<CrearEncuesta />} />
+            <Route path="usuarios" element={<GestionUsuarios />} />
             {/* Agrega más rutas del admin aquí */}
           </Route>
 

@@ -44,10 +44,7 @@ export async function generarUrlFirmadaService(objectName, expiresIn = 7200, buc
         }
 
         const targetBucket = bucketName;
-
-        console.log(`Generando URL firmada - Bucket: ${targetBucket}, Object: ${objectName}`);
         const stats = await minioClient.statObject(targetBucket, objectName);
-        console.log('Stats del archivo:', { size: stats.size, contentType: stats.metaData['content-type'] });
 
         const signedUrl = await minioClient.presignedGetObject(
             targetBucket,

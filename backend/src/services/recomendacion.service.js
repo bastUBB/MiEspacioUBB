@@ -68,6 +68,8 @@ export async function generarRecomendacionPersonalizadaService(rutUser, limite =
                 razonRecomendacion: item.explicacion
             }));
 
+        console.log(recomendacionesFinales)
+
         return [recomendacionesFinales, null];
 
     } catch (error) {

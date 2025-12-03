@@ -18,7 +18,8 @@ import {
     obtenerAsignaturasConMasApuntesService,
     obtenerValoracionApunteService,
     obtenerLinkDescargaApunteURLFirmadaService,
-    sumarDescargaApunteUsuarioService
+    sumarDescargaApunteUsuarioService,
+    obtenerMejorApunteUserService
 } from '../services/apunte.service.js';
 import {
     busquedaApuntesMismoAutorService,
@@ -428,6 +429,23 @@ export async function registrarDescargaApunte(req, res) {
         return handleSuccess(res, 200, 'Descarga registrada exitosamente', descargaRegistrada);
     } catch (error) {
         console.error('Error al registrar descarga:', error);
+        return handleErrorServer(res, 500, 'Error interno del servidor');
+    }
+}
+
+export async function obtenerMejorApunteUser(req, res) {
+    try {
+        const { value: valueQuery, error: errorQuery } = apunteQueryValidation.validate(req.query);
+
+        if (errorQuery) return handleErrorClient(res, 400, 'RUT de usuario inválido', errorQuery.message);
+
+        const [mejorApunte, mejorApunteError] = await obtenerMejorApunteUserService(valueQuery.rutUser);
+
+        if (mejorApunteError) return handleErrorServer(res, 500, 'Error al obtener mejor apunte', mejorApunteError);
+
+        return handleSuccess(res, 200, 'Mejor apunte obtenido exitosamente', mejorApunte);
+    } catch (error) {
+        console.error('Error al obtener mejor apunte:', error);
         return handleErrorServer(res, 500, 'Error interno del servidor');
     }
 }

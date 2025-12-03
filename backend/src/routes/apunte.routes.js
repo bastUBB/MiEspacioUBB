@@ -25,7 +25,8 @@ import {
     busquedaApuntesMismaAsignatura,
     obtenerValoracionApunte,
     obtenerLinkDescargaApunte,
-    registrarDescargaApunte
+    registrarDescargaApunte,
+    obtenerMejorApunteUser
 } from '../controllers/apunte.controller.js';
 
 const router = Router();
@@ -45,6 +46,7 @@ router
     .delete('/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), deleteApunte)
     .get('/apuntes-rut/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), obtenerMisApuntesByRut)
     .get('/', authorizeRoles('admin'), getAllApuntes)
+    .get('/mejor-apunte-user', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), obtenerMejorApunteUser)
     .get('/valoracion/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), obtenerValoracionApunte)
     .get('/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), getApunteById)
     .get('/cantidad-apuntes/', authorizeRoles('admin'), obtenerCantidadApuntes)

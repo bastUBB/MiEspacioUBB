@@ -5,9 +5,8 @@ const RecommendationsSection = ({ notes, onNoteClick }) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
-        className={`w-4 h-4 ${
-          i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-        }`}
+        className={`w-4 h-4 ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+          }`}
       />
     ));
   };
@@ -15,12 +14,9 @@ const RecommendationsSection = ({ notes, onNoteClick }) => {
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-gray-900">Recomendaciones personalizadas</h2>
-        <button className="text-purple-600 hover:text-purple-700 font-medium transition-colors">
-          Ver todos
-        </button>
+        <h2 className="text-xl font-bold text-gray-900">Recomendación personalizada</h2>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {notes.map((note) => (
           <div
@@ -40,15 +36,15 @@ const RecommendationsSection = ({ notes, onNoteClick }) => {
                 <span className="text-sm text-gray-500 ml-1">({note.rating})</span>
               </div>
             </div>
-            
+
             <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors">
               {note.title}
             </h3>
-            
+
             <p className="text-gray-600 text-sm mb-4 line-clamp-2">
               {note.preview}
             </p>
-            
+
             <div className="flex flex-wrap gap-1 mb-4">
               {note.tags.map((tag, index) => (
                 <span
@@ -59,7 +55,7 @@ const RecommendationsSection = ({ notes, onNoteClick }) => {
                 </span>
               ))}
             </div>
-            
+
             <div className="flex items-center justify-between text-sm text-gray-500">
               <div className="flex items-center space-x-1">
                 <User className="w-4 h-4" />

@@ -314,3 +314,16 @@ export async function obtenerCantidadApuntesService() {
         throw error;
     }
 }
+
+export async function obtenerMejorApunteUserService(rutUser) {
+    try {
+        const response = await axios.get('/api/apuntes/mejor-apunte-user', {
+            params: { rutUser }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al obtener el mejor apunte del usuario:", error);
+        throw error;
+    }
+}

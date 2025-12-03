@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { crearReporteUserService } from '../services/reporte.service';
+import { crearReporteApunteService } from '../services/apunte.service';
 
 function ReportModal({ isOpen, onClose, apunteId, autorRut, userRut }) {
     const [motivo, setMotivo] = useState('');
@@ -47,11 +47,10 @@ function ReportModal({ isOpen, onClose, apunteId, autorRut, userRut }) {
                 rutUsuarioReporte: userRut,
                 motivo,
                 descripcion: descripcion.trim(),
-                fecha,
-                apunteID: apunteId
+                fecha
             };
 
-            const response = await crearReporteUserService(reporteData);
+            const response = await crearReporteApunteService(apunteId, reporteData);
 
             if (response.status === 'Success') {
                 toast.success('Reporte enviado correctamente');

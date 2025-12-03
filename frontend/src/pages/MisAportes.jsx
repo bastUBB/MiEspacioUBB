@@ -1,10 +1,11 @@
 import { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../context/userContextProvider';
-import { BookOpen, MessageSquare } from 'lucide-react';
+import { BookOpen, MessageSquare, AlertTriangle } from 'lucide-react';
 import Header from '../components/header';
 import ListaApuntes from '../components/listaApuntes';
 import ListaEncuestas from '../components/listaEncuestas';
+import ListaReportes from '../components/listaReportes';
 
 function MisAportes() {
     const { user, loading: userLoading } = useContext(UserContext);
@@ -19,7 +20,8 @@ function MisAportes() {
 
     const tabs = [
         { id: 'apuntes', name: 'Mis Apuntes', icon: BookOpen },
-        { id: 'encuestas', name: 'Mis Encuestas', icon: MessageSquare }
+        { id: 'encuestas', name: 'Mis Encuestas', icon: MessageSquare },
+        { id: 'reportes', name: 'Reportes Realizados', icon: AlertTriangle }
     ];
 
     if (userLoading) {
@@ -67,6 +69,7 @@ function MisAportes() {
                 <div>
                     {activeTab === 'apuntes' && <ListaApuntes rutUser={user?.rut} />}
                     {activeTab === 'encuestas' && <ListaEncuestas rutUser={user?.rut} />}
+                    {activeTab === 'reportes' && <ListaReportes rutUser={user?.rut} />}
                 </div>
             </div>
         </div>

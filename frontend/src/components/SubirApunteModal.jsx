@@ -1,5 +1,5 @@
 import { useState, useContext, useEffect, useRef } from 'react';
-import { Upload, FileText, X, Tag, Plus, PencilLine, Users, AlignLeft, BookOpen, FolderOpen } from 'lucide-react';
+import { Upload, FileText, X, Tag, Plus, PencilLine, Users, AlignLeft, BookOpen, FolderOpen, Search, ChevronDown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../context/userContextProvider';
@@ -10,7 +10,7 @@ import { getAsignaturasService } from '../services/asignatura.service';
 export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
   const navigate = useNavigate();
   const { user, loading: userLoading } = useContext(UserContext);
-  
+
   const [_profileLoading, setProfileLoading] = useState(true);
   const hasCheckedProfile = useRef(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -32,6 +32,22 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [asignaturas, setAsignaturas] = useState([]);
   const [loadingAsignaturas, setLoadingAsignaturas] = useState(true);
+  const [subjectSearch, setSubjectSearch] = useState('');
+  const [showSubjectDropdown, setShowSubjectDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowSubjectDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Cargar asignaturas al abrir el modal
   useEffect(() => {
@@ -39,7 +55,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
       const fetchAsignaturas = async () => {
         try {
           const response = await getAsignaturasService();
-          
+
           if (response.status === 'Success' && response.data) {
             setAsignaturas(response.data);
           } else {
@@ -62,10 +78,10 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
     const checkProfile = async () => {
       if (!userLoading && user && !hasCheckedProfile.current && isOpen) {
         hasCheckedProfile.current = true;
-        
+
         try {
           const response = await poseePerfilAcademicoService(user.rut);
-          
+
           if (!response.data || !response.data._id) {
             toast.error('Debes crear tu perfil académico antes de subir apuntes', {
               duration: 5000,
@@ -75,7 +91,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
             navigate('/estudiante/perfil-academico', { replace: true });
             return;
           }
-          
+
           setProfileLoading(false);
         } catch (error) {
           console.error('Error verificando perfil:', error);
@@ -106,7 +122,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!isResizing) return;
-      
+
       const newWidth = e.clientX - (modalRef.current?.getBoundingClientRect().left || 0);
       // Limitar entre 640px (min) y 1200px (max)
       if (newWidth >= 640 && newWidth <= 1200) {
@@ -131,7 +147,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
+
     if (name === 'name') {
       const namePattern = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*$/;
       if (value && !namePattern.test(value)) {
@@ -149,7 +165,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
         return;
       }
     }
-    
+
     if (name === 'authors') {
       const authorsPattern = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s,]*$/;
       if (value && !authorsPattern.test(value)) {
@@ -160,7 +176,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
         return;
       }
     }
-    
+
     if (name === 'description') {
       if (value.length > 200) {
         toast.error('La descripción no puede tener más de 200 caracteres', {
@@ -170,7 +186,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
         return;
       }
     }
-    
+
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -351,7 +367,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
     }
 
     const autoresArray = formData.authors.split(',').map(a => a.trim()).filter(a => a);
-    
+
     if (autoresArray.length === 0 || autoresArray.length > 10) {
       toast.error('Debe haber entre 1 y 10 autores', { duration: 3000, icon: '⚠️' });
       return;
@@ -429,7 +445,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
         toast.success('¡Apunte subido exitosamente!', { duration: 4000, icon: '🎉' });
         resetForm();
         onClose();
-        
+
         // Notificar al componente padre para que recargue los apuntes
         if (onApunteCreated) {
           onApunteCreated();
@@ -459,14 +475,14 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
       {/* Backdrop - Ajusta bg-opacity-40 para cambiar transparencia (valores: 10, 20, 30, 40, 50, 60, etc.) */}
-      <div 
+      <div
         className="fixed inset-0 bg-gray-5 bg-opacity-40 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       ></div>
 
       {/* Modal Container */}
       <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-        <div 
+        <div
           ref={modalRef}
           className="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8"
           style={{ width: `${modalWidth}px`, maxWidth: '95vw' }}
@@ -499,258 +515,295 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
             </div>
           </div>
 
-                <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-semibold text-[#4D398A] mb-2">
-                      <PencilLine className="inline mr-1 mb-1" size={16} />
-                      Nombre del Apunte
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#6E52D9] focus:outline-none transition-colors"
-                      placeholder="Ej: Resumen de Álgebra Lineal"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Solo letras y espacios • Mínimo 3 caracteres, máximo 50 caracteres
-                    </p>
-                  </div>
+          <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+            <div>
+              <label htmlFor="name" className="block text-sm font-semibold text-[#4D398A] mb-2">
+                <PencilLine className="inline mr-1 mb-1" size={16} />
+                Nombre del Apunte
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#6E52D9] focus:outline-none transition-colors"
+                placeholder="Ej: Resumen de Álgebra Lineal"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Solo letras y espacios • Mínimo 3 caracteres, máximo 50 caracteres
+              </p>
+            </div>
 
-                  <div>
-                    <label htmlFor="authors" className="block text-sm font-semibold text-[#4D398A] mb-2">
-                      <Users className="inline mr-1 mb-1" size={16} />
-                      Autores
-                    </label>
-                    <input
-                      type="text"
-                      id="authors"
-                      name="authors"
-                      value={formData.authors}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#6E52D9] focus:outline-none transition-colors"
-                      placeholder="Ej: Juan Pérez González, María García López"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Separa múltiples autores con comas • Mínimo 15 caracteres por autor, máximo 50 • Máximo 10 autores
-                    </p>
-                  </div>
+            <div>
+              <label htmlFor="authors" className="block text-sm font-semibold text-[#4D398A] mb-2">
+                <Users className="inline mr-1 mb-1" size={16} />
+                Autores
+              </label>
+              <input
+                type="text"
+                id="authors"
+                name="authors"
+                value={formData.authors}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#6E52D9] focus:outline-none transition-colors"
+                placeholder="Ej: Juan Pérez González, María García López"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Separa múltiples autores con comas • Mínimo 15 caracteres por autor, máximo 50 • Máximo 10 autores
+              </p>
+            </div>
 
-                  <div>
-                    <label htmlFor="description" className="block text-sm font-semibold text-[#4D398A] mb-2">
-                      <AlignLeft className="inline mr-1 mb-1" size={16} />
-                      Descripción Breve
-                    </label>
-                    <textarea
-                      id="description"
-                      name="description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      required
-                      rows={4}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#6E52D9] focus:outline-none transition-colors resize-none"
-                      placeholder="Describe brevemente el contenido del apunte..."
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Mínimo 10 caracteres, máximo 200 caracteres • {formData.description.length}/200
-                    </p>
-                  </div>
+            <div>
+              <label htmlFor="description" className="block text-sm font-semibold text-[#4D398A] mb-2">
+                <AlignLeft className="inline mr-1 mb-1" size={16} />
+                Descripción Breve
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                required
+                rows={4}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#6E52D9] focus:outline-none transition-colors resize-none"
+                placeholder="Describe brevemente el contenido del apunte..."
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Mínimo 10 caracteres, máximo 200 caracteres • {formData.description.length}/200
+              </p>
+            </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-[#4D398A] mb-2">
-                      <Tag className="inline mr-1 mb-1" size={16} />
-                      Etiquetas
-                    </label>
+            <div>
+              <label className="block text-sm font-semibold text-[#4D398A] mb-2">
+                <Tag className="inline mr-1 mb-1" size={16} />
+                Etiquetas
+              </label>
 
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={currentEtiqueta}
-                        onChange={(e) => setCurrentEtiqueta(e.target.value)}
-                        onKeyDown={handleKeyPressEtiqueta}
-                        className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#6E52D9] focus:outline-none transition-colors"
-                        placeholder="Escribe una etiqueta y presiona + o Enter"
-                        maxLength={30}
-                      />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={currentEtiqueta}
+                  onChange={(e) => setCurrentEtiqueta(e.target.value)}
+                  onKeyDown={handleKeyPressEtiqueta}
+                  className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#6E52D9] focus:outline-none transition-colors"
+                  placeholder="Escribe una etiqueta y presiona + o Enter"
+                  maxLength={30}
+                />
+                <button
+                  type="button"
+                  onClick={agregarEtiqueta}
+                  className="w-10 h-10 bg-gradient-to-r from-[#6E52D9] to-[#5643A8] text-white rounded-full hover:shadow-lg hover:scale-110 transition-all duration-200 flex items-center justify-center flex-shrink-0 mt-1"
+                  title="Agregar etiqueta"
+                >
+                  <Plus size={24} />
+                </button>
+              </div>
+
+              {etiquetas.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {etiquetas.map((etiqueta, index) => (
+                    <div
+                      key={index}
+                      className="group relative bg-gradient-to-r from-[#6E52D9] to-[#5643A8] text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-200"
+                    >
+                      <Tag size={14} />
+                      <span>{etiqueta}</span>
                       <button
                         type="button"
-                        onClick={agregarEtiqueta}
-                        className="w-10 h-10 bg-gradient-to-r from-[#6E52D9] to-[#5643A8] text-white rounded-full hover:shadow-lg hover:scale-110 transition-all duration-200 flex items-center justify-center flex-shrink-0 mt-1"
-                        title="Agregar etiqueta"
+                        onClick={() => eliminarEtiqueta(etiqueta)}
+                        className="ml-1 hover:bg-white/20 rounded-full p-1 transition-colors"
                       >
-                        <Plus size={24} />
+                        <X size={14} />
                       </button>
                     </div>
+                  ))}
+                </div>
+              )}
 
-                    {etiquetas.length > 0 && (
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {etiquetas.map((etiqueta, index) => (
-                          <div
-                            key={index}
-                            className="group relative bg-gradient-to-r from-[#6E52D9] to-[#5643A8] text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-200"
-                          >
-                            <Tag size={14} />
-                            <span>{etiqueta}</span>
-                            <button
-                              type="button"
-                              onClick={() => eliminarEtiqueta(etiqueta)}
-                              className="ml-1 hover:bg-white/20 rounded-full p-1 transition-colors"
-                            >
-                              <X size={14} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+              <p className="text-xs text-gray-500 mt-2">
+                {etiquetas.length}/5 etiquetas • Mínimo 6 caracteres, máximo 30 caracteres por etiqueta
+              </p>
+            </div>
 
-                    <p className="text-xs text-gray-500 mt-2">
-                      {etiquetas.length}/5 etiquetas • Mínimo 6 caracteres, máximo 30 caracteres por etiqueta
-                    </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="relative" ref={dropdownRef}>
+                <label htmlFor="subject" className="block text-sm font-semibold text-[#4D398A] mb-2">
+                  <BookOpen className="inline mr-1 mb-1" size={16} />
+                  Asignatura *
+                </label>
+
+                <div
+                  className="relative"
+                  onClick={() => !loadingAsignaturas && setShowSubjectDropdown(!showSubjectDropdown)}
+                >
+                  <div className={`w-full px-4 py-3 border-2 border-gray-200 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${showSubjectDropdown ? 'border-[#6E52D9] ring-2 ring-[#6E52D9]/20' : 'hover:border-[#6E52D9]'}`}>
+                    <span className={formData.subject ? 'text-gray-900' : 'text-gray-500'}>
+                      {formData.subject || (loadingAsignaturas ? 'Cargando asignaturas...' : 'Selecciona una asignatura')}
+                    </span>
+                    <ChevronDown size={20} className={`text-gray-400 transition-transform ${showSubjectDropdown ? 'rotate-180' : ''}`} />
                   </div>
+                </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label htmlFor="subject" className="block text-sm font-semibold text-[#4D398A] mb-2">
-                        <BookOpen className="inline mr-1 mb-1" size={16} />
-                        Asignatura *
-                      </label>
-                      <select
-                        id="subject"
-                        name="subject"
-                        value={formData.subject}
-                        onChange={handleInputChange}
-                        required
-                        disabled={loadingAsignaturas}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#6E52D9] focus:outline-none transition-colors bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
-                      >
-                        <option value="" disabled>
-                          {loadingAsignaturas ? 'Cargando asignaturas...' : 'Selecciona una asignatura'}
-                        </option>
-                        {asignaturas.map((asignatura) => (
-                          <option key={asignatura._id} value={asignatura.nombre}>
-                            {asignatura.nombre}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label htmlFor="noteType" className="block text-sm font-semibold text-[#4D398A] mb-2">
-                        <FolderOpen className="inline mr-1 mb-1" size={16} />
-                        Tipo de Apunte
-                      </label>
-                      <select
-                        id="noteType"
-                        name="noteType"
-                        value={formData.noteType}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#6E52D9] focus:outline-none transition-colors bg-white"
-                      >
-                        <option value="" disabled>Selecciona un tipo</option>
-                        <option value="Manuscrito">Manuscrito</option>
-                        <option value="Documento tipeado">Documento tipeado</option>
-                        <option value="Resumen conceptual">Resúmen conceptual</option>
-                        <option value="Mapa mental">Mapa mental</option>
-                        <option value="Diagrama y/o esquema">Diagrama y/o esquema</option>
-                        <option value="Resolucion de ejercicio(s)">Resolución de ejercicio(s)</option>
-                        <option value="Flashcard">Flashcard</option>
-                        <option value="Formulario">Formulario</option>
-                        <option value="Presentacion">Presentación</option>
-                        <option value="Otro">Otro</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-[#4D398A] mb-2">
-                      <Upload className="inline mr-1 mb-1" size={16} />
-                      Archivo
-                    </label>
-
-                    {!formData.file ? (
-                      <div
-                        onDragEnter={handleDrag}
-                        onDragLeave={handleDrag}
-                        onDragOver={handleDrag}
-                        onDrop={handleDrop}
-                        className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all ${
-                          dragActive
-                            ? 'border-[#6E52D9] bg-[#E2E4FD]'
-                            : 'border-gray-300 hover:border-[#6E52D9] hover:bg-gray-50'
-                        }`}
-                      >
+                {showSubjectDropdown && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-hidden flex flex-col">
+                    <div className="p-2 border-b border-gray-100 sticky top-0 bg-white">
+                      <div className="relative">
+                        <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         <input
-                          type="file"
-                          id="file"
-                          onChange={handleFileChange}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                          accept=".pdf,.doc,.docx,.txt,.ppt,.pptx"
+                          type="text"
+                          value={subjectSearch}
+                          onChange={(e) => setSubjectSearch(e.target.value)}
+                          placeholder="Buscar asignatura..."
+                          className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-[#6E52D9] focus:ring-1 focus:ring-[#6E52D9]"
+                          autoFocus
+                          onClick={(e) => e.stopPropagation()}
                         />
-                        <p className="text-[#4D398A] font-semibold mb-1">
-                          Arrastra tu archivo aquí o haz clic para seleccionar
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          PDF, DOC, DOCX, TXT, PPT, PPTX (Máx. 10MB)
-                        </p>
                       </div>
-                    ) : (
-                      <div className="border-2 rounded-lg p-4 border-[#6E52D9] bg-[#F5F5FF]">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-[#6E52D9]">
-                              <FileText className="text-white" size={24} />
-                            </div>
-                            <div>
-                              <p className="font-semibold text-[#4D398A]">{formData.file.name}</p>
-                              <p className="text-sm text-gray-500">
-                                {(formData.file.size / 1024 / 1024).toFixed(2)} MB
-                              </p>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={removeFile}
-                            className="p-2 hover:bg-red-100 rounded-full transition-colors"
-                          >
-                            <X className="text-red-500" size={20} />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                    </div>
 
-                  <div className="flex gap-4 pt-4">
+                    <div className="overflow-y-auto flex-1">
+                      {asignaturas
+                        .filter(asig => asig.nombre.toLowerCase().includes(subjectSearch.toLowerCase()))
+                        .map((asignatura) => (
+                          <button
+                            key={asignatura._id}
+                            type="button"
+                            onClick={() => {
+                              setFormData(prev => ({ ...prev, subject: asignatura.nombre }));
+                              setShowSubjectDropdown(false);
+                              setSubjectSearch('');
+                            }}
+                            className={`w-full text-left px-4 py-2 text-sm hover:bg-purple-50 transition-colors ${formData.subject === asignatura.nombre ? 'bg-purple-50 text-[#6E52D9] font-medium' : 'text-gray-700'}`}
+                          >
+                            {asignatura.nombre}
+                          </button>
+                        ))
+                      }
+                      {asignaturas.filter(asig => asig.nombre.toLowerCase().includes(subjectSearch.toLowerCase())).length === 0 && (
+                        <div className="p-4 text-center text-sm text-gray-500">
+                          No se encontraron asignaturas
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="noteType" className="block text-sm font-semibold text-[#4D398A] mb-2">
+                  <FolderOpen className="inline mr-1 mb-1" size={16} />
+                  Tipo de Apunte
+                </label>
+                <select
+                  id="noteType"
+                  name="noteType"
+                  value={formData.noteType}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#6E52D9] focus:outline-none transition-colors bg-white"
+                >
+                  <option value="" disabled>Selecciona un tipo</option>
+                  <option value="Manuscrito">Manuscrito</option>
+                  <option value="Documento tipeado">Documento tipeado</option>
+                  <option value="Resumen conceptual">Resúmen conceptual</option>
+                  <option value="Mapa mental">Mapa mental</option>
+                  <option value="Diagrama y/o esquema">Diagrama y/o esquema</option>
+                  <option value="Resolucion de ejercicio(s)">Resolución de ejercicio(s)</option>
+                  <option value="Flashcard">Flashcard</option>
+                  <option value="Formulario">Formulario</option>
+                  <option value="Presentacion">Presentación</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-[#4D398A] mb-2">
+                <Upload className="inline mr-1 mb-1" size={16} />
+                Archivo
+              </label>
+
+              {!formData.file ? (
+                <div
+                  onDragEnter={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDragOver={handleDrag}
+                  onDrop={handleDrop}
+                  className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all ${dragActive
+                      ? 'border-[#6E52D9] bg-[#E2E4FD]'
+                      : 'border-gray-300 hover:border-[#6E52D9] hover:bg-gray-50'
+                    }`}
+                >
+                  <input
+                    type="file"
+                    id="file"
+                    onChange={handleFileChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    accept=".pdf,.doc,.docx,.txt,.ppt,.pptx"
+                  />
+                  <p className="text-[#4D398A] font-semibold mb-1">
+                    Arrastra tu archivo aquí o haz clic para seleccionar
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    PDF, DOC, DOCX, TXT, PPT, PPTX (Máx. 10MB)
+                  </p>
+                </div>
+              ) : (
+                <div className="border-2 rounded-lg p-4 border-[#6E52D9] bg-[#F5F5FF]">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-[#6E52D9]">
+                        <FileText className="text-white" size={24} />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-[#4D398A]">{formData.file.name}</p>
+                        <p className="text-sm text-gray-500">
+                          {(formData.file.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                    </div>
                     <button
                       type="button"
-                      onClick={onClose}
-                      className="flex-1 bg-gray-200 text-gray-700 font-semibold py-4 rounded-lg hover:bg-gray-300 transition-colors"
+                      onClick={removeFile}
+                      className="p-2 hover:bg-red-100 rounded-full transition-colors"
                     >
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="flex-1 bg-gradient-to-r from-[#6E52D9] to-[#5643A8] text-white font-semibold py-4 rounded-lg hover:shadow-lg hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                    >
-                      {isSubmitting ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                          </svg>
-                          Subiendo apunte...
-                        </span>
-                      ) : (
-                        'Subir Apunte'
-                      )}
+                      <X className="text-red-500" size={20} />
                     </button>
                   </div>
-                </form>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-4 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 bg-gray-200 text-gray-700 font-semibold py-4 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex-1 bg-gradient-to-r from-[#6E52D9] to-[#5643A8] text-white font-semibold py-4 rounded-lg hover:shadow-lg hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Subiendo apunte...
+                  </span>
+                ) : (
+                  'Subir Apunte'
+                )}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

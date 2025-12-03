@@ -1,7 +1,7 @@
 import path from 'path';
 import moment from "moment";
 
-export const diaActual = moment().format("DD-MM-YYYY");
+export const obtenerDiaActual = () => moment().format("DD-MM-YYYY");
 
 export const fechaActual = moment().format("DD-MM-YYYY-HH:mm");
 
@@ -22,6 +22,8 @@ export function generarNombreArchivoForMinIO(metadataArchivo, body, abreviacionA
     const autorNormalizado = normalizarNombres(body.autorSubida);
 
     const nombreArchivoNormalizado = normalizarNombres(nombreSinExtension);
+
+    const diaActual = obtenerDiaActual();
 
     return `${abreviacionAsignatura}-${nombreArchivoNormalizado}-${autorNormalizado}-${diaActual}${extension}`;
 }

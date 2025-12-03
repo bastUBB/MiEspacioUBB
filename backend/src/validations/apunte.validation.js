@@ -1,5 +1,5 @@
 import joi from 'joi';
-import { diaActual } from '../helpers/ayudasVarias.helper.js';
+import { obtenerDiaActual } from '../helpers/ayudasVarias.helper.js';
 
 export const apunteQueryValidation = joi.object({
     apunteID: joi.string()
@@ -141,12 +141,18 @@ export const apunteCreateValidation = joi.object({
         .required()
         .strict()
         .pattern(/^([0-2][0-9]|3[0-1])-(0[1-9]|1[0-2])-\d{4}$/)
-        .valid(diaActual)
+        .custom((value, helpers) => {
+            const diaActual = obtenerDiaActual();
+            if (value !== diaActual) {
+                return helpers.message(`La fecha debe ser exactamente hoy: ${diaActual}.`);
+            }
+            return value;
+        })
         .messages({
             "string.empty": "La fecha no puede estar vacía.",
             "string.base": "La fecha debe ser de tipo string.",
             "string.pattern.base": "La fecha debe tener el formato DD-MM-AAAA.",
-            "any.only": `La fecha debe ser exactamente hoy: ${diaActual}.`,
+
             "any.required": "La fecha es obligatoria."
         }),
     tipoApunte: joi.string()
@@ -232,11 +238,17 @@ export const apunteUpdateValidation = joi.object({
     fechaSubida: joi.string()
         .strict()
         .pattern(/^([0-2][0-9]|3[0-1])-(0[1-9]|1[0-2])-\d{4}$/)
-        .valid(diaActual)
+        .custom((value, helpers) => {
+            const diaActual = obtenerDiaActual();
+            if (value !== diaActual) {
+                return helpers.message(`La fecha debe ser exactamente hoy: ${diaActual}.`);
+            }
+            return value;
+        })
         .messages({
             "string.base": "La fecha debe ser de tipo string.",
             "string.pattern.base": "La fecha debe tener el formato DD-MM-AAAA.",
-            "any.only": `La fecha debe ser exactamente hoy: ${diaActual}.`,
+
         }),
     tipoApunte: joi.string()
         .valid('Manuscrito', 'Documento tipeado', 'Resumen conceptual', 'Mapa mental', 'Diagrama y/o esquema',

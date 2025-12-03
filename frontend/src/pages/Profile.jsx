@@ -303,6 +303,37 @@ function Profile() {
     });
   };
 
+  const handleSelectAllCursantes = () => {
+    const allSubjectNames = asignaturas.map(a => a.nombre);
+    setTempPerfilData(prev => ({
+      ...prev,
+      asignaturasCursantes: allSubjectNames
+    }));
+  };
+
+  const handleDeselectAllCursantes = () => {
+    setTempPerfilData(prev => ({
+      ...prev,
+      asignaturasCursantes: [],
+      informeCurricular: [] // Also clear informe curricular as it depends on cursantes
+    }));
+  };
+
+  const handleSelectAllIntereses = () => {
+    const allSubjectNames = asignaturas.map(a => a.nombre);
+    setTempPerfilData(prev => ({
+      ...prev,
+      asignaturasInteres: allSubjectNames
+    }));
+  };
+
+  const handleDeselectAllIntereses = () => {
+    setTempPerfilData(prev => ({
+      ...prev,
+      asignaturasInteres: []
+    }));
+  };
+
   const handleHomeClick = () => navigate('/estudiante/home');
   const handleProfileClick = () => { };
   const handleExplorarClick = () => navigate('/estudiante/explorar');
@@ -529,7 +560,7 @@ function Profile() {
 
                   <div className="p-6">
                     {isEditingPerfil && (
-                      <div className="mb-4">
+                      <div className="mb-4 space-y-3">
                         <select
                           defaultValue={""}
                           onChange={(e) => handleAddAsignaturaCursante(e.target.value)}
@@ -541,6 +572,21 @@ function Profile() {
                             <option key={asig._id} value={asig.nombre}>{asig.nombre}</option>
                           ))}
                         </select>
+
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleSelectAllCursantes}
+                            className="text-xs px-3 py-1.5 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors font-medium"
+                          >
+                            Seleccionar Todas
+                          </button>
+                          <button
+                            onClick={handleDeselectAllCursantes}
+                            className="text-xs px-3 py-1.5 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition-colors font-medium"
+                          >
+                            Deseleccionar Todas
+                          </button>
+                        </div>
                       </div>
                     )}
 
@@ -582,16 +628,32 @@ function Profile() {
                       Intereses
                     </h3>
                     {isEditingPerfil && (
-                      <select
-                        defaultValue={""}
-                        onChange={(e) => handleAddAsignaturaInteres(e.target.value)}
-                        className="w-full px-3 py-2 mb-3 text-sm border border-gray-300 rounded-lg"
-                      >
-                        <option value="" disabled>+ Agregar interés...</option>
-                        {asignaturas.map((asig) => (
-                          <option key={asig._id} value={asig.nombre}>{asig.nombre}</option>
-                        ))}
-                      </select>
+                      <div className="mb-3">
+                        <select
+                          defaultValue={""}
+                          onChange={(e) => handleAddAsignaturaInteres(e.target.value)}
+                          className="w-full px-3 py-2 mb-2 text-sm border border-gray-300 rounded-lg"
+                        >
+                          <option value="" disabled>+ Agregar interés...</option>
+                          {asignaturas.map((asig) => (
+                            <option key={asig._id} value={asig.nombre}>{asig.nombre}</option>
+                          ))}
+                        </select>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleSelectAllIntereses}
+                            className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition-colors font-medium"
+                          >
+                            Todas
+                          </button>
+                          <button
+                            onClick={handleDeselectAllIntereses}
+                            className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors font-medium"
+                          >
+                            Ninguna
+                          </button>
+                        </div>
+                      </div>
                     )}
                     <div className="flex flex-wrap gap-2">
                       {(isEditingPerfil ? tempPerfilData.asignaturasInteres : perfilData.asignaturasInteres).map((asig, index) => (

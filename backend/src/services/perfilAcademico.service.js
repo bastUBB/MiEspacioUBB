@@ -406,7 +406,7 @@ export async function obtenerNumeroDescargasApuntesService(rutUser) {
 
 export async function obtenerMayoresContribuidoresService() {
     try {
-        const perfiles = await perfilAcademico.find().sort({ apuntesSubidos: -1 }).limit(5);
+        const perfiles = await perfilAcademico.find({ apuntesSubidos: { $gt: 0 } }).sort({ apuntesSubidos: -1 }).limit(5);
 
         if (!perfiles || perfiles.length === 0) return [[], null];
 

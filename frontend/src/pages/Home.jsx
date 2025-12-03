@@ -468,7 +468,7 @@ function Home() {
 
   // Vista principal del dashboard
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       <Header
         notificationCount={notificationCount}
         notifications={notifications}

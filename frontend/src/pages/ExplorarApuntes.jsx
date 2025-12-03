@@ -153,6 +153,7 @@ function ExplorarApuntes({ embedded = false }) {
           {filteredApuntes.map((apunte) => (
             <div
               key={apunte._id}
+              onClick={() => navigate(`/${user.rol}/apunte/${apunte._id}`)}
               className="bg-gradient-to-br from-white to-purple-50/20 rounded-xl shadow-sm hover:shadow-lg transition-all hover:scale-105 cursor-pointer overflow-hidden border border-gray-100"
             >
               <div className="p-6">

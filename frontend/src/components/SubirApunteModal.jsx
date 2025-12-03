@@ -715,6 +715,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
                   <option value="Flashcard">Flashcard</option>
                   <option value="Formulario">Formulario</option>
                   <option value="Presentacion">Presentación</option>
+                  <option value="Guia de ejercicios">Guía de ejercicios</option>
                   <option value="Otro">Otro</option>
                 </select>
               </div>
@@ -733,8 +734,8 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
                   onDragOver={handleDrag}
                   onDrop={handleDrop}
                   className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all ${dragActive
-                      ? 'border-[#6E52D9] bg-[#E2E4FD]'
-                      : 'border-gray-300 hover:border-[#6E52D9] hover:bg-gray-50'
+                    ? 'border-[#6E52D9] bg-[#E2E4FD]'
+                    : 'border-gray-300 hover:border-[#6E52D9] hover:bg-gray-50'
                     }`}
                 >
                   <input

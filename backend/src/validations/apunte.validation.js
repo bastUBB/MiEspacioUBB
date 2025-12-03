@@ -159,11 +159,11 @@ export const apunteCreateValidation = joi.object({
         .required()
         .trim()
         .valid('Manuscrito', 'Documento tipeado', 'Resumen conceptual', 'Mapa mental', 'Diagrama y/o esquema',
-            'Resolucion de ejercicio(s)', 'Flashcard', 'Formulario', 'Presentacion', 'Otro')
+            'Resolucion de ejercicio(s)', 'Flashcard', 'Formulario', 'Presentacion', 'Guia de ejercicios', 'Otro')
         .messages({
             "string.empty": "El tipo de apunte no puede estar vacío.",
             "string.base": "El tipo de apunte debe ser de tipo string.",
-            "any.only": "El tipo de apunte debe ser uno de los siguientes: Manuscrito, Documento tipeado, Resumen conceptual, Mapa mental, Diagrama y/o esquema, Resolucion de ejercicios, Flashcard, Formulario, Presentacion u Otro.",
+            "any.only": "El tipo de apunte debe ser uno de los siguientes: Manuscrito, Documento tipeado, Resumen conceptual, Mapa mental, Diagrama y/o esquema, Resolucion de ejercicios, Flashcard, Formulario, Presentacion, Guia de ejercicios u Otro.",
             "any.required": "El tipo de apunte es obligatorio."
         }),
     etiquetas: joi.array()
@@ -252,10 +252,10 @@ export const apunteUpdateValidation = joi.object({
         }),
     tipoApunte: joi.string()
         .valid('Manuscrito', 'Documento tipeado', 'Resumen conceptual', 'Mapa mental', 'Diagrama y/o esquema',
-            'Resolucion de ejercicio(s)', 'Flashcard', 'Formulario', 'Presentacion', 'Otro')
+            'Resolucion de ejercicio(s)', 'Flashcard', 'Formulario', 'Presentacion', 'Guia de ejercicios', 'Otro')
         .messages({
             "string.base": "El tipo de apunte debe ser de tipo string.",
-            "any.only": "El tipo de apunte debe ser uno de los siguientes: Manuscrito, Documento tipeado, Resumen conceptual, Mapa mental, Diagrama y/o esquema, Resolucion de ejercicios, Flashcard, Formulario, Presentacion u Otro.",
+            "any.only": "El tipo de apunte debe ser uno de los siguientes: Manuscrito, Documento tipeado, Resumen conceptual, Mapa mental, Diagrama y/o esquema, Resolucion de ejercicios, Flashcard, Formulario, Presentacion, Guia de ejercicios u Otro.",
         }),
     etiquetas: joi.array()
         .items(

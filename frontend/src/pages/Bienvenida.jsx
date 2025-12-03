@@ -179,7 +179,7 @@ const Bienvenida = () => {
               </div>
               <div className="relative space-y-2">
                 <h4 className="font-bold text-gray-900">Estadísticas personales</h4>
-                <p className="text-gray-600">Monitorea tu progreso y contribuciones</p>
+                <p className="text-gray-600">Monitorea tus aportes y contribuciones</p>
               </div>
             </div>
           </div>

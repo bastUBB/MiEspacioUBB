@@ -92,9 +92,9 @@ function HomeStatistics() {
 
             {/* Main Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <div className="bg-gradient-to-br from-white to-green-50/50 rounded-xl p-4 shadow-sm border border-green-100 hover:shadow-md transition-all hover:scale-105">
                     <div className="flex items-center justify-between mb-2">
-                        <FileText className="w-8 h-8 text-purple-100" />
+                        <FileText className="w-8 h-8 text-green-200" />
                         <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full flex items-center gap-1">
                             <TrendingUp className="w-3 h-3" />
                             Apuntes
@@ -104,9 +104,9 @@ function HomeStatistics() {
                     <p className="text-xs text-gray-500">Subidos</p>
                 </div>
 
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <div className="bg-gradient-to-br from-white to-violet-50/50 rounded-xl p-4 shadow-sm border border-violet-100 hover:shadow-md transition-all hover:scale-105">
                     <div className="flex items-center justify-between mb-2">
-                        <Eye className="w-8 h-8 text-violet-100" />
+                        <Eye className="w-8 h-8 text-violet-200" />
                         <span className="text-xs font-medium text-violet-600 bg-violet-50 px-2 py-1 rounded-full">
                             Vistas
                         </span>
@@ -115,9 +115,9 @@ function HomeStatistics() {
                     <p className="text-xs text-gray-500">Totales</p>
                 </div>
 
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <div className="bg-gradient-to-br from-white to-indigo-50/50 rounded-xl p-4 shadow-sm border border-indigo-100 hover:shadow-md transition-all hover:scale-105">
                     <div className="flex items-center justify-between mb-2">
-                        <Download className="w-8 h-8 text-indigo-100" />
+                        <Download className="w-8 h-8 text-indigo-200" />
                         <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">
                             Descargas
                         </span>
@@ -126,9 +126,9 @@ function HomeStatistics() {
                     <p className="text-xs text-gray-500">Totales</p>
                 </div>
 
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <div className="bg-gradient-to-br from-white to-yellow-50/50 rounded-xl p-4 shadow-sm border border-yellow-100 hover:shadow-md transition-all hover:scale-105">
                     <div className="flex items-center justify-between mb-2">
-                        <Star className="w-8 h-8 text-yellow-100" />
+                        <Star className="w-8 h-8 text-yellow-200" />
                         <span className="text-xs font-medium text-yellow-600 bg-yellow-50 px-2 py-1 rounded-full">
                             Valoración
                         </span>
@@ -137,9 +137,9 @@ function HomeStatistics() {
                     <p className="text-xs text-gray-500">Promedio</p>
                 </div>
 
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow col-span-2 md:col-span-1">
+                <div className="bg-gradient-to-br from-white to-orange-50/50 rounded-xl p-4 shadow-sm border border-orange-100 hover:shadow-md transition-all hover:scale-105 col-span-2 md:col-span-1">
                     <div className="flex items-center justify-between mb-2">
-                        <Trophy className="w-8 h-8 text-orange-100" />
+                        <Trophy className="w-8 h-8 text-orange-200" />
                         <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-full">
                             Reputación
                         </span>
@@ -193,7 +193,7 @@ function HomeStatistics() {
                 </div>
 
                 {/* Actividad Reciente */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div className="bg-gradient-to-br from-white to-purple-50/30 rounded-2xl shadow-sm border border-purple-100 p-6">
                     <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <Calendar className="w-5 h-5 text-purple-600" />
                         Tus apuntes recientes

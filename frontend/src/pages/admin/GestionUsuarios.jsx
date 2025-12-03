@@ -62,8 +62,11 @@ function GestionUsuarios() {
 
     // ==================== CRUD de Usuarios ====================
 
+    const [editingUser, setEditingUser] = useState(null);
+
     const abrirModalCrear = () => {
         setModalFormulario({ isOpen: true, modoEdicion: false });
+        setEditingUser(null);
         setFormData({
             rut: '',
             nombreCompleto: '',
@@ -75,47 +78,52 @@ function GestionUsuarios() {
 
     const abrirModalEditar = (usuario) => {
         setModalFormulario({ isOpen: true, modoEdicion: true });
+        setEditingUser(usuario);
         setFormData({
-            rut: usuario._raw.rut,
-            nombreCompleto: usuario._raw.nombreCompleto,
-            email: usuario._raw.email,
-            password: '', // No mostramos la contraseña por seguridad
-            rol: usuario._raw.rol
+            rut: '',
+            nombreCompleto: '',
+            email: '',
+            password: '',
+            rol: '' // Empty indicates "keep current"
         });
     };
 
     const cerrarModalFormulario = () => {
         setModalFormulario({ isOpen: false, modoEdicion: false });
+        setEditingUser(null);
     };
 
     const guardarUsuario = async () => {
-        // Validaciones
-        if (!formData.rut || !formData.nombreCompleto || !formData.email || !formData.rol) {
-            toast.error('Completa todos los campos requeridos');
-            return;
+        // Validaciones para Creación
+        if (!modalFormulario.modoEdicion) {
+            if (!formData.rut || !formData.nombreCompleto || !formData.email || !formData.rol || !formData.password) {
+                toast.error('Completa todos los campos requeridos para crear un usuario');
+                return;
+            }
         }
 
-        if (!modalFormulario.modoEdicion && !formData.password) {
-            toast.error('La contraseña es requerida para nuevos usuarios');
-            return;
-        }
+        // Validaciones para Edición (al menos un campo si se quiere editar algo, aunque podría ser opcional)
+        // En este caso, permitimos enviar solo lo que se haya llenado.
 
         try {
             setProcesando(true);
 
             let response;
             if (modalFormulario.modoEdicion) {
-                // Actualizar usuario
-                const body = {
-                    ...formData,
-                };
+                // Actualizar usuario - Solo enviar campos modificados
+                const body = {};
+                if (formData.rut) body.rut = formData.rut;
+                if (formData.nombreCompleto) body.nombreCompleto = formData.nombreCompleto;
+                if (formData.email) body.email = formData.email;
+                if (formData.password) body.password = formData.password;
+                if (formData.rol) body.rol = formData.rol;
 
-                // Si no se ingresó contraseña, eliminarla del body
-                if (!formData.password) {
-                    delete body.password;
+                if (Object.keys(body).length === 0) {
+                    toast.info('No se han realizado cambios');
+                    return;
                 }
 
-                response = await axios.patch(`/api/users/detail?rut=${formData.rut}`, body);
+                response = await axios.patch(`/api/users/detail?rut=${editingUser.rut}`, body);
             } else {
                 // Crear nuevo usuario
                 response = await axios.post('/api/users/', formData);
@@ -334,59 +342,63 @@ function GestionUsuarios() {
                                 <div className="p-6">
                                     <div className="grid grid-cols-2 gap-4 mb-4">
                                         <div>
-                                            <label className="block text-gray-700 font-semibold mb-2">RUT *</label>
+                                            <label className="block text-gray-700 font-semibold mb-2">RUT {modalFormulario.modoEdicion ? '(Opcional)' : '*'}</label>
                                             <input
                                                 type="text"
                                                 value={formData.rut}
                                                 onChange={(e) => setFormData(prev => ({ ...prev, rut: e.target.value }))}
-                                                disabled={modalFormulario.modoEdicion || procesando}
+                                                disabled={procesando}
                                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
-                                                placeholder="12345678-9"
+                                                placeholder={modalFormulario.modoEdicion ? editingUser?.rut : "12345678-9"}
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-gray-700 font-semibold mb-2">Rol *</label>
+                                            <label className="block text-gray-700 font-semibold mb-2">Rol {modalFormulario.modoEdicion ? '(Opcional)' : '*'}</label>
                                             <select
                                                 value={formData.rol}
                                                 onChange={(e) => setFormData(prev => ({ ...prev, rol: e.target.value }))}
-                                                disabled={procesando}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                                disabled={procesando || (modalFormulario.modoEdicion && editingUser?.rol === 'admin')}
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100 disabled:text-gray-500"
                                             >
+                                                {modalFormulario.modoEdicion && <option value="">Mantener actual ({editingUser?.rol})</option>}
                                                 <option value="estudiante">Estudiante</option>
                                                 <option value="ayudante">Ayudante</option>
                                                 <option value="docente">Docente</option>
                                                 <option value="admin">Administrador</option>
                                             </select>
+                                            {modalFormulario.modoEdicion && editingUser?.rol === 'admin' && (
+                                                <p className="text-xs text-red-500 mt-1">No se puede cambiar el rol de un administrador.</p>
+                                            )}
                                         </div>
                                     </div>
 
                                     <div className="mb-4">
-                                        <label className="block text-gray-700 font-semibold mb-2">Nombre Completo *</label>
+                                        <label className="block text-gray-700 font-semibold mb-2">Nombre Completo {modalFormulario.modoEdicion ? '(Opcional)' : '*'}</label>
                                         <input
                                             type="text"
                                             value={formData.nombreCompleto}
                                             onChange={(e) => setFormData(prev => ({ ...prev, nombreCompleto: e.target.value }))}
                                             disabled={procesando}
                                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                            placeholder="Juan Pérez González"
+                                            placeholder={modalFormulario.modoEdicion ? editingUser?.nombre : "Juan Pérez González"}
                                         />
                                     </div>
 
                                     <div className="mb-4">
-                                        <label className="block text-gray-700 font-semibold mb-2">Email *</label>
+                                        <label className="block text-gray-700 font-semibold mb-2">Email {modalFormulario.modoEdicion ? '(Opcional)' : '*'}</label>
                                         <input
                                             type="email"
                                             value={formData.email}
                                             onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                                             disabled={procesando}
                                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                            placeholder="usuario@ubb.cl"
+                                            placeholder={modalFormulario.modoEdicion ? editingUser?.email : "usuario@ubb.cl"}
                                         />
                                     </div>
 
                                     <div className="mb-6">
                                         <label className="block text-gray-700 font-semibold mb-2">
-                                            Contraseña {!modalFormulario.modoEdicion && '*'}
+                                            Contraseña {modalFormulario.modoEdicion ? '(Opcional)' : '*'}
                                         </label>
                                         <input
                                             type="password"
@@ -397,7 +409,7 @@ function GestionUsuarios() {
                                             placeholder={modalFormulario.modoEdicion ? 'Dejar vacío para no cambiar' : 'Contraseña'}
                                         />
                                         {modalFormulario.modoEdicion && (
-                                            <p className="text-sm text-gray-500 mt-1">Dejar vacío si no deseas cambiar la contraseña</p>
+                                            <p className="text-sm text-gray-500 mt-1">Dejar vacío para mantener la contraseña actual</p>
                                         )}
                                     </div>
 

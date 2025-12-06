@@ -83,6 +83,26 @@ export async function createApunteService(body, file) {
 
         if (uploadError) return [null, uploadError];
 
+        // Verificar que el archivo no esté ya asociado a otro apunte
+        const apunteExistente = await Apunte.findOne({
+            'archivo.objectName': uploadResult.objectName,
+            'archivo.bucket': uploadResult.bucket,
+            estado: { $ne: 'Suspendido' } // Ignorar apuntes suspendidos
+        });
+
+        if (apunteExistente) {
+            // ROLLBACK: Eliminar archivo de MinIO ya que no se usará
+            try {
+                const { minioClient } = await import('../config/configMinio.js');
+                await minioClient.removeObject(uploadResult.bucket, uploadResult.objectName);
+                console.log(`[ROLLBACK] Archivo eliminado de MinIO: ${uploadResult.objectName}`);
+            } catch (cleanupError) {
+                console.error('Error limpiando archivo duplicado:', cleanupError);
+            }
+
+            return [null, 'Este archivo ya está asociado a otro apunte. Por favor use un archivo diferente.'];
+        }
+
         const apunteData = {
             ...body,
             archivo: {
@@ -352,7 +372,7 @@ export async function obtenerMisApuntesByRutService(rutUser) {
     try {
         const misApuntes = await Apunte.find({ rutAutorSubida: rutUser, estado: 'Activo' });
 
-        if (!misApuntes || misApuntes.length === 0) return [null, 'No tienes apuntes subidos'];
+        if (!misApuntes || misApuntes.length === 0) return [0, 'No tienes apuntes subidos'];
 
         return [misApuntes, null];
     } catch (error) {
@@ -669,12 +689,21 @@ export async function crearReporteApunteService(apunteID, dataReporte) {
 
 export async function obtenerApuntesMasValoradosService() {
     try {
+        //buscar los apuntes activos ordenas por cantidad de valoraciones (verificar que los apuntes encontrados tengan un promedio de valoracion)
         const apuntesMasValorados = await Apunte.find({ estado: 'Activo' })
-            .sort({ 'valoracion.promedioValoracion': -1, 'valoracion.cantidadValoraciones': -1 })
+            .sort({ 'valoracion.cantidadValoraciones': -1 })
             .limit(10);
 
-        // Si no hay apuntes, devolver array vacío en lugar de error
-        return [apuntesMasValorados || [], null];
+        //dejar solo los apuntes con valoraciones activas
+        const apuntesMasValoradosVerificados = apuntesMasValorados.filter(apunte => apunte.valoracion.cantidadValoraciones > 0);
+
+        if (apuntesMasValoradosVerificados.length === 0) return [0, 'No hay apuntes con valoraciones activas'];
+
+        //ordenar los apuntes encontrados por cantidad de valoraciones
+        const apuntesMasValoradosOrdenados = apuntesMasValoradosVerificados.sort((a, b) => b.valoracion.cantidadValoraciones - a.valoracion.cantidadValoraciones);
+
+        return [apuntesMasValoradosOrdenados, null];
+
     } catch (error) {
         console.error('Error al obtener los apuntes más valorados:', error);
         return [null, 'Error interno del servidor'];
@@ -689,7 +718,7 @@ export async function apuntesMasVisualizadosService() {
             .select('nombre asignatura visualizaciones autorSubida rutAutorSubida');
 
         if (apuntes.length === 0) {
-            return [null, 'No hay apuntes activos'];
+            return [0, 'No hay apuntes activos'];
         }
 
         return [apuntes, null];
@@ -790,7 +819,6 @@ Crear funcion para obtener el mejor apunte del usuario. Esto mediante la siguien
 Apunte seleccionado debe ser el mejor puntaje obtenido por:
 Valoracion + comentarios +  visualizaciones + (descargas / 1) + reportes
 */
-
 export async function obtenerMejorApunteUserService(rutUser) {
     try {
 
@@ -802,7 +830,7 @@ export async function obtenerMejorApunteUserService(rutUser) {
 
         if (!perfilUsuario) return [null, 'El usuario no posee perfil académico'];
 
-        if (!perfilUsuario.apuntesIDs || perfilUsuario.apuntesIDs.length === 0) return [null, 'El usuario no ha subido apuntes'];
+        if (!perfilUsuario.apuntesIDs || perfilUsuario.apuntesIDs.length === 0) return [0, 'El usuario no ha subido apuntes'];
 
         const calcularScore = (apunte) => {
             const val = apunte.valoracion?.promedioValoracion || 0;
@@ -824,6 +852,20 @@ export async function obtenerMejorApunteUserService(rutUser) {
 
     } catch (error) {
         console.error('Error al obtener el mejor apunte del usuario:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function obtenerApuntesRandomService() {
+    try {
+        //Buscar todos los apuntes y mostrarlos randomizados
+        const apuntesRandom = await Apunte.find({ estado: 'Activo' }).sort({ random: 1 });
+
+        if (!apuntesRandom) return [0, 'No se encontraron apuntes aleatorios'];
+
+        return [apuntesRandom, null];
+    } catch (error) {
+        console.error('Error al obtener apuntes aleatorios:', error);
         return [null, 'Error interno del servidor'];
     }
 }

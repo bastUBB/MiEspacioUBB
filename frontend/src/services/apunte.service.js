@@ -327,3 +327,12 @@ export async function obtenerMejorApunteUserService(rutUser) {
         throw error;
     }
 }
+export async function obtenerApuntesRandomService() {
+    try {
+        const response = await axios.get('/api/apuntes/apuntes-aleatorios');
+        return response.data;
+    } catch (error) {
+        console.error('Error al obtener apuntes aleatorios:', error);
+        throw error;
+    }
+}

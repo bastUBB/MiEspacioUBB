@@ -18,7 +18,8 @@ const notificacionSchema = new mongoose.Schema({
     },
 }, {
     versionKey: false,
-    strict: true
+    strict: true,
+    timestamps: true  // Añadir createdAt y updatedAt automáticamente
 });
 
 const Notificacion = mongoose.model('Notificacion', notificacionSchema);

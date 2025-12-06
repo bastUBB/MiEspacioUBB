@@ -187,58 +187,76 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
 
               {/* Dropdown de notificaciones */}
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
-                  <div className="bg-gradient-to-r from-purple-500 to-violet-600 px-4 py-3 flex items-center justify-between">
-                    <h3 className="text-white font-semibold">Notificaciones</h3>
-                    {notifications.length > 0 && (
-                      <button
-                        onClick={onClearAll}
-                        className="text-white hover:bg-white/20 rounded px-2 py-1 text-xs transition-colors"
-                      >
-                        Marcar todas como leídas
-                      </button>
-                    )}
+                <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-purple-100 overflow-hidden">
+                  <div className="bg-gradient-to-r from-purple-600 via-violet-600 to-cyan-500 px-6 py-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Bell className="w-5 h-5 text-white" />
+                        <h3 className="text-white font-bold text-lg">Notificaciones</h3>
+                        {notifications.length > 0 && (
+                          <span className="bg-white/20 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                            {notifications.length}
+                          </span>
+                        )}
+                      </div>
+                      {notifications.length > 0 && (
+                        <button
+                          onClick={onClearAll}
+                          className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-200 hover:scale-105"
+                        >
+                          <Check className="w-4 h-4" />
+                          <span>Marcar todas</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="max-h-96 overflow-y-auto">
+                  <div className="max-h-[32rem] overflow-y-auto">
                     {notifications.length === 0 ? (
-                      <div className="p-8 text-center text-gray-500">
-                        <Bell className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                        <p>No tienes notificaciones nuevas</p>
+                      <div className="p-12 text-center">
+                        <div className="bg-gradient-to-br from-purple-50 to-violet-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <Bell className="w-10 h-10 text-purple-300" />
+                        </div>
+                        <p className="text-gray-500 font-medium">No tienes notificaciones nuevas</p>
+                        <p className="text-gray-400 text-sm mt-1">Te avisaremos cuando haya algo nuevo</p>
                       </div>
                     ) : (
-                      <div className="divide-y divide-gray-100">
-                        {notifications.map((notif) => (
+                      <div>
+                        {notifications.map((notif, index) => (
                           <div
                             key={notif._id}
-                            className="p-4 hover:bg-gray-50 transition-colors cursor-pointer group"
+                            className={`p-4 hover:bg-gradient-to-r hover:from-purple-50 hover:to-violet-50 transition-all duration-200 cursor-pointer group border-b border-gray-100 ${index === notifications.length - 1 ? 'border-b-0' : ''
+                              }`}
                             onClick={() => onNotificationClick && onNotificationClick(notif)}
                           >
-                            <div className="flex items-start space-x-3">
-                              <div className="flex-shrink-0 text-2xl">
-                                {getNotificationIcon(notif.tipoNotificacion)}
+                            <div className="flex items-start gap-3">
+                              <div className="flex-shrink-0">
+                                <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-violet-100 rounded-full flex items-center justify-center text-xl">
+                                  {getNotificationIcon(notif.tipoNotificacion)}
+                                </div>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-gray-900">
+                                <p className="text-sm font-bold text-gray-900 mb-0.5">
                                   {notif.tipoNotificacion}
                                 </p>
-                                <p className="text-sm text-gray-600 mt-1">
+                                <p className="text-sm text-gray-600 leading-relaxed">
                                   {notif.mensaje}
                                 </p>
-                                <p className="text-xs text-gray-400 mt-1">
+                                <p className="text-xs text-purple-600 font-medium mt-1.5">
                                   {formatFecha(notif.createdAt)}
                                 </p>
                               </div>
-                              <div className="flex items-center space-x-2">
+                              <div className="flex-shrink-0">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     onMarkAsRead && onMarkAsRead(notif._id);
                                   }}
-                                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-green-100 rounded-full transition-all"
+                                  className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white rounded-lg transition-all duration-200 hover:scale-105 text-xs font-medium shadow-sm"
                                   title="Marcar como leída"
                                 >
-                                  <Check className="w-4 h-4 text-green-600" />
+                                  <Check className="w-3.5 h-3.5" />
+                                  <span>Leída</span>
                                 </button>
                               </div>
                             </div>

@@ -10,6 +10,7 @@ import notificacionRoutes from "./notificacion.routes.js"
 import recomendacionRoutes from "./recomendacion.routes.js"
 import historialRoutes from "./historial.routes.js"
 import encuestaRoutes from "./encuesta.routes.js"
+import estadisticasRoutes from "./estadisticas.routes.js"
 
 const router = Router();
 
@@ -24,6 +25,7 @@ router
     .use("/notificaciones", notificacionRoutes)
     .use("/recomendaciones", recomendacionRoutes)
     .use("/historial", historialRoutes)
-    .use("/encuestas", encuestaRoutes);
+    .use("/encuestas", encuestaRoutes)
+    .use("/estadisticas", estadisticasRoutes);
 
 export default router;

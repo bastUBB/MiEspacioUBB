@@ -250,7 +250,6 @@ export async function asignarApunteToPerfilAcademicoService(dataUserApunte) {
     }
 }
 
-//hacer controlador
 export async function numeroApuntesUserService(rutUser) {
     try {
         const userExist = await User.findOne({ rut: rutUser });
@@ -263,16 +262,17 @@ export async function numeroApuntesUserService(rutUser) {
 
         perfil.apuntesSubidos = perfil.apuntesIDs.length;
 
+        if (perfil.apuntesSubidos === 0) return [0, null];
+
         await perfil.save();
 
-        return [perfil.apuntesIDs.length, null];
+        return [perfil.apuntesSubidos, null];
     } catch (error) {
         console.error('Error al obtener el número de apuntes del usuario:', error);
         return [null, 'Error interno del servidor'];
     }
 }
 
-//asociar en el servicio de apunte (IMPLEMENTAR)
 export async function sumarDescargaApunteService(rutUser) {
     try {
         const userExist = await User.findOne({ rut: rutUser });

@@ -1,13 +1,16 @@
 import express from 'express';
+import { createServer } from 'http';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { connectDB } from './config/configDb.js';
 import { initializeMinIO } from './config/configMinio.js';
 import { initialSetup } from './config/initialSetup.js';
+import { initializeSocket } from './config/configSocket.js';
 import indexRoutes from './routes/index.routes.js';
 import { BACKEND_URL, FRONTEND_URL } from './config/configEnv.js';
 
 const app = express();
+const server = createServer(app);
 const url = new URL(BACKEND_URL);
 
 // Configuración de CORS mejorada
@@ -16,9 +19,9 @@ const corsOptions = {
   origin: function (origin, callback) {
 
     if (!origin) return callback(null, true);
-    
+
     const allowedOrigins = [FRONTEND_URL];
-    
+
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -30,19 +33,24 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use(cookieParser()); 
-app.use(express.urlencoded({ extended: true })); 
-app.use("/api", indexRoutes); // Rutas de la API
+app.use(cookieParser());
+app.use(express.urlencoded({ extended: true }));
+app.use("/api", indexRoutes);
+
+// Inicializar Socket.IO
+initializeSocket(server);
 
 // initialSetup()
 //     .then(() => console.log('Initial setup completed'))
 //     .catch(err => console.error('Error during initial setup:', err));
 
-app.listen(url.port, async () => {
+server.listen(url.port, async () => {
   try {
     await connectDB();
     await initializeMinIO();
     await initialSetup();
+    console.log(`🚀 Servidor corriendo en puerto ${url.port}`);
+    console.log(`🔌 Socket.IO inicializado`);
   } catch (error) {
     console.error('Error inicializando servicios:', error);
     process.exit(1);

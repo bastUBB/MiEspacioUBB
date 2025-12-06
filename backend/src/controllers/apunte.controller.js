@@ -19,7 +19,8 @@ import {
     obtenerValoracionApunteService,
     obtenerLinkDescargaApunteURLFirmadaService,
     sumarDescargaApunteUsuarioService,
-    obtenerMejorApunteUserService
+    obtenerMejorApunteUserService,
+    obtenerApuntesRandomService
 } from '../services/apunte.service.js';
 import {
     busquedaApuntesMismoAutorService,
@@ -128,6 +129,8 @@ export async function obtenerMisApuntesByRut(req, res) {
         if (errorQuery) return handleErrorClient(res, 400, 'RUT de usuario inválido', errorQuery.message);
 
         const [misApuntes, misApuntesError] = await obtenerMisApuntesByRutService(valueQuery.rutAutorSubida);
+
+        if (misApuntes === 0) return handleSuccess(res, 200, 'Aún no tienes apuntes subidos', misApuntes);
 
         if (misApuntesError) return handleErrorServer(res, 500, 'Error al obtener mis apuntes', misApuntesError);
 
@@ -275,7 +278,7 @@ export async function obtenerApuntesMasValorados(req, res) {
     try {
         const [apuntes, apuntesError] = await obtenerApuntesMasValoradosService();
 
-        if (apuntes.length === 0) return handleSuccess(res, 200, 'No hay apuntes disponibles', []);
+        if (apuntes === 0) return handleSuccess(res, 200, 'No hay apuntes con valoraciones activas', apuntes);
 
         if (apuntesError) return handleErrorServer(res, 500, 'Error al obtener apuntes más valorados', apuntesError);
 
@@ -291,7 +294,7 @@ export async function obtenerApuntesMasVisualizados(req, res) {
     try {
         const [apuntes, apuntesError] = await apuntesMasVisualizadosService();
 
-        if (apuntes.length === 0) return handleSuccess(res, 200, 'No hay apuntes disponibles', []);
+        if (apuntes === 0) return handleSuccess(res, 200, 'No hay apuntes disponibles', apuntes);
 
         if (apuntesError) return handleErrorServer(res, 500, 'Error al obtener apuntes más visualizados', apuntesError);
 
@@ -441,6 +444,8 @@ export async function obtenerMejorApunteUser(req, res) {
 
         const [mejorApunte, mejorApunteError] = await obtenerMejorApunteUserService(valueQuery.rutUser);
 
+        if (mejorApunte === 0) return handleSuccess(res, 200, 'Aún no tienes apuntes subidos', mejorApunte);
+
         if (mejorApunteError) return handleErrorServer(res, 500, 'Error al obtener mejor apunte', mejorApunteError);
 
         return handleSuccess(res, 200, 'Mejor apunte obtenido exitosamente', mejorApunte);
@@ -449,3 +454,20 @@ export async function obtenerMejorApunteUser(req, res) {
         return handleErrorServer(res, 500, 'Error interno del servidor');
     }
 }
+
+export async function obtenerApuntesRandom(req, res) {
+    try {
+        const [apuntesRandom, apuntesRandomError] = await obtenerApuntesRandomService();
+
+        if (apuntesRandom === 0) return handleSuccess(res, 200, 'No se encontraron apuntes', apuntesRandom);
+
+        if (apuntesRandomError) return handleErrorServer(res, 500, 'Error al obtener apuntes aleatorios', apuntesRandomError);
+
+        return handleSuccess(res, 200, 'Apuntes aleatorios obtenidos exitosamente', apuntesRandom);
+    } catch (error) {
+        console.error('Error al obtener apuntes aleatorios:', error);
+        return handleErrorServer(res, 500, 'Error interno del servidor');
+    }
+}
+
+

@@ -101,18 +101,23 @@ export const FILE_CONFIG = {
   },
 };
 
-// Borrar buckets
+// Borrar buckets (FORZAR a la fuerza el borrado de TODOS los BUCKETS)
 // export async function deleteAllBuckets() {
-//   const buckets = await minioClient.listBuckets();
-//   for (const bucket of buckets) {
-//     try {
-//       await minioClient.removeBucket(bucket.name);
-//       console.log(`[MINIO] Bucket eliminado: ${bucket.name}`);
-//     } catch (error) {
-//       console.error(`[MINIO] Error eliminando bucket ${bucket.name}:`, error);
+//   try {
+//     const buckets = Object.values(BUCKETS);
+//     for (const bucketName of buckets) {
+//       try {
+//         await minioClient.removeBucket(bucketName, true);
+//         console.log(`[MINIO] Bucket eliminado: ${bucketName}`);
+//       } catch (error) {
+//         console.error(`[MINIO] Error eliminando bucket ${bucketName}:`, error);
+//       }
 //     }
+//     return true;
+//   } catch (error) {
+//     console.error('[MINIO] Error al listar buckets:', error);
+//     return false;
 //   }
-//   return true;
 // }
 
 export async function initializeMinIO() {

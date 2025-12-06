@@ -494,8 +494,6 @@ function Home() {
             />
             <HomeStatistics />
 
-            <HomeStatistics />
-
             <GeneradorRecomendaciones onNoteClick={handleNoteClick} />
           </div>
 

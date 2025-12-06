@@ -5,6 +5,13 @@ export const obtenerDiaActual = () => moment().format("DD-MM-YYYY");
 
 export const fechaActual = moment().format("DD-MM-YYYY-HH:mm");
 
+//funcion que retorne la semana actual, es decir, el dia inicio de la semana e inicio fin de la semana
+export const semanaActual = () => {
+    const diaInicioSemana = moment().startOf("week").format("DD-MM-YYYY");
+    const diaFinSemana = moment().endOf("week").format("DD-MM-YYYY");
+    return { diaInicioSemana, diaFinSemana };
+}
+
 export const normalizarNombres = (texto) => {
     return texto
         .normalize("NFD")

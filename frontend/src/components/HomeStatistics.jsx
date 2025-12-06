@@ -68,7 +68,21 @@ function HomeStatistics() {
 
             } catch (error) {
                 console.error('Error cargando estadísticas:', error);
-                toast.error('Error al cargar las estadísticas');
+
+                // Solo mostrar error si es un fallo real de la API, no si simplemente no hay datos
+                if (error.response && error.response.status !== 404) {
+                    toast.error('Error al cargar las estadísticas');
+                }
+
+                // Si no hay datos, establecer valores por defecto (usuario nuevo)
+                setStats({
+                    totalApuntes: 0,
+                    totalVisualizaciones: 0,
+                    totalDescargas: 0,
+                    promedioValoracion: 0,
+                    reputacion: 0,
+                    mejorApunte: null
+                });
             } finally {
                 setLoading(false);
             }

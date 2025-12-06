@@ -24,7 +24,7 @@ export default function Login() {
     const loginUser = async (e) => {
         e.preventDefault();
         const { email, password } = data;
-        
+
         // Validaciones del lado del cliente
         if (!email || !password) {
             toast.error('Por favor, completa todos los campos');
@@ -62,12 +62,12 @@ export default function Login() {
             toast.error('La contraseña solo puede contener letras y números');
             return;
         }
-        
+
         const response = await loginService({ email, password });
-        
+
         if (response.status === "Client error" || response.error) {
             const errorMessage = response.message || response.error;
-            
+
             if (errorMessage.includes('verificar tu correo') || errorMessage.includes('verificar su correo')) {
                 setPendingEmail(email);
                 setShowVerificationWarning(true);
@@ -77,7 +77,7 @@ export default function Login() {
             }
         } else if (response.status === "Success" && response.data) {
             const { user, token } = response.data;
-            
+
             localStorage.setItem('token', token);
             localStorage.setItem('userData', JSON.stringify(user));
 
@@ -95,7 +95,7 @@ export default function Login() {
 
     const resendVerificationEmail = async () => {
         const response = await resendVerificationService(pendingEmail);
-        
+
         if (response.status === "Success") {
             toast.success('Correo de verificación reenviado. Revisa tu bandeja de entrada.');
             setShowVerificationWarning(false);
@@ -106,14 +106,13 @@ export default function Login() {
 
     return (
         <div className="w-screen h-screen relative overflow-hidden">
-            {/* Imagen de fondo */}
+            {/* Imagen de fondo - fixed para prevenir scroll */}
             <div
-                className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat z-0"
+                className='fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat z-0'
                 style={{
                     backgroundImage: `url(${fondoLogin})`,
                 }}
             />
-
             <div className="relative w-full h-full flex justify-center items-center z-20 px-4 sm:px-6">
                 {/* Cuadro de login */}
                 <div className="bg-gradient-to-br from-purple-500 to-cyan-400 bg-opacity-100 p-4 sm:p-6 md:p-8 w-full max-w-sm rounded-lg shadow-[0_0_20px_rgba(168,85,247,0.6)]">

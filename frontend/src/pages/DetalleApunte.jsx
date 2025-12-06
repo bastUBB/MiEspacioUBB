@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { UserContext } from '../context/userContextProvider';
 import { toast } from 'react-hot-toast';
@@ -44,7 +44,7 @@ function DetalleApunte() {
   const [comentarios, setComentarios] = useState([]);
   const [otrosApuntesAutor, setOtrosApuntesAutor] = useState([]);
   const [apuntesRelacionados, setApuntesRelacionados] = useState([]);
-  const [visualizacionRegistrada, setVisualizacionRegistrada] = useState(false);
+  const visualizacionRegistrada = useRef(false);
   const [respuestaActiva, setRespuestaActiva] = useState(null);
   const [textoRespuesta, setTextoRespuesta] = useState('');
   const [userLikesMap, setUserLikesMap] = useState({});
@@ -67,6 +67,9 @@ function DetalleApunte() {
       navigate('/estudiante/home');
       return;
     }
+
+    // Resetear el flag de visualización cuando cambia el apunte
+    visualizacionRegistrada.current = false;
 
     // Cargar apunte cuando cambia el ID
     loadApunte();
@@ -127,10 +130,10 @@ function DetalleApunte() {
         }
 
         // Registrar visualización solo una vez y si el usuario está logueado
-        if (user && user.rut && !visualizacionRegistrada) {
+        if (user && user.rut && !visualizacionRegistrada.current) {
           try {
             await sumarVisualizacionUsuariosApunteService(id, user.rut);
-            setVisualizacionRegistrada(true);
+            visualizacionRegistrada.current = true;
           } catch {
             console.log('No se pudo registrar la visualización');
           }
@@ -254,14 +257,17 @@ function DetalleApunte() {
         // Actualizar el rating del usuario primero
         setUserRating(rating);
 
+        // Actualizar la valoración en el estado del apunte inmediatamente
+        if (response.data && response.data.valoracion) {
+          setApunte(prev => ({
+            ...prev,
+            valoracion: response.data.valoracion
+          }));
+        }
+
         // Mostrar mensaje de éxito
         const mensaje = userRating > 0 ? 'Valoración actualizada exitosamente' : 'Valoración registrada exitosamente';
         toast.success(mensaje);
-
-        // Recargar apunte para actualizar promedio
-        setTimeout(() => {
-          loadComentarios();
-        }, 500);
       } else {
         toast.error(response.message || 'Error al procesar valoración');
       }
@@ -274,9 +280,6 @@ function DetalleApunte() {
         // Actualizar el rating del usuario
         setUserRating(rating);
         toast.success(userRating > 0 ? 'Valoración actualizada exitosamente' : 'Valoración registrada exitosamente');
-        setTimeout(() => {
-          loadComentarios();
-        }, 500);
       } else if (errorMessage.includes('propio apunte')) {
         toast.error('No puedes valorar tu propio apunte');
       } else {

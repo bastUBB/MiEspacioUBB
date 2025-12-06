@@ -65,18 +65,18 @@ const CrearEncuesta = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 py-8 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-cyan-50 py-8 px-4">
             <div className="max-w-3xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
                     <button
                         onClick={() => navigate('/admin/encuestas')}
-                        className="flex items-center gap-2 text-gray-600 hover:text-blue-600 mb-4 transition-colors"
+                        className="flex items-center gap-2 text-gray-600 hover:text-purple-600 mb-4 transition-colors"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         Volver a Mis Encuestas
                     </button>
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-cyan-500 bg-clip-text text-transparent mb-2">
                         Crear Nueva Encuesta
                     </h1>
                     <p className="text-gray-600">
@@ -85,7 +85,7 @@ const CrearEncuesta = () => {
                 </div>
 
                 {/* Formulario */}
-                <div className="bg-white rounded-lg shadow-lg p-8">
+                <div className="bg-white rounded-2xl shadow-xl p-8 border border-purple-100">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -96,7 +96,7 @@ const CrearEncuesta = () => {
                                 name="nombreEncuesta"
                                 value={formData.nombreEncuesta}
                                 onChange={handleChange}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                className="w-full px-4 py-з bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none"
                                 placeholder="Ej: Encuesta de satisfacción 2024"
                                 maxLength={200}
                             />
@@ -114,7 +114,7 @@ const CrearEncuesta = () => {
                                 value={formData.descripcion}
                                 onChange={handleChange}
                                 rows="5"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none outline-none"
                                 placeholder="Describe el propósito de la encuesta y la información que se recopilará..."
                                 maxLength={1000}
                             />
@@ -132,7 +132,7 @@ const CrearEncuesta = () => {
                                 name="enlaceGoogleForm"
                                 value={formData.enlaceGoogleForm}
                                 onChange={handleChange}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none"
                                 placeholder="https://forms.gle/..."
                             />
                             <p className="text-xs text-gray-500 mt-1">
@@ -140,9 +140,9 @@ const CrearEncuesta = () => {
                             </p>
                         </div>
 
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <h3 className="font-semibold text-blue-900 mb-2">💡 Consejos</h3>
-                            <ul className="text-sm text-blue-800 space-y-1">
+                        <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+                            <h3 className="font-semibold text-purple-900 mb-2">💡 Consejos</h3>
+                            <ul className="text-sm text-purple-800 space-y-1">
                                 <li>• Usa un título claro y descriptivo</li>
                                 <li>• Explica el objetivo de la encuesta en la descripción</li>
                                 <li>• Asegúrate de que el enlace de Google Form sea público</li>
@@ -154,7 +154,7 @@ const CrearEncuesta = () => {
                             <button
                                 type="submit"
                                 disabled={saving}
-                                className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-3 px-6 rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all flex items-center justify-center gap-2 font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex-1 bg-gradient-to-r from-purple-600 to-cyan-500 text-white py-3 px-6 rounded-xl hover:from-purple-700 hover:to-cyan-600 transition-all flex items-center justify-center gap-2 font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {saving ? (
                                     <>
@@ -171,7 +171,7 @@ const CrearEncuesta = () => {
                             <button
                                 type="button"
                                 onClick={() => navigate('/admin/encuestas')}
-                                className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                                className="px-6 py-3 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-xl transition-colors font-medium"
                                 disabled={saving}
                             >
                                 Cancelar

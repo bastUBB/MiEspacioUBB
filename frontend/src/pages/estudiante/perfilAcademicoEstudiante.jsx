@@ -1,7 +1,7 @@
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { GraduationCap, ArrowRight, ArrowLeft, Check, BookOpen, Star, Clock, Sparkles } from 'lucide-react';
+import { GraduationCap, ArrowRight, ArrowLeft, Check, BookOpen, Star, Brain, Sparkles, XCircle, CheckSquare } from 'lucide-react';
 import { UserContext } from '../../context/userContextProvider.jsx';
 import MallaCurricular from '../../components/MallaCurricular.jsx';
 import CalificacionComplejidad from '../../components/CalificacionComplejidad';
@@ -10,11 +10,11 @@ import { crearPerfilAcademicoService, poseePerfilAcademicoService } from '../../
 function InicioPerfilAcademico() {
   const navigate = useNavigate();
   const { user, loading: userLoading } = useContext(UserContext);
-  
+
   const [profileLoading, setProfileLoading] = useState(true);
   const [hasProfile, setHasProfile] = useState(false);
   const [_profileError] = useState(null);
-  
+
   const hasCheckedProfile = useRef(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
@@ -34,10 +34,10 @@ function InicioPerfilAcademico() {
     const checkProfile = async () => {
       if (!userLoading && user && !hasCheckedProfile.current) {
         hasCheckedProfile.current = true;
-        
+
         try {
           const response = await poseePerfilAcademicoService(user.rut);
-          
+
           if (response.data && response.data._id) {
             // Usuario ya tiene perfil, redirigir inmediatamente
             setProfileLoading(false);
@@ -63,12 +63,12 @@ function InicioPerfilAcademico() {
   const createProfile = async () => {
     try {
       const informeCurricular = [];
-      
+
       const { modo, calificaciones, pesosComplejidad } = formData.datosCalificacionComplejidad;
-      
+
       formData.asignaturasCursantes.forEach((asignatura) => {
         const informeAsignatura = {
-          asignatura: asignatura.nombre 
+          asignatura: asignatura.nombre
         };
 
         if (modo === 'calificaciones') {
@@ -99,25 +99,25 @@ function InicioPerfilAcademico() {
         rutUser: user.rut,
         asignaturasCursantes: formData.asignaturasCursantes.map(a => a.nombre),
         informeCurricular: informeCurricular,
-        asignaturasInteres: formData.asignaturasInteres.length > 0 
-          ? formData.asignaturasInteres.map(a => a.nombre) 
+        asignaturasInteres: formData.asignaturasInteres.length > 0
+          ? formData.asignaturasInteres.map(a => a.nombre)
           : [],
         metodosEstudiosPreferidos: formData.metodosEstudiosPreferidos
       };
-      
+
       const response = await crearPerfilAcademicoService(profileData);
-      
+
       if (response.status === 'Success') {
         toast.success('¡Perfil académico creado exitosamente!');
         setIsComplete(true);
         setTimeout(() => {
           navigate('/estudiante/home');
         }, 1500);
-      } else {        
+      } else {
         // Detectar específicamente errores de autorización
-        if (response.message?.includes('Acceso denegado') || 
-            response.message?.includes('Token') ||
-            response.message?.includes('rol')) {
+        if (response.message?.includes('Acceso denegado') ||
+          response.message?.includes('Token') ||
+          response.message?.includes('rol')) {
           toast.error(`⛔ ${response.message || response.details}`, { duration: 5000 });
         } else {
           toast.error(response.details || response.message || 'Error al crear el perfil académico');
@@ -139,7 +139,7 @@ function InicioPerfilAcademico() {
     { title: 'Asignaturas Cursantes', icon: BookOpen },
     { title: 'Notas/Complejidad', icon: Star },
     { title: 'Asignaturas de Interés', icon: GraduationCap },
-    { title: 'Preferencias de Estudio', icon: Clock }
+    { title: 'Preferencias de Estudio', icon: Brain }
   ];
 
   const noteTypes = [
@@ -172,7 +172,7 @@ function InicioPerfilAcademico() {
 
   const toggleNoteType = (noteType) => {
     const isSelected = formData.metodosEstudiosPreferidos.includes(noteType);
-    
+
     if (isSelected) {
       // Si ya está seleccionado, lo deseleccionamos
       setFormData({
@@ -197,6 +197,44 @@ function InicioPerfilAcademico() {
     }
   };
 
+  // Función para desmarcar todas las asignaturas cursantes
+  const clearAsignaturasCursantes = () => {
+    setFormData({
+      ...formData,
+      asignaturasCursantes: [],
+      datosCalificacionComplejidad: {
+        modo: 'calificaciones',
+        calificaciones: {},
+        ordenComplejidad: []
+      }
+    });
+  };
+
+  // Función para desmarcar todas las asignaturas de interés
+  const clearAsignaturasInteres = () => {
+    setFormData({
+      ...formData,
+      asignaturasInteres: []
+    });
+  };
+
+  // Función para marcar todos los métodos de estudio (excepto "Ninguno")
+  const selectAllEstudios = () => {
+    const todosExceptoNinguno = noteTypes.filter(type => type !== 'Ninguno');
+    setFormData({
+      ...formData,
+      metodosEstudiosPreferidos: todosExceptoNinguno
+    });
+  };
+
+  // Función para desmarcar todos los métodos de estudio
+  const clearAllEstudios = () => {
+    setFormData({
+      ...formData,
+      metodosEstudiosPreferidos: []
+    });
+  };
+
   const canProceed = () => {
     switch (currentStep) {
       case 0: return formData.asignaturasCursantes.length > 0;
@@ -209,7 +247,7 @@ function InicioPerfilAcademico() {
         }
         return false;
       }
-      case 2: return true; 
+      case 2: return true;
       case 3: return formData.metodosEstudiosPreferidos.length > 0;
       default: return false;
     }
@@ -289,17 +327,15 @@ function InicioPerfilAcademico() {
           <div className="flex items-center justify-center mb-2 sm:mb-4 overflow-x-auto">
             {steps.map((step, index) => (
               <div key={index} className="flex items-center flex-shrink-0">
-                <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-semibold text-xs sm:text-sm transition-all duration-300 ${
-                  index <= currentStep 
-                    ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white' 
-                    : 'bg-gray-200 text-gray-400'
-                }`}>
+                <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-semibold text-xs sm:text-sm transition-all duration-300 ${index <= currentStep
+                  ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white'
+                  : 'bg-gray-200 text-gray-400'
+                  }`}>
                   {index < currentStep ? <Check className="w-3 h-3 sm:w-5 sm:h-5" /> : index + 1}
                 </div>
                 {index < steps.length - 1 && (
-                  <div className={`w-8 sm:w-16 h-1 mx-1 sm:mx-2 rounded transition-all duration-300 ${
-                    index < currentStep ? 'bg-gradient-to-r from-purple-500 to-cyan-500' : 'bg-gray-200'
-                  }`} />
+                  <div className={`w-8 sm:w-16 h-1 mx-1 sm:mx-2 rounded transition-all duration-300 ${index < currentStep ? 'bg-gradient-to-r from-purple-500 to-cyan-500' : 'bg-gray-200'
+                    }`} />
                 )}
               </div>
             ))}
@@ -322,10 +358,11 @@ function InicioPerfilAcademico() {
             {/* Step 0: Asignaturas Cursantes */}
             {currentStep === 0 && (
               <MallaCurricular
-                onAsignaturasSeleccionadas={(asignaturas) => 
-                  setFormData({...formData, asignaturasCursantes: asignaturas})
+                onAsignaturasSeleccionadas={(asignaturas) =>
+                  setFormData({ ...formData, asignaturasCursantes: asignaturas })
                 }
                 asignaturasIniciales={formData.asignaturasCursantes}
+                onClearAll={clearAsignaturasCursantes}
               />
             )}
 
@@ -346,7 +383,7 @@ function InicioPerfilAcademico() {
                   <CalificacionComplejidad
                     asignaturas={formData.asignaturasCursantes}
                     onGuardarDatos={(datos) =>
-                      setFormData({...formData, datosCalificacionComplejidad: datos})
+                      setFormData({ ...formData, datosCalificacionComplejidad: datos })
                     }
                     datosIniciales={formData.datosCalificacionComplejidad}
                   />
@@ -356,33 +393,57 @@ function InicioPerfilAcademico() {
 
             {/* Step 2: Asignaturas de Interés */}
             {currentStep === 2 && (
-              <div>
-                <MallaCurricular
-                  onAsignaturasSeleccionadas={(asignaturas) =>
-                    setFormData({...formData, asignaturasInteres: asignaturas})
-                  }
-                  asignaturasIniciales={formData.asignaturasInteres}
-                />
-              </div>
+              <MallaCurricular
+                onAsignaturasSeleccionadas={(asignaturas) =>
+                  setFormData({ ...formData, asignaturasInteres: asignaturas })
+                }
+                asignaturasIniciales={formData.asignaturasInteres}
+                onClearAll={clearAsignaturasInteres}
+              />
             )}
 
             {/* Step 3: Preferencias de Estudio */}
             {currentStep === 3 && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Métodos de estudio preferidos
-                  </label>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Métodos de estudio preferidos
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={selectAllEstudios}
+                        disabled={formData.metodosEstudiosPreferidos.length === noteTypes.length - 1}
+                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all text-xs font-medium ${formData.metodosEstudiosPreferidos.length < noteTypes.length - 1
+                          ? 'bg-green-50 text-green-600 hover:bg-green-100 border border-green-200'
+                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          }`}
+                      >
+                        <CheckSquare className="w-3.5 h-3.5" />
+                        Marcar Todos
+                      </button>
+                      <button
+                        onClick={clearAllEstudios}
+                        disabled={formData.metodosEstudiosPreferidos.length === 0}
+                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all text-xs font-medium ${formData.metodosEstudiosPreferidos.length > 0
+                          ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
+                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          }`}
+                      >
+                        <XCircle className="w-3.5 h-3.5" />
+                        Desmarcar Todos
+                      </button>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                     {noteTypes.map(noteType => (
                       <button
                         key={noteType}
                         onClick={() => toggleNoteType(noteType)}
-                        className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all duration-200 text-left ${
-                          formData.metodosEstudiosPreferidos.includes(noteType)
-                            ? 'border-purple-500 bg-purple-50 text-purple-700'
-                            : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50'
-                        }`}
+                        className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all duration-200 text-left ${formData.metodosEstudiosPreferidos.includes(noteType)
+                          ? 'border-purple-500 bg-purple-50 text-purple-700'
+                          : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+                          }`}
                       >
                         <div className="font-medium text-sm sm:text-base">{noteType}</div>
                       </button>
@@ -398,11 +459,10 @@ function InicioPerfilAcademico() {
             <button
               onClick={handlePrevious}
               disabled={currentStep === 0}
-              className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-lg sm:rounded-xl font-medium transition-all duration-200 text-sm sm:text-base order-2 sm:order-1 ${
-                currentStep === 0
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
-              }`}
+              className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-lg sm:rounded-xl font-medium transition-all duration-200 text-sm sm:text-base order-2 sm:order-1 ${currentStep === 0
+                ? 'text-gray-400 cursor-not-allowed'
+                : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
+                }`}
             >
               <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               Anterior
@@ -411,18 +471,17 @@ function InicioPerfilAcademico() {
             <button
               onClick={handleNext}
               disabled={!canProceed()}
-              className={`flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-lg sm:rounded-xl font-semibold transition-all duration-200 text-sm sm:text-base order-1 sm:order-2 ${
-                canProceed()
-                  ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white hover:from-purple-600 hover:to-cyan-600 transform hover:scale-105'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
+              className={`flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-lg sm:rounded-xl font-semibold transition-all duration-200 text-sm sm:text-base order-1 sm:order-2 ${canProceed()
+                ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white hover:from-purple-600 hover:to-cyan-600 transform hover:scale-105'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}
             >
               {currentStep === steps.length - 1 ? 'Crear Perfil' : 'Siguiente'}
               <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
-        
+
         {/* Espacio adicional para asegurar scroll completo */}
         <div className="h-4 sm:h-8"></div>
       </div>

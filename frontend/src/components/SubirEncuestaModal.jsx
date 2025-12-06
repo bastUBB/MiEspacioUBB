@@ -1,5 +1,5 @@
-import { useState, useContext, useEffect, useRef } from 'react';
-import { FileText, X, AlignLeft, Link, ClipboardList } from 'lucide-react';
+import { useState, useContext } from 'react';
+import { FileText, X, AlignLeft, Link, ClipboardList, Sparkles, CheckCircle2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../context/userContextProvider';
@@ -7,11 +7,7 @@ import { crearEncuesta } from '../services/encuesta.service';
 
 export default function SubirEncuestaModal({ isOpen, onClose, onEncuestaCreated }) {
     const navigate = useNavigate();
-    const { user, loading: userLoading } = useContext(UserContext);
-
-    const [isResizing, setIsResizing] = useState(false);
-    const [modalWidth, setModalWidth] = useState(768); // Ancho inicial en px
-    const modalRef = useRef(null);
+    const { user } = useContext(UserContext);
 
     const [formData, setFormData] = useState({
         nombreEncuesta: '',
@@ -20,38 +16,6 @@ export default function SubirEncuestaModal({ isOpen, onClose, onEncuestaCreated 
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    // Manejar redimensionamiento del modal
-    const handleMouseDown = (e) => {
-        e.preventDefault();
-        setIsResizing(true);
-    };
-
-    useEffect(() => {
-        const handleMouseMove = (e) => {
-            if (!isResizing) return;
-
-            const newWidth = e.clientX - (modalRef.current?.getBoundingClientRect().left || 0);
-            // Limitar entre 640px (min) y 1200px (max)
-            if (newWidth >= 640 && newWidth <= 1200) {
-                setModalWidth(newWidth);
-            }
-        };
-
-        const handleMouseUp = () => {
-            setIsResizing(false);
-        };
-
-        if (isResizing) {
-            document.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseup', handleMouseUp);
-        }
-
-        return () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-        };
-    }, [isResizing]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -116,7 +80,8 @@ export default function SubirEncuestaModal({ isOpen, onClose, onEncuestaCreated 
         // Validación básica de URL
         try {
             new URL(formData.enlaceGoogleForm);
-        } catch (e) {
+        } catch (error) {
+            console.error('Error al validar URL:', error);
             toast.error('El enlace proporcionado no es una URL válida', { duration: 3000, icon: '⚠️' });
             return;
         }
@@ -133,7 +98,7 @@ export default function SubirEncuestaModal({ isOpen, onClose, onEncuestaCreated 
                 nombreEncuesta: formData.nombreEncuesta.trim(),
                 descripcion: formData.descripcion.trim(),
                 enlaceGoogleForm: formData.enlaceGoogleForm.trim(),
-                rutUsuario: user.rut // Asumiendo que el backend necesita el rut del usuario
+                rutUsuario: user.rut
             };
 
             const response = await crearEncuesta(encuestaData);
@@ -159,130 +124,151 @@ export default function SubirEncuestaModal({ isOpen, onClose, onEncuestaCreated 
 
     if (!isOpen) return null;
 
+    const isFormComplete = formData.nombreEncuesta && formData.descripcion && formData.enlaceGoogleForm;
+
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-50 overflow-y-auto animate-in fade-in duration-200" aria-labelledby="modal-title" role="dialog" aria-modal="true">
             <div
-                className="fixed inset-0 bg-gray-5 bg-opacity-40 backdrop-blur-sm transition-opacity"
+                className="fixed inset-0 bg-gray-900/60 backdrop-blur-md transition-all"
                 onClick={onClose}
             ></div>
 
-            <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
                 <div
-                    ref={modalRef}
-                    className="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8"
-                    style={{ width: `${modalWidth}px`, maxWidth: '95vw' }}
+                    className="relative w-full max-w-4xl transform overflow-hidden rounded-3xl bg-white shadow-2xl transition-all animate-in zoom-in-95 duration-300"
+                    onClick={(e) => e.stopPropagation()}
                 >
-                    <div className="bg-gradient-to-r from-pink-500 to-rose-500 px-8 py-6 relative">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                                    <ClipboardList size={28} />
-                                    Crear Encuesta
-                                </h2>
-                                <p className="text-pink-100 mt-2 text-sm">
-                                    Comparte tu encuesta con la comunidad
+                    <div className="relative bg-gradient-to-br from-purple-50 via-violet-50 to-cyan-50 px-8 py-8 border-b border-purple-100">
+                        <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="p-2 bg-gradient-to-r from-purple-600 to-cyan-500 rounded-xl shadow-lg">
+                                        <Sparkles className="text-white" size={24} />
+                                    </div>
+                                    <h2 className="text-3xl font-bold text-gray-900">
+                                        Crear Encuesta
+                                    </h2>
+                                </div>
+                                <p className="text-gray-600 text-sm ml-14">
+                                    Comparte una encuesta con la comunidad
                                 </p>
                             </div>
                             <button
                                 onClick={onClose}
-                                className="text-white hover:bg-white/20 rounded-full p-2 transition-colors"
+                                className="ml-4 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all duration-200"
+                                aria-label="Cerrar modal"
                             >
                                 <X size={24} />
                             </button>
                         </div>
-                        <div
-                            onMouseDown={handleMouseDown}
-                            className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-white/20 transition-colors"
-                            title="Arrastra para redimensionar"
-                        >
-                            <div className="h-full w-1 bg-white/30 ml-auto"></div>
-                        </div>
+
+                        {isFormComplete && (
+                            <div className="mt-6 flex items-center gap-2 text-sm font-medium text-purple-700 bg-purple-50 px-4 py-2.5 rounded-xl border border-purple-200">
+                                <CheckCircle2 size={18} />
+                                <span>Formulario completo - listo para crear</span>
+                            </div>
+                        )}
                     </div>
 
-                    <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
-                        <div>
-                            <label htmlFor="nombreEncuesta" className="block text-sm font-semibold text-rose-700 mb-2">
-                                <FileText className="inline mr-1 mb-1" size={16} />
-                                Nombre de la Encuesta
-                            </label>
-                            <input
-                                type="text"
-                                id="nombreEncuesta"
-                                name="nombreEncuesta"
-                                value={formData.nombreEncuesta}
-                                onChange={handleInputChange}
-                                required
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-rose-500 focus:outline-none transition-colors"
-                                placeholder="Ej: Encuesta sobre hábitos de estudio"
-                            />
-                            <p className="text-xs text-gray-500 mt-1">
-                                Mínimo 5 caracteres, máximo 100 caracteres
-                            </p>
+                    <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+                        <div className="bg-gradient-to-br from-purple-50 to-white border border-purple-100 rounded-2xl p-6 shadow-sm">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                <ClipboardList size={20} className="text-purple-600" />
+                                Información de la Encuesta
+                            </h3>
+
+                            <div className="space-y-5">
+                                <div>
+                                    <label htmlFor="nombreEncuesta" className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                        <FileText size={16} className="text-purple-600" />
+                                        Nombre de la Encuesta
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="nombreEncuesta"
+                                        name="nombreEncuesta"
+                                        value={formData.nombreEncuesta}
+                                        onChange={handleInputChange}
+                                        required
+                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 outline-none"
+                                        placeholder="Ej: Encuesta sobre hábitos de estudio"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1.5 ml-1">
+                                        5-100 caracteres
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                        <AlignLeft size={16} className="text-purple-600" />
+                                        Descripción
+                                    </label>
+                                    <textarea
+                                        id="descripcion"
+                                        name="descripcion"
+                                        value={formData.descripcion}
+                                        onChange={handleInputChange}
+                                        required
+                                        rows={4}
+                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 outline-none resize-none"
+                                        placeholder="Describe el propósito de tu encuesta..."
+                                    />
+                                    <div className="flex justify-between items-center mt-1.5 ml-1">
+                                        <p className="text-xs text-gray-500">10-500 caracteres</p>
+                                        <p className={`text-xs font-medium ${formData.descripcion.length > 480 ? 'text-orange-600' : 'text-gray-500'}`}>
+                                            {formData.descripcion.length}/500
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label htmlFor="enlaceGoogleForm" className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                        <Link size={16} className="text-purple-600" />
+                                        Enlace de Google Forms
+                                    </label>
+                                    <input
+                                        type="url"
+                                        id="enlaceGoogleForm"
+                                        name="enlaceGoogleForm"
+                                        value={formData.enlaceGoogleForm}
+                                        onChange={handleInputChange}
+                                        required
+                                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 outline-none"
+                                        placeholder="https://docs.google.com/forms/..."
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1.5 ml-1">
+                                        Debe ser un enlace válido de Google Forms
+                                    </p>
+                                </div>
+                            </div>
                         </div>
 
-                        <div>
-                            <label htmlFor="descripcion" className="block text-sm font-semibold text-rose-700 mb-2">
-                                <AlignLeft className="inline mr-1 mb-1" size={16} />
-                                Descripción
-                            </label>
-                            <textarea
-                                id="descripcion"
-                                name="descripcion"
-                                value={formData.descripcion}
-                                onChange={handleInputChange}
-                                required
-                                rows={4}
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-rose-500 focus:outline-none transition-colors resize-none"
-                                placeholder="Describe el propósito de tu encuesta..."
-                            />
-                            <p className="text-xs text-gray-500 mt-1">
-                                Mínimo 10 caracteres, máximo 500 caracteres • {formData.descripcion.length}/500
-                            </p>
-                        </div>
-
-                        <div>
-                            <label htmlFor="enlaceGoogleForm" className="block text-sm font-semibold text-rose-700 mb-2">
-                                <Link className="inline mr-1 mb-1" size={16} />
-                                Enlace de Google Forms
-                            </label>
-                            <input
-                                type="url"
-                                id="enlaceGoogleForm"
-                                name="enlaceGoogleForm"
-                                value={formData.enlaceGoogleForm}
-                                onChange={handleInputChange}
-                                required
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-rose-500 focus:outline-none transition-colors"
-                                placeholder="https://docs.google.com/forms/..."
-                            />
-                            <p className="text-xs text-gray-500 mt-1">
-                                Debe ser un enlace válido de Google Forms
-                            </p>
-                        </div>
-
-                        <div className="flex gap-4 pt-4">
+                        <div className="flex gap-4 pt-4 border-t border-gray-200">
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="flex-1 bg-gray-200 text-gray-700 font-semibold py-4 rounded-lg hover:bg-gray-300 transition-colors"
+                                className="flex-1 px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all duration-200"
                             >
                                 Cancelar
                             </button>
                             <button
                                 type="submit"
-                                disabled={isSubmitting}
-                                className="flex-1 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold py-4 rounded-lg hover:shadow-lg hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                                disabled={isSubmitting || !isFormComplete}
+                                className="flex-1 px-6 py-4 bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg flex items-center justify-center gap-2"
                             >
                                 {isSubmitting ? (
-                                    <span className="flex items-center justify-center gap-2">
+                                    <>
                                         <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                         </svg>
-                                        Creando encuesta...
-                                    </span>
+                                        <span>Creando...</span>
+                                    </>
                                 ) : (
-                                    'Crear Encuesta'
+                                    <>
+                                        <ClipboardList size={20} />
+                                        <span>Crear Encuesta</span>
+                                    </>
                                 )}
                             </button>
                         </div>

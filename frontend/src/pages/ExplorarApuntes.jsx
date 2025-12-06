@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { Search, Filter, BookOpen, Star, Eye, Calendar, Tag } from 'lucide-react';
 import Header from '../components/header';
-import { obtenerApuntesMasValoradosService } from '../services/apunte.service';
+import { obtenerApuntesRandomService } from '../services/apunte.service';
 import { parseCustomDate } from '../helpers/dateFormatter.helper';
 
 function ExplorarApuntes({ embedded = false }) {
@@ -12,19 +12,19 @@ function ExplorarApuntes({ embedded = false }) {
   const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory] = useState('all');
   const [apuntes, setApuntes] = useState([]);
   const [filteredApuntes, setFilteredApuntes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('rating'); // rating, downloads, recent
 
-  const categories = [
-    { id: 'all', name: 'Todos', color: 'purple' },
-    { id: 'ingenieria', name: 'Ingeniería', color: 'blue' },
-    { id: 'ciencias', name: 'Ciencias', color: 'green' },
-    { id: 'humanidades', name: 'Humanidades', color: 'yellow' },
-    { id: 'salud', name: 'Salud', color: 'red' }
-  ];
+  // const categories = [
+  //   { id: 'all', name: 'Todos', color: 'purple' },
+  //   { id: 'ingenieria', name: 'Ingeniería', color: 'blue' },
+  //   { id: 'ciencias', name: 'Ciencias', color: 'green' },
+  //   { id: 'humanidades', name: 'Humanidades', color: 'yellow' },
+  //   { id: 'salud', name: 'Salud', color: 'red' }
+  // ];
 
   useEffect(() => {
     if (!userLoading && !user) {
@@ -36,7 +36,7 @@ function ExplorarApuntes({ embedded = false }) {
     const fetchApuntes = async () => {
       try {
         setLoading(true);
-        const response = await obtenerApuntesMasValoradosService();
+        const response = await obtenerApuntesRandomService();
 
         if (response.status === 'Success' && response.data) {
           setApuntes(response.data);
@@ -58,14 +58,36 @@ function ExplorarApuntes({ embedded = false }) {
   useEffect(() => {
     let filtered = [...apuntes];
 
-    // Filtrar por búsqueda
+    // Filtrar por búsqueda inteligente
     if (searchQuery) {
-      filtered = filtered.filter(apunte =>
-        apunte.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        apunte.asignatura.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        apunte.autorSubida.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        apunte.etiquetas?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
+      const query = searchQuery.toLowerCase().trim();
+
+      filtered = filtered.filter(apunte => {
+        // Buscar en nombre del apunte
+        const matchNombre = apunte.nombre?.toLowerCase().includes(query);
+
+        // Buscar en autores (array de autores)
+        const matchAutores = apunte.autores?.some(autor =>
+          autor.toLowerCase().includes(query)
+        );
+
+        // Buscar en usuario que subió el apunte
+        const matchUsuario = apunte.autorSubida?.toLowerCase().includes(query);
+
+        // Buscar en asignatura
+        const matchAsignatura = apunte.asignatura?.toLowerCase().includes(query);
+
+        // Buscar en tipo de apunte
+        const matchTipo = apunte.tipoApunte?.toLowerCase().includes(query);
+
+        // Buscar en etiquetas
+        const matchEtiquetas = apunte.etiquetas?.some(tag =>
+          tag.toLowerCase().includes(query)
+        );
+
+        // Retornar true si coincide con algún campo
+        return matchNombre || matchAutores || matchUsuario || matchAsignatura || matchTipo || matchEtiquetas;
+      });
     }
 
     // Ordenar
@@ -106,7 +128,7 @@ function ExplorarApuntes({ embedded = false }) {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Buscar por nombre, asignatura, autor o etiquetas..."
+                placeholder="Buscar por nombre, autores, usuario, asignatura, tipo o etiquetas..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -125,7 +147,7 @@ function ExplorarApuntes({ embedded = false }) {
           </div>
 
           {/* Categories */}
-          <div className="flex flex-wrap gap-2">
+          {/* <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
               <button
                 key={category.id}
@@ -138,7 +160,7 @@ function ExplorarApuntes({ embedded = false }) {
                 {category.name}
               </button>
             ))}
-          </div>
+          </div> */}
         </div>
 
         {/* Results Count */}
@@ -153,7 +175,7 @@ function ExplorarApuntes({ embedded = false }) {
           {filteredApuntes.map((apunte) => (
             <div
               key={apunte._id}
-              onClick={() => navigate(`/${user.rol}/apunte/${apunte._id}`)}
+              onClick={() => navigate(`/estudiante/apunte/${apunte._id}`)}
               className="bg-gradient-to-br from-white to-purple-50/20 rounded-xl shadow-sm hover:shadow-lg transition-all hover:scale-105 cursor-pointer overflow-hidden border border-gray-100"
             >
               <div className="p-6">

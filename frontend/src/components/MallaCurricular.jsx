@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Check, Loader2 } from 'lucide-react';
+import { Check, Loader2, XCircle } from 'lucide-react';
 import { getAsignaturasService } from '../services/asignatura.service.js';
 
-export default function MallaCurricular({ onAsignaturasSeleccionadas, asignaturasIniciales = [] }) {
+export default function MallaCurricular({ onAsignaturasSeleccionadas, asignaturasIniciales = [], onClearAll }) {
   const [asignaturasSeleccionadas, setAsignaturasSeleccionadas] = useState(asignaturasIniciales);
   const [mallaCurricular, setMallaCurricular] = useState({});
   const [loading, setLoading] = useState(true);
@@ -14,9 +14,9 @@ export default function MallaCurricular({ onAsignaturasSeleccionadas, asignatura
       try {
         setLoading(true);
         setError(null);
-        
+
         const response = await getAsignaturasService();
-        
+
         if (response.status === 'Success' && response.data) {
           // Agrupar asignaturas por semestre
           const asignaturasPorSemestre = response.data.reduce((acc, asignatura) => {
@@ -31,7 +31,7 @@ export default function MallaCurricular({ onAsignaturasSeleccionadas, asignatura
             });
             return acc;
           }, {});
-          
+
           setMallaCurricular(asignaturasPorSemestre);
           setError(null);
         } else {
@@ -48,16 +48,21 @@ export default function MallaCurricular({ onAsignaturasSeleccionadas, asignatura
     cargarAsignaturas();
   }, []);
 
+  // Sincronizar con cambios externos (cuando el padre limpia las asignaturas)
+  useEffect(() => {
+    setAsignaturasSeleccionadas(asignaturasIniciales);
+  }, [asignaturasIniciales]);
+
   const toggleAsignatura = (asignatura) => {
     const yaSeleccionada = asignaturasSeleccionadas.some(a => a.codigo === asignatura.codigo);
-    
+
     let nuevasSeleccionadas;
     if (yaSeleccionada) {
       nuevasSeleccionadas = asignaturasSeleccionadas.filter(a => a.codigo !== asignatura.codigo);
     } else {
       nuevasSeleccionadas = [...asignaturasSeleccionadas, asignatura];
     }
-    
+
     setAsignaturasSeleccionadas(nuevasSeleccionadas);
     onAsignaturasSeleccionadas(nuevasSeleccionadas);
   };
@@ -124,8 +129,8 @@ export default function MallaCurricular({ onAsignaturasSeleccionadas, asignatura
               {Object.entries(mallaCurricular)
                 .sort(([a], [b]) => Number(a) - Number(b))
                 .map(([semestre, asignaturas]) => (
-                  <div 
-                    key={semestre} 
+                  <div
+                    key={semestre}
                     className="flex-shrink-0 w-90 bg-gradient-to-b from-purple-50 to-white rounded-xl border-2 border-purple-200 shadow-md overflow-hidden"
                   >
                     {/* Header del semestre */}
@@ -148,37 +153,33 @@ export default function MallaCurricular({ onAsignaturasSeleccionadas, asignatura
                           <button
                             key={asignatura.codigo}
                             onClick={() => toggleAsignatura(asignatura)}
-                            className={`w-full p-3 rounded-lg border-2 transition-all duration-200 text-left transform hover:scale-105 ${
-                              seleccionada
-                                ? 'border-purple-500 bg-purple-100 shadow-lg ring-2 ring-purple-300'
-                                : 'border-gray-200 bg-white hover:border-purple-300 hover:shadow-md'
-                            }`}
+                            className={`w-full p-3 rounded-lg border-2 transition-all duration-200 text-left transform hover:scale-105 ${seleccionada
+                              ? 'border-purple-500 bg-purple-100 shadow-lg ring-2 ring-purple-300'
+                              : 'border-gray-200 bg-white hover:border-purple-300 hover:shadow-md'
+                              }`}
                           >
                             <div className="flex items-start gap-2">
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <span className={`text-xs font-mono px-2 py-0.5 rounded ${
-                                    seleccionada 
-                                      ? 'bg-purple-600 text-white' 
-                                      : 'bg-gray-200 text-gray-700'
-                                  }`}>
+                                  <span className={`text-xs font-mono px-2 py-0.5 rounded ${seleccionada
+                                    ? 'bg-purple-600 text-white'
+                                    : 'bg-gray-200 text-gray-700'
+                                    }`}>
                                     {asignatura.codigo}
                                   </span>
                                   <span className="text-xs text-gray-500">
                                     {asignatura.creditos} CR
                                   </span>
                                 </div>
-                                <p className={`text-sm font-semibold leading-tight ${
-                                  seleccionada ? 'text-purple-900' : 'text-gray-800'
-                                }`}>
+                                <p className={`text-sm font-semibold leading-tight ${seleccionada ? 'text-purple-900' : 'text-gray-800'
+                                  }`}>
                                   {asignatura.nombre}
                                 </p>
                               </div>
-                              <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
-                                seleccionada 
-                                  ? 'bg-purple-600 scale-110' 
-                                  : 'bg-gray-200 opacity-40'
-                              }`}>
+                              <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all ${seleccionada
+                                ? 'bg-purple-600 scale-110'
+                                : 'bg-gray-200 opacity-40'
+                                }`}>
                                 {seleccionada && <Check className="w-4 h-4 text-white" />}
                               </div>
                             </div>
@@ -190,7 +191,7 @@ export default function MallaCurricular({ onAsignaturasSeleccionadas, asignatura
                 ))}
             </div>
           </div>
-          
+
           {/* Leyenda */}
           <div className="border-t-2 border-gray-200 bg-gray-50 px-6 py-3">
             <div className="flex items-center justify-between text-xs text-gray-600">
@@ -203,9 +204,18 @@ export default function MallaCurricular({ onAsignaturasSeleccionadas, asignatura
                   <div className="w-4 h-4 rounded border-2 border-purple-500 bg-purple-100"></div>
                   <span>Seleccionada</span>
                 </div>
+                {onClearAll && asignaturasSeleccionadas.length > 0 && (
+                  <button
+                    onClick={onClearAll}
+                    className="flex items-center gap-1 px-2 py-1 rounded text-xs transition-all text-red-600 hover:bg-red-50 ml-2"
+                  >
+                    <XCircle className="w-3 h-3" />
+                    Limpiar ({asignaturasSeleccionadas.length})
+                  </button>
+                )}
               </div>
               <span className="text-gray-500">
-                💡 Desplázate horizontalmente para ver todos los semestres
+                Desplázate horizontalmente para ver todos los semestres
               </span>
             </div>
           </div>

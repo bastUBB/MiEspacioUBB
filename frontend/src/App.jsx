@@ -12,6 +12,7 @@ import EstudianteLayout from './layouts/estudianteLayout.jsx'
 import AdminLayout from './layouts/adminLayout.jsx'
 import DocenteLayout from './layouts/docenteLayout.jsx'
 import AyudanteLayout from './layouts/ayudanteLayout.jsx'
+import GeneralLayout from './layouts/generalLayout.jsx'
 
 // Páginas
 import InicioPerfilAcademicoEstudiante from './pages/estudiante/perfilAcademicoEstudiante.jsx'
@@ -35,6 +36,7 @@ import CrearEncuesta from './pages/admin/CrearEncuesta.jsx'
 
 import { Toaster } from 'react-hot-toast'
 import { UserContextProvider } from './context/userContextProvider.jsx'
+import { SocketProvider } from './context/SocketContext.jsx'
 import { RoleProtectedRoute, UnauthorizedPage } from './components/roleProtectedRoute.jsx'
 import { Routes, Route, useLocation } from 'react-router-dom'
 
@@ -78,94 +80,102 @@ function App() {
   return (
     <div className="w-screen h-screen overflow-y-auto">
       <UserContextProvider>
-        {!hideNavbar}
-        <Toaster position="bottom-right" toastOptions={{ duration: 2000 }} />
-        <Routes>
+        <SocketProvider>
+          {!hideNavbar}
+          <Toaster position="bottom-right" toastOptions={{ duration: 2000 }} />
+          <Routes>
 
-          <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<Login />} />
 
-          <Route path="/register" element={<Register />} />
+            <Route path="/register" element={<Register />} />
 
-          <Route path="/verify-email/:token" element={<VerifyEmail />} />
+            <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
-          <Route path="/" element={
-            <ProtectedRoute>
-              <Bienvenida />
-            </ProtectedRoute>
-          } />
+            {/* Rutas protegidas */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <RedireccionRol />
+              </ProtectedRoute>
+            } />
 
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <RedireccionRol />
-            </ProtectedRoute>
-          } />
+            {/* Rutas generales */}
+            <Route path="/" element={
+              <GeneralLayout />
+            }>
+              <Route index element={<Bienvenida />} />
+              {/* aqui agregar y ver bien cual dejaré como rutas generales */}
+            </Route>
 
-          <Route path="/admin" element={
-            <RoleProtectedRoute allowedRoles={['admin']}>
-              <AdminLayout />
-            </RoleProtectedRoute>
-          }>
-            <Route index element={<HomeAdmin />} />
-            <Route path="home" element={<HomeAdmin />} />
-            <Route path="encuestas" element={<MisEncuestas />} />
-            <Route path="encuestas/crear" element={<CrearEncuesta />} />
-            <Route path="usuarios" element={<GestionUsuarios />} />
-            <Route path="apuntes" element={<GestionApuntes />} />
-            {/* Agrega más rutas del admin aquí */}
-          </Route>
+            {/* Rutas admin*/}
+            <Route path="/admin" element={
+              <RoleProtectedRoute allowedRoles={['admin']}>
+                <AdminLayout />
+              </RoleProtectedRoute>
+            }>
+              <Route index element={<HomeAdmin />} />
+              <Route path="home" element={<HomeAdmin />} />
+              <Route path="encuestas" element={<MisEncuestas />} />
+              <Route path="encuestas/crear" element={<CrearEncuesta />} />
+              <Route path="usuarios" element={<GestionUsuarios />} />
+              <Route path="apuntes" element={<GestionApuntes />} />
+            </Route>
 
-          <Route path="/docente" element={
-            <RoleProtectedRoute allowedRoles={['docente', 'admin']}>
-              <DocenteLayout />
-            </RoleProtectedRoute>
-          }>
-            {/* <Route index element={<InicioPerfilAcademicoDocente />} /> */}
+            {/* Rutas docente*/}
+            <Route path="/docente" element={
+              <RoleProtectedRoute allowedRoles={['docente', 'admin']}>
+                <DocenteLayout />
+              </RoleProtectedRoute>
+            }>
+              {/* <Route index element={<InicioPerfilAcademicoDocente />} /> */}
 
-            <Route path="home" element={<Home />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="explorar" element={<ExplorarApuntes />} />
-            <Route path="mis-apuntes" element={<MisApuntes />} />
-            <Route path="estadisticas" element={<Estadisticas />} />
-            <Route path="encuestas" element={<ExploradorEncuestas />} />
-            <Route path="apunte/:id" element={<DetalleApunte />} />
-          </Route>
+              <Route path="home" element={<Home />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="explorar" element={<ExplorarApuntes />} />
+              <Route path="mis-apuntes" element={<MisApuntes />} />
+              <Route path="estadisticas" element={<Estadisticas />} />
+              <Route path="encuestas" element={<ExploradorEncuestas />} />
+              <Route path="apunte/:id" element={<DetalleApunte />} />
+            </Route>
 
-          <Route path="/ayudante" element={
-            <RoleProtectedRoute allowedRoles={['ayudante', 'admin']}>
-              <AyudanteLayout />
-            </RoleProtectedRoute>
-          }>
-            {/* <Route index element={<InicioPerfilAcademicoAyudante />} /> */}
+            {/* Rutas ayudante*/}
+            <Route path="/ayudante" element={
+              <RoleProtectedRoute allowedRoles={['ayudante', 'admin']}>
+                <AyudanteLayout />
+              </RoleProtectedRoute>
+            }>
+              {/* <Route index element={<InicioPerfilAcademicoAyudante />} /> */}
 
-            <Route path="home" element={<Home />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="explorar" element={<ExplorarApuntes />} />
-            <Route path="mis-apuntes" element={<MisApuntes />} />
-            <Route path="estadisticas" element={<Estadisticas />} />
-            <Route path="encuestas" element={<ExploradorEncuestas />} />
-            <Route path="apunte/:id" element={<DetalleApunte />} />
-          </Route>
+              <Route path="home" element={<Home />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="explorar" element={<ExplorarApuntes />} />
+              <Route path="mis-apuntes" element={<MisApuntes />} />
+              <Route path="estadisticas" element={<Estadisticas />} />
+              <Route path="encuestas" element={<ExploradorEncuestas />} />
+              <Route path="apunte/:id" element={<DetalleApunte />} />
+            </Route>
 
-          <Route path="/estudiante" element={
-            <RoleProtectedRoute allowedRoles={['estudiante', 'admin']}>
-              <EstudianteLayout />
-            </RoleProtectedRoute>
-          }>
-            <Route index element={<InicioPerfilAcademicoEstudiante />} />
-            <Route path="perfil-academico" element={<InicioPerfilAcademicoEstudiante />} />
-            <Route path="home" element={<Home />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="explorar" element={<ExplorarApuntes />} />
-            <Route path="mis-aportes" element={<MisAportes />} />
-            <Route path="estadisticas" element={<Estadisticas />} />
-            <Route path="encuestas" element={<ExploradorEncuestas />} />
-            <Route path="apunte/:id" element={<DetalleApunte />} />
-          </Route>
+            {/* Rutas estudiante*/}
+            <Route path="/estudiante" element={
+              <RoleProtectedRoute allowedRoles={['estudiante', 'admin']}>
+                <EstudianteLayout />
+              </RoleProtectedRoute>
+            }>
+              <Route index element={<InicioPerfilAcademicoEstudiante />} />
+              <Route path="perfil-academico" element={<InicioPerfilAcademicoEstudiante />} />
+              <Route path="home" element={<Home />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="explorar" element={<ExplorarApuntes />} />
+              <Route path="mis-aportes" element={<MisAportes />} />
+              <Route path="estadisticas" element={<Estadisticas />} />
+              <Route path="encuestas" element={<ExploradorEncuestas />} />
+              <Route path="apunte/:id" element={<DetalleApunte />} />
+            </Route>
 
-          <Route path="/unauthorized" element={<UnauthorizedPage />} />
+            <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </SocketProvider>
       </UserContextProvider>
     </div>
   )

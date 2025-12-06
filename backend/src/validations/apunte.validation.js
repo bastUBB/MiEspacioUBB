@@ -10,26 +10,26 @@ export const apunteQueryValidation = joi.object({
             "string.pattern.base": "El ID del apunte debe ser un ObjectId válido de MongoDB.",
         }),
     rutAutorSubida: joi.string()
-        .trim()
         .min(9)
         .max(12)
-        .pattern(/^[0-9]{1,2}\.[0-9]{3}\.[0-9]{3}-[0-9kK]$/)
+        .trim()
+        .pattern(/^(?:(?:[1-9]\d{0}|[1-2]\d{1})(\.\d{3}){2}|[1-9]\d{6}|[1-2]\d{7}|29\.999\.999|29999999)-[\dkK]$/)
         .messages({
             "string.base": "El rut debe ser de tipo string.",
             "string.min": "El rut debe tener como mínimo 9 caracteres.",
             "string.max": "El rut debe tener como máximo 12 caracteres.",
-            "string.pattern.base": "Formato rut inválido, debe ser xx.xxx.xxx-x.",
+            "string.pattern.base": "Formato rut inválido, debe ser xx.xxx.xxx-x o xxxxxxxx-x.",
         }),
     rutUser: joi.string()
-        .trim()
         .min(9)
         .max(12)
-        .pattern(/^[0-9]{1,2}\.[0-9]{3}\.[0-9]{3}-[0-9kK]$/)
+        .trim()
+        .pattern(/^(?:(?:[1-9]\d{0}|[1-2]\d{1})(\.\d{3}){2}|[1-9]\d{6}|[1-2]\d{7}|29\.999\.999|29999999)-[\dkK]$/)
         .messages({
             "string.base": "El rut debe ser de tipo string.",
             "string.min": "El rut debe tener como mínimo 9 caracteres.",
             "string.max": "El rut debe tener como máximo 12 caracteres.",
-            "string.pattern.base": "Formato rut inválido, debe ser xx.xxx.xxx-x.",
+            "string.pattern.base": "Formato rut inválido, debe ser xx.xxx.xxx-x o xxxxxxxx-x.",
         }),
 })
     .or("apunteID", "rutAutorSubida", "rutUser")
@@ -57,14 +57,14 @@ export const apunteCreateValidation = joi.object({
         }),
     autorSubida: joi.string()
         .required()
-        .min(15)
+        .min(3)
         .max(50)
         .trim()
         .pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
         .messages({
             "string.base": "El nombre completo debe ser de tipo string.",
             "string.empty": "El nombre completo no puede estar vacío.",
-            "string.min": "El nombre completo debe tener como mínimo 15 caracteres.",
+            "string.min": "El nombre completo debe tener como mínimo 3 caracteres.",
             "string.max": "El nombre completo debe tener como máximo 50 caracteres.",
             "string.pattern.base": "El nombre completo solo puede contener letras y espacios.",
             "any.required": "El nombre completo es obligatorio.",
@@ -87,14 +87,14 @@ export const apunteCreateValidation = joi.object({
         .required()
         .items(
             joi.string()
-                .min(15)
+                .min(5)
                 .max(50)
                 .trim()
                 .pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
                 .messages({
                     "string.base": "El nombre completo debe ser de tipo string.",
                     "string.empty": "El nombre completo no puede estar vacío.",
-                    "string.min": "El nombre completo debe tener como mínimo 15 caracteres.",
+                    "string.min": "El nombre completo debe tener como mínimo 5 caracteres.",
                     "string.max": "El nombre completo debe tener como máximo 50 caracteres.",
                     "string.pattern.base": "El nombre completo solo puede contener letras y espacios.",
                     "any.required": "El nombre completo es obligatorio.",
@@ -112,20 +112,20 @@ export const apunteCreateValidation = joi.object({
     descripcion: joi.string()
         .required()
         .strict()
-        .min(10)
+        .min(5)
         .max(200)
         .trim()
         .messages({
             'string.empty': 'El campo descripcion no puede estar vacío',
             'string.base': 'El campo descripcion debe ser de tipo string',
-            'string.min': 'El campo descripcion debe tener al menos 10 caracteres',
+            'string.min': 'El campo descripcion debe tener al menos 5 caracteres',
             'string.max': 'El campo descripcion no puede tener más de 200 caracteres',
             'any.required': 'El campo descripcion es obligatorio',
         }),
     asignatura: joi.string()
         .required()
-        .min(3)
         .trim()
+        .min(3)
         .max(50)
         .strict()
         .pattern(/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/)
@@ -171,14 +171,14 @@ export const apunteCreateValidation = joi.object({
         .items(
             joi.string()
                 .lowercase()
-                .min(6)
+                .min(3)
                 .max(30)
                 .trim()
                 .pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
                 .messages({
                     "string.base": "La etiqueta debe ser de tipo string.",
                     "string.empty": "La etiqueta no puede estar vacía.",
-                    "string.min": "La etiqueta debe tener como mínimo 6 caracteres.",
+                    "string.min": "La etiqueta debe tener como mínimo 3 caracteres.",
                     "string.max": "La etiqueta debe tener como máximo 30 caracteres.",
                     "string.pattern.base": "La etiqueta solo puede contener letras y espacios.",
                     "any.required": "La etiqueta es obligatoria.",

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BookOpen, Star, Eye, Calendar, Download, Edit2, Trash2 } from 'lucide-react';
 import { obtenerMisApuntesByRutService } from '../services/apunte.service';
-import { parseCustomDate } from '../helpers/dateFormatter.helper';
 import { useNavigate } from 'react-router-dom';
 
 function ListaApuntes({ rutUser }) {
@@ -87,21 +86,40 @@ function ListaApuntes({ rutUser }) {
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <Calendar className="w-4 h-4" />
-                                    <span>{parseCustomDate(apunte.fechaSubida)?.toLocaleDateString('es-ES', {
-                                        day: 'numeric',
-                                        month: 'short',
-                                        year: 'numeric'
-                                    })}</span>
+                                    <span>{(() => {
+                                        if (!apunte.fechaSubida) return 'Fecha desconocida';
+                                        try {
+                                            if (apunte.fechaSubida.includes('-')) {
+                                                const parts = apunte.fechaSubida.split('-');
+                                                if (parts.length === 3) {
+                                                    const day = parseInt(parts[0], 10);
+                                                    const month = parseInt(parts[1], 10) - 1;
+                                                    const year = parseInt(parts[2], 10);
+                                                    const date = new Date(year, month, day);
+                                                    if (!isNaN(date.getTime())) {
+                                                        return date.toLocaleDateString('es-ES', {
+                                                            day: 'numeric',
+                                                            month: 'short',
+                                                            year: 'numeric'
+                                                        });
+                                                    }
+                                                }
+                                            }
+                                            return apunte.fechaSubida;
+                                        } catch {
+                                            return apunte.fechaSubida;
+                                        }
+                                    })()}</span>
                                 </div>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-2 ml-4">
                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${apunte.estado === 'Activo'
-                                    ? 'bg-green-100 text-green-700'
-                                    : apunte.estado === 'Bajo Revisión'
-                                        ? 'bg-yellow-100 text-yellow-700'
-                                        : 'bg-gray-100 text-gray-700'
+                                ? 'bg-green-100 text-green-700'
+                                : apunte.estado === 'Bajo Revisión'
+                                    ? 'bg-yellow-100 text-yellow-700'
+                                    : 'bg-gray-100 text-gray-700'
                                 }`}>
                                 {apunte.estado}
                             </span>

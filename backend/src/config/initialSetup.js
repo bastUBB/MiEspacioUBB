@@ -3,6 +3,7 @@ import path from 'path';
 import User from '../models/user.model.js';
 import Asignatura from '../models/asignatura.model.js';
 import { hashPassword } from '../helpers/bcrypt.helper.js';
+// import { deleteAllBuckets } from './configMinio.js';
 
 const asignaturasPath = path.resolve('output/datosAsignaturas.json');
 const asignaturasRaw = fs.readFileSync(asignaturasPath);
@@ -11,12 +12,6 @@ const Asignaturas = asignaturasData.datos || asignaturasData || [];
 
 async function createInitialUsers() {
     try {
-        const existingUsers = await User.find({});
-        if (existingUsers.length > 1) {
-            console.log('Usuarios iniciales ya existen');
-            return;
-        }
-
         const usersData = [
             {
                 nombreCompleto: 'Bastián Rodríguez Campusano',
@@ -26,7 +21,39 @@ async function createInitialUsers() {
                 role: 'admin',
                 isVerified: true
             },
+            {
+                nombreCompleto: 'Basti Estudiante',
+                email: 'correo_falso1@ubiobio.cl',
+                rut: '12345678-9',
+                password: 'Basti123',
+                role: 'estudiante',
+                isVerified: true
+            },
+            {
+                nombreCompleto: 'Basti Docente',
+                email: 'correo_falso2@ubiobio.cl',
+                rut: '12543687-9',
+                password: 'Basti123',
+                role: 'profesor',
+                isVerified: true
+            },
+            {
+                nombreCompleto: 'Basti Ayudante',
+                email: 'correo_falso3@ubiobio.cl',
+                rut: '12743687-9',
+                password: 'Basti123',
+                role: 'ayudante',
+                isVerified: true
+            }
         ];
+
+        //verificar si ya existen los usuarios con usersData
+        const existingUsers = await User.find({ rut: { $in: usersData.map(user => user.rut) } });
+
+        if (existingUsers.length > 0) {
+            console.log('Algunos usuarios iniciales ya existen en la base de datos.');
+            return;
+        }
 
         const usersPromises = usersData.map(async (userData) => {
             const hashedPassword = await hashPassword(userData.password);
@@ -35,7 +62,8 @@ async function createInitialUsers() {
                 email: userData.email,
                 rut: userData.rut,
                 password: hashedPassword,
-                role: userData.role
+                role: userData.role,
+                isVerified: userData.isVerified
             });
         });
 
@@ -85,8 +113,18 @@ async function createAsignaturas() {
     }
 }
 
+// export async function borrarBuckets() {
+//     try {
+//         await deleteAllBuckets();
+//         console.log('Buckets borrados exitosamente');
+//     } catch (error) {
+//         console.error('Error al borrar buckets:', error.message);
+//     }
+// }
+
 export async function initialSetup() {
     await createInitialUsers();
     await createAsignaturas();
+    // await borrarBuckets();
 }
 

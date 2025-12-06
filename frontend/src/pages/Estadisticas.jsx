@@ -1,96 +1,95 @@
-import { useState, useEffect, useContext } from 'react';
-import { UserContext } from '../context/userContextProvider';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
-import { BarChart3, TrendingUp, Award, FileText, Star, Download, Eye, Calendar, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useSocket } from '../context/SocketContext';
 import Header from '../components/header';
-import { obtenerMayoresContribuidoresService } from '../services/perfilAcademico.service';
-import { obtenerMisApuntesByRutService } from '../services/apunte.service';
-import { formatDateToLocal } from '../helpers/dateFormatter.helper';
+import {
+  obtenerTotalApuntesActivosService,
+  obtenerTotalUsuariosService,
+  obtenerDescargasTotalesService,
+  obtenerDistribucionTiposService,
+  obtenerTop5AsignaturasService,
+  obtenerCrecimientoMensualService,
+  obtenerApuntesPopularesSemanaService,
+  obtenerTopContribuidoresSemanaService,
+  obtenerApunteMasDescargadoService
+} from '../services/estadisticas.service';
+import {
+  BarChart, Bar, PieChart, Pie, LineChart, Line,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer, Cell
+} from 'recharts';
+import { TrendingUp, Users, FileText, Download, Trophy, Star, Flame } from 'lucide-react';
 
-function Estadisticas() {
-  const { user, loading: userLoading } = useContext(UserContext);
-  const navigate = useNavigate();
+export default function Estadisticas() {
+  const { usuariosActivos } = useSocket();
+
+  // Hero metrics
+  const [totalApuntes, setTotalApuntes] = useState(0);
+  const [totalUsuarios, setTotalUsuarios] = useState(0);
+  const [descargasTotales, setDescargasTotales] = useState(0);
+
+  // Charts data
+  const [distribucionTipos, setDistribucionTipos] = useState([]);
+  const [topAsignaturas, setTopAsignaturas] = useState([]);
+  const [crecimiento, setCrecimiento] = useState([]);
+
+  // Week highlights
+  const [popularesSemana, setPopularesSemana] = useState([]);
+  const [topContribuidores, setTopContribuidores] = useState([]);
+  const [apunteMasDescargado, setApunteMasDescargado] = useState(null);
 
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalApuntes: 0,
-    totalVisualizaciones: 0,
-    totalDescargas: 0,
-    promedioValoracion: 0,
-    mejorApunte: null,
-    apuntesPorMes: []
-  });
-  const [topContributors, setTopContributors] = useState([]);
-  const [misApuntes, setMisApuntes] = useState([]);
 
   useEffect(() => {
-    if (!userLoading && !user) {
-      navigate('/login');
+    cargarEstadisticas();
+  }, []);
+
+  const cargarEstadisticas = async () => {
+    try {
+      const [
+        apuntesRes,
+        usuariosRes,
+        descargasRes,
+        tiposRes,
+        asignaturasRes,
+        crecimientoRes,
+        popularesRes,
+        contribuidoresRes,
+        masDescargadoRes
+      ] = await Promise.all([
+        obtenerTotalApuntesActivosService(),
+        obtenerTotalUsuariosService(),
+        obtenerDescargasTotalesService(),
+        obtenerDistribucionTiposService(),
+        obtenerTop5AsignaturasService(),
+        obtenerCrecimientoMensualService(),
+        obtenerApuntesPopularesSemanaService(),
+        obtenerTopContribuidoresSemanaService(),
+        obtenerApunteMasDescargadoService()
+      ]);
+
+      if (apuntesRes?.data) setTotalApuntes(apuntesRes.data.total);
+      if (usuariosRes?.data) setTotalUsuarios(usuariosRes.data.total);
+      if (descargasRes?.data) setDescargasTotales(descargasRes.data.total);
+      if (tiposRes?.data) setDistribucionTipos(tiposRes.data);
+      if (asignaturasRes?.data) setTopAsignaturas(asignaturasRes.data);
+      if (crecimientoRes?.data) setCrecimiento(crecimientoRes.data);
+      if (popularesRes?.data) setPopularesSemana(popularesRes.data);
+      if (contribuidoresRes?.data) setTopContribuidores(contribuidoresRes.data);
+      if (masDescargadoRes?.data) setApunteMasDescargado(masDescargadoRes.data);
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Error al cargar estadísticas:', error);
+      setLoading(false);
     }
-  }, [user, userLoading, navigate]);
+  };
 
-  useEffect(() => {
-    const fetchEstadisticas = async () => {
-      if (!user?.rut) return;
+  const COLORS = ['#9333ea', '#ec4899', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
 
-      try {
-        setLoading(true);
-
-        // Obtener mis apuntes
-        const apuntesResponse = await obtenerMisApuntesByRutService(user.rut);
-
-        if (apuntesResponse.status === 'Success' && apuntesResponse.data) {
-          const apuntes = apuntesResponse.data;
-          setMisApuntes(apuntes);
-
-          // Calcular estadísticas
-          const totalVisualizaciones = apuntes.reduce((sum, a) => sum + (a.visualizaciones || 0), 0);
-          const totalDescargas = apuntes.reduce((sum, a) => sum + (a.descargas || 0), 0);
-          const promedioValoracion = apuntes.length > 0
-            ? apuntes.reduce((sum, a) => sum + (a.valoracion?.promedioValoracion || 0), 0) / apuntes.length
-            : 0;
-
-          const mejorApunte = apuntes.length > 0
-            ? apuntes.reduce((best, current) =>
-              (current.valoracion?.promedioValoracion || 0) > (best.valoracion?.promedioValoracion || 0)
-                ? current
-                : best
-            )
-            : null;
-
-          setStats({
-            totalApuntes: apuntes.length,
-            totalVisualizaciones,
-            totalDescargas,
-            promedioValoracion,
-            mejorApunte
-          });
-        }
-
-        // Obtener top contribuidores
-        const contributorsResponse = await obtenerMayoresContribuidoresService();
-        if (contributorsResponse.status === 'Success' && contributorsResponse.data) {
-          setTopContributors(contributorsResponse.data);
-        }
-
-      } catch (error) {
-        console.error('Error cargando estadísticas:', error);
-        toast.error('Error al cargar las estadísticas');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user) {
-      fetchEstadisticas();
-    }
-  }, [user]);
-
-  if (userLoading || loading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
       </div>
     );
   }
@@ -100,179 +99,213 @@ function Estadisticas() {
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
+        {/* Header Section */}
         <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl p-8 mb-8 shadow-sm">
-          <div className="flex items-center gap-3 mb-2">
-            <BarChart3 className="w-8 h-8 text-purple-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Estadísticas</h1>
-          </div>
-          <p className="text-gray-600">Analiza tu rendimiento y contribución a la comunidad</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Estadísticas del Sistema</h1>
+          <p className="text-gray-600">Panel de métricas y análisis en tiempo real</p>
         </div>
 
-        {/* Main Stats Grid */}
+        {/* Hero Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <FileText className="w-12 h-12 text-purple-600 opacity-20" />
-              <TrendingUp className="w-6 h-6 text-green-500" />
-            </div>
-            <p className="text-sm text-gray-600 mb-1">Apuntes Subidos</p>
-            <p className="text-4xl font-bold text-purple-600">{stats.totalApuntes}</p>
-          </div>
-
-          <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <Eye className="w-12 h-12 text-violet-600 opacity-20" />
-              <TrendingUp className="w-6 h-6 text-green-500" />
-            </div>
-            <p className="text-sm text-gray-600 mb-1">Total Visualizaciones</p>
-            <p className="text-4xl font-bold text-violet-600">{stats.totalVisualizaciones}</p>
-          </div>
-
-          <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <Download className="w-12 h-12 text-indigo-600 opacity-20" />
-              <TrendingUp className="w-6 h-6 text-green-500" />
-            </div>
-            <p className="text-sm text-gray-600 mb-1">Total Descargas</p>
-            <p className="text-4xl font-bold text-indigo-600">{stats.totalDescargas}</p>
-          </div>
-
-          <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <Star className="w-12 h-12 text-yellow-600 opacity-20" />
-              <Award className="w-6 h-6 text-yellow-500" />
-            </div>
-            <p className="text-sm text-gray-600 mb-1">Valoración Promedio</p>
-            <p className="text-4xl font-bold text-yellow-600">{stats.promedioValoracion.toFixed(1)}</p>
-          </div>
+          <MetricCard
+            IconComponent={FileText}
+            title="Total Apuntes"
+            value={totalApuntes}
+            color="purple"
+          />
+          <MetricCard
+            IconComponent={Users}
+            title="Usuarios Registrados"
+            value={totalUsuarios}
+            color="pink"
+          />
+          <MetricCard
+            IconComponent={Users}
+            title="Usuarios Activos"
+            value={usuariosActivos}
+            color="indigo"
+            live
+          />
+          <MetricCard
+            IconComponent={Download}
+            title="Descargas Totales"
+            value={descargasTotales}
+            color="violet"
+          />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Mejor Apunte */}
-          <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Award className="w-6 h-6 text-yellow-500" />
-              Tu Mejor Apunte
-            </h2>
+        {/* Charts Row 1 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Distribucion Tipos */}
+          <ChartCard title="Distribución por Tipo de Material">
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={distribucionTipos}
+                  dataKey="cantidad"
+                  nameKey="tipo"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  label
+                >
+                  {distribucionTipos.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartCard>
 
-            {stats.mejorApunte ? (
-              <div className="bg-white rounded-xl p-4">
-                <h3 className="font-bold text-lg text-gray-900 mb-2">{stats.mejorApunte.nombre}</h3>
-                <p className="text-sm text-gray-600 mb-3">{stats.mejorApunte.descripcion}</p>
+          {/* Top Asignaturas */}
+          <ChartCard title="Top 5 Asignaturas con Más Apuntes">
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={topAsignaturas}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="nombre" angle={-15} textAnchor="end" height={80} />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="cantidad" fill="#9333ea" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
 
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                    <span className="text-gray-600">
-                      {stats.mejorApunte.valoracion?.promedioValoracion?.toFixed(1) || '0.0'}
-                      ({stats.mejorApunte.valoracion?.cantidadValoraciones || 0} votos)
-                    </span>
+        {/* Crecimiento Mensual */}
+        <ChartCard title="Crecimiento Mensual de Contenido (Últimos 6 Meses)">
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={crecimiento}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="mes" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="cantidad" stroke="#9333ea" strokeWidth={3} />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        {/* Highlights Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+          {/* Apuntes Populares Semana */}
+          <HighlightCard
+            title="Populares Esta Semana"
+            IconComponent={Flame}
+          >
+            {popularesSemana.length > 0 ? (
+              <ul className="space-y-2">
+                {popularesSemana.map((apunte, idx) => (
+                  <li key={idx} className="flex justify-between items-center p-3 bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg border border-purple-100">
+                    <span className="text-sm font-medium text-gray-900 truncate">{apunte.nombre}</span>
+                    <span className="text-xs text-purple-600 font-semibold">{apunte.visualizaciones} vistas</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500 text-sm">No hay datos esta semana</p>
+            )}
+          </HighlightCard>
+
+          {/* Top Contribuidores */}
+          <HighlightCard
+            title="Top Contribuidores"
+            IconComponent={Trophy}
+          >
+            {topContribuidores.length > 0 ? (
+              <ul className="space-y-2">
+                {topContribuidores.map((contrib, idx) => (
+                  <li key={idx} className="flex justify-between items-center p-3 bg-gradient-to-r from-violet-50 to-indigo-50 rounded-lg border border-violet-100">
+                    <span className="text-sm font-medium text-gray-900 truncate">{contrib.nombre}</span>
+                    <span className="text-xs text-violet-600 font-semibold">{contrib.cantidadApuntes} apuntes</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500 text-sm">No hay datos esta semana</p>
+            )}
+          </HighlightCard>
+
+          {/* Apunte Más Descargado */}
+          <HighlightCard
+            title="Apunte Legendario"
+            IconComponent={Star}
+          >
+            {apunteMasDescargado ? (
+              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-lg border border-indigo-100">
+                <h4 className="font-bold text-purple-700 mb-2">{apunteMasDescargado.nombre}</h4>
+                <p className="text-sm text-gray-600 mb-3">{apunteMasDescargado.asignatura}</p>
+                <div className="flex justify-between text-xs text-gray-700">
+                  <div className="flex items-center gap-1">
+                    <Download className="w-3 h-3" />
+                    <span>{apunteMasDescargado.descargas}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Eye className="w-4 h-4 text-violet-600" />
-                    <span className="text-gray-600">{stats.mejorApunte.visualizaciones || 0} vistas</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Download className="w-4 h-4 text-indigo-600" />
-                    <span className="text-gray-600">{stats.mejorApunte.descargas || 0} descargas</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-gray-600" />
-                    <span className="text-gray-600">
-                      {formatDateToLocal(stats.mejorApunte.fechaSubida)}
-                    </span>
+                  <div className="flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3" />
+                    <span>{apunteMasDescargado.visualizaciones}</span>
                   </div>
                 </div>
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-8">Aún no tienes apuntes subidos</p>
+              <p className="text-gray-500 text-sm">No hay datos disponibles</p>
             )}
-          </div>
-
-          {/* Top Contribuidores */}
-          <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Users className="w-6 h-6 text-purple-600" />
-              Ranking de Contribuidores
-            </h2>
-
-            <div className="space-y-3">
-              {topContributors.map((contributor, index) => (
-                <div
-                  key={index}
-                  className={`flex items-center justify-between p-4 rounded-xl ${contributor.nombreCompleto === user?.nombreCompleto
-                    ? 'bg-purple-100 border-2 border-purple-300'
-                    : 'bg-white'
-                    }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${index === 0 ? 'bg-yellow-100 text-yellow-600' :
-                      index === 1 ? 'bg-gray-100 text-gray-600' :
-                        index === 2 ? 'bg-orange-100 text-orange-600' :
-                          'bg-purple-100 text-purple-600'
-                      }`}>
-                      {index + 1}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">
-                        {contributor.nombreCompleto}
-                        {contributor.nombreCompleto === user?.nombreCompleto && (
-                          <span className="ml-2 text-xs text-purple-600">(Tú)</span>
-                        )}
-                      </p>
-                      <p className="text-sm text-gray-500">{contributor.apuntesSubidos} apuntes</p>
-                    </div>
-                  </div>
-
-                  {index < 3 && (
-                    <Award className={`w-6 h-6 ${index === 0 ? 'text-yellow-500' :
-                      index === 1 ? 'text-gray-400' :
-                        'text-orange-500'
-                      }`} />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Actividad Reciente */}
-        <div className="mt-8 bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl shadow-sm p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Calendar className="w-6 h-6 text-purple-600" />
-            Tus Apuntes Recientes
-          </h2>
-
-          <div className="space-y-3">
-            {misApuntes.slice(0, 5).map((apunte) => (
-              <div key={apunte._id} className="bg-white rounded-xl p-4 flex items-center justify-between hover:shadow-md transition-shadow">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900">{apunte.nombre}</h3>
-                  <p className="text-sm text-gray-500">{apunte.asignatura}</p>
-                </div>
-
-                <div className="flex items-center gap-4 text-sm text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                    <span>{apunte.valoracion?.promedioValoracion?.toFixed(1) || '0.0'}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Eye className="w-4 h-4" />
-                    <span>{apunte.visualizaciones || 0}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Download className="w-4 h-4" />
-                    <span>{apunte.descargas || 0}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          </HighlightCard>
         </div>
       </div>
     </div>
   );
 }
 
-export default Estadisticas;
+// Componentes auxiliares
+function MetricCard({ IconComponent, title, value, color, live }) {
+  const colorClasses = {
+    purple: 'from-purple-500 to-purple-700',
+    pink: 'from-pink-500 to-pink-700',
+    indigo: 'from-indigo-500 to-indigo-700',
+    violet: 'from-violet-500 to-violet-700'
+  };
+
+  return (
+    <div className={`bg-gradient-to-br ${colorClasses[color]} rounded-xl shadow-lg p-6 text-white transform transition hover:scale-105`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-white/80 text-sm font-medium">{title}</p>
+          <p className="text-3xl font-bold mt-2">
+            {typeof value === 'number' ? value.toLocaleString() : value}
+          </p>
+          {live && (
+            <span className="text-xs bg-white/20 px-2 py-1 rounded-full mt-2 inline-flex items-center gap-1">
+              <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+              EN VIVO
+            </span>
+          )}
+        </div>
+        <div className="bg-white/20 p-3 rounded-lg">
+          <IconComponent className="w-8 h-8" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChartCard({ title, children }) {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+function HighlightCard({ title, IconComponent, children }) {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="flex items-center gap-2 mb-4">
+        <IconComponent className="w-5 h-5 text-purple-600" />
+        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+      </div>
+      {children}
+    </div>
+  );
+}

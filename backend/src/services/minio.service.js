@@ -1,5 +1,5 @@
 import path from 'path';
-import { minioClient, BUCKETS } from '../config/configMinio.js';
+import { minioClient } from '../config/configMinio.js';
 
 export async function uploadToMinIOService(bucketName, objectName, buffer, size, metadata = {}) {
     try {
@@ -11,8 +11,33 @@ export async function uploadToMinIOService(bucketName, objectName, buffer, size,
     }
 }
 
+// Verificar si un archivo ya existe en MinIO
+export async function checkFileExistsInMinIO(bucketName, objectName) {
+    try {
+        await minioClient.statObject(bucketName, objectName);
+        return [true, null]; // Archivo existe
+    } catch (error) {
+        if (error.code === 'NotFound') {
+            return [false, null]; // Archivo no existe (OK para subir)
+        }
+        console.error('Error verificando existencia del archivo:', error);
+        return [null, 'Error verificando existencia del archivo'];
+    }
+}
+
 export async function uploadFileService(bucketName, objectName, buffer, metadata = {}) {
     try {
+        // Verificar si el archivo ya existe en MinIO
+        const [exists, checkError] = await checkFileExistsInMinIO(bucketName, objectName);
+
+        if (checkError) {
+            return [null, checkError];
+        }
+
+        if (exists) {
+            return [null, 'El archivo ya existe en el almacenamiento. Por favor renombre el archivo o use otro.'];
+        }
+
         const [success, uploadError] = await uploadToMinIOService(
             bucketName,
             objectName,

@@ -142,7 +142,7 @@ export async function notificacionNuevaValoracionApunteService(rutAutorApunte, r
 
         await usuarioDestinatario.save();
 
-        return [nuevaNotificacion, apunteID, null];
+        return [nuevaNotificacion, null];
     } catch (error) {
         console.error('Error al crear la notificación de nueva valoración de apunte:', error);
         return [null, 'Error interno del servidor'];
@@ -206,7 +206,7 @@ export async function obtenerTodasMisNotificacionesService(rutUsuario) {
         const notificaciones = await Notificacion.find({ _id: { $in: usuario.notificaciones }, estadoLeido: false }).sort({ createdAt: -1 });
 
         if (!notificaciones || notificaciones.length === 0) return [[], null];
-        
+
         return [notificaciones, null];
 
     } catch (error) {

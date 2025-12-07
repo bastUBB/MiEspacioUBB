@@ -101,9 +101,17 @@ jobs:
 
               # actualizar el código fuente, instalar dependencias y reiniciar servicios
               echo "Actualizando el código fuente..."
+              
+              # Limpiar cualquier cambio local y archivos no rastreados
+              echo "Limpiando cambios locales..."
+              git clean -fd || { echo "Error al limpiar archivos"; exit 1; }
+              git checkout -- . || { echo "Error al descartar cambios"; exit 1; }
+              
+              # Obtener últimos cambios y actualizar
               git fetch origin main || { echo "Error al obtener cambios del repositorio"; exit 1; }
               git checkout main || { echo "Error al cambiar a la rama main"; exit 1; }
               git reset --hard origin/main || { echo "Error al actualizar el código"; exit 1; }
+              
               echo "Rama actual: $(git branch --show-current)"
               echo "Último commit: $(git log -1 --oneline)"
 

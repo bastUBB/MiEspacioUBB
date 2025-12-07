@@ -66,7 +66,7 @@ export async function updateUserService(query, body) {
 
         if (!userExistQuery) return [null, 'Usuario no encontrado'];
 
-        const { rut: nuevoRut, email: nuevoEmail, password: nuevaPassword } = body;
+        let { rut: nuevoRut, email: nuevoEmail, password: nuevaPassword } = body;
 
         const existNuevoRut = await User.findOne({ rut: nuevoRut });
 

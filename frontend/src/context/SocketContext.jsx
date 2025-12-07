@@ -26,7 +26,7 @@ export function SocketProvider({ children }) {
 
         const newSocket = io(socketUrl, {
             path: '/socket.io/',
-            transports: ['websocket', 'polling'],
+            // transports: ['websocket', 'polling'], // Comentado para permitir polling por defecto (mejor compatibilidad)
             withCredentials: true,
             reconnection: true,
             reconnectionAttempts: 5,

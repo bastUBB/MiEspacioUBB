@@ -136,7 +136,7 @@ jobs:
               
               # Configuración para Socket.IO
               echo '    # Configuración para Socket.IO' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '    RewriteEngine On' | sudo tee-a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo '    RewriteEngine On' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '    RewriteCond %{REQUEST_URI}  ^/socket.io            [NC]' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '    RewriteCond %{HTTP:Upgrade} =websocket             [NC]' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo "    RewriteRule /(.*)           ws://$BACKEND_AUTHORITY/\$1 [P,L]" | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null

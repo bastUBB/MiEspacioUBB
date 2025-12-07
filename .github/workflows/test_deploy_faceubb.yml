@@ -131,8 +131,9 @@ jobs:
               sudo a2enmod proxy proxy_http proxy_wstunnel rewrite 2>/dev/null || true
               
               # Crear configuración del VirtualHost
-              echo 'Listen 1804' | sudo tee /etc/apache2/ports.conf > /dev/null
-              echo '<VirtualHost *:1804>' | sudo tee /etc/apache2/sites-available/000-default.conf > /dev/null
+              # Crear configuración del VirtualHost
+              echo 'Listen 80' | sudo tee /etc/apache2/ports.conf > /dev/null
+              echo '<VirtualHost *:80>' | sudo tee /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '    ServerAdmin webmaster@localhost' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '    DocumentRoot /var/www/html' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
@@ -173,7 +174,12 @@ jobs:
 
               echo "=== Reiniciando Apache... ==="
               sudo apachectl configtest || { echo "Error en la configuración de Apache"; exit 1; }
+              echo "=== Reiniciando Apache... ==="
+              sudo apachectl configtest || { echo "Error en la configuración de Apache"; exit 1; }
               sudo apachectl -k restart || { echo "Error al reiniciar Apache"; exit 1; }
+              
+              echo "=== Puertos escuchando (Debug) ==="
+              sudo ss -tulpn || echo "ss no disponible"
 
               # Gestión de procesos con PM2
               echo "=== Gestionando procesos con PM2... ==="

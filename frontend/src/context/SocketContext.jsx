@@ -18,10 +18,11 @@ export function SocketProvider({ children }) {
             return;
         }
 
-        // En producción usa la URL del dominio, en dev localhost
-        const socketUrl = import.meta.env.PROD
+        // En producción usa la variable de entorno VITE_SOCKET_URL si existe,
+        // de lo contrario usa el origen de la ventana (para proxy) o localhost en desarrollo
+        const socketUrl = import.meta.env.VITE_SOCKET_URL || (import.meta.env.PROD
             ? window.location.origin
-            : 'http://localhost:5500';
+            : 'http://localhost:5500');
 
         const newSocket = io(socketUrl, {
             path: '/socket.io/',

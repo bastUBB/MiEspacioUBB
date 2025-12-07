@@ -127,8 +127,9 @@ jobs:
               sudo chmod -R 755 /var/www/html
               
               # Configurar Apache como proxy reverso para el backend
+              # Configurar Apache con módulos necesarios para WebSocket
               echo "=== Configurando proxy reverso de Apache... ==="
-              sudo a2enmod proxy proxy_http rewrite 2>/dev/null || true
+              sudo a2enmod proxy proxy_http proxy_wstunnel rewrite 2>/dev/null || true
               
               # Crear configuración del VirtualHost
               echo '<VirtualHost *:80>' | sudo tee /etc/apache2/sites-available/000-default.conf > /dev/null
@@ -144,6 +145,24 @@ jobs:
               echo '        Options Indexes FollowSymLinks' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '        AllowOverride All' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '        Require all granted' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo '' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              
+              # Proxy para Socket.IO (Configuración Híbrida WS/HTTP)
+              # 1. Habilitar RewriteEngine
+              echo '    RewriteEngine On' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+
+              # 2. WebSocket Upgrade Rule (ws://)
+              # Si el cliente solicita upgrade a websocket, redirigir al protocolo ws interno
+              BK_URL="${{ secrets.BACKEND_URL }}"
+              WS_URL="${BK_URL/http/ws}"
+              echo '    RewriteCond %{HTTP:Upgrade} =websocket [NC]' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo "    RewriteRule ^/socket.io/(.*) $WS_URL/socket.io/\$1 [P,L]" | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+
+              # 3. HTTP Polling Rule (http://)
+              # Tráfico normal de socket.io via ProxyPass
+              echo '    ProxyPass /socket.io/ ${{ secrets.BACKEND_URL }}/socket.io/' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo '    ProxyPassReverse /socket.io/ ${{ secrets.BACKEND_URL }}/socket.io/' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              
               echo '' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '        # Para React Router - NO aplicar a /api/*' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '        RewriteEngine On' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null

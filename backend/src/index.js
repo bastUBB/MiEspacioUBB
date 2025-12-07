@@ -37,8 +37,6 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use("/api", indexRoutes);
 
-// Inicializar Socket.IO
-initializeSocket(server);
 
 // initialSetup()
 //     .then(() => console.log('Initial setup completed'))
@@ -49,6 +47,7 @@ server.listen(url.port, async () => {
     await connectDB();
     await initializeMinIO();
     await initialSetup();
+    await initializeSocket(server);
     console.log(`🚀 Servidor corriendo en puerto ${url.port}`);
     console.log(`🔌 Socket.IO inicializado`);
   } catch (error) {

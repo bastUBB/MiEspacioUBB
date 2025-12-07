@@ -140,49 +140,6 @@ jobs:
               echo '    ProxyPreserveHost On' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '    ProxyPass /api/ ${{ secrets.BACKEND_URL }}/' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '    ProxyPassReverse /api/ ${{ secrets.BACKEND_URL }}/' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '    <Directory /var/www/html>' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '        Options Indexes FollowSymLinks' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '        AllowOverride All' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '        Require all granted' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              
-              # Proxy para Socket.IO (Configuración Híbrida WS/HTTP)
-              # 1. Habilitar RewriteEngine
-              echo '    RewriteEngine On' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-
-              # 2. WebSocket Upgrade Rule (ws://)
-              # Si el cliente solicita upgrade a websocket, redirigir al protocolo ws interno
-              BK_URL="${{ secrets.BACKEND_URL }}"
-              WS_URL="${BK_URL/http/ws}"
-              echo '    RewriteCond %{HTTP:Upgrade} =websocket [NC]' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo "    RewriteRule ^/socket.io/(.*) $WS_URL/socket.io/\$1 [P,L]" | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-
-              # 3. HTTP Polling Rule (http://)
-              # Tráfico normal de socket.io via ProxyPass
-              echo '    ProxyPass /socket.io/ ${{ secrets.BACKEND_URL }}/socket.io/' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '    ProxyPassReverse /socket.io/ ${{ secrets.BACKEND_URL }}/socket.io/' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              
-              echo '' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '        # Para React Router - NO aplicar a /api/*' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '        RewriteEngine On' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '        RewriteBase /' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '        # Excluir rutas de API del rewrite' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '        RewriteCond %{REQUEST_URI} !^/api' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '        RewriteRule ^index\.html$ - [L]' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '        RewriteCond %{REQUEST_URI} !^/api' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '        RewriteCond %{REQUEST_FILENAME} !-f' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '        RewriteCond %{REQUEST_FILENAME} !-d' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '        RewriteRule . /index.html [L]' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '    </Directory>' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '    ErrorLog ${APACHE_LOG_DIR}/error.log' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '    CustomLog ${APACHE_LOG_DIR}/access.log combined' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo '</VirtualHost>' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-
-              echo "=== Reiniciando Apache... ==="
-              sudo apachectl -k graceful
-
               # Gestión de procesos con PM2
               echo "=== Gestionando procesos con PM2... ==="
               

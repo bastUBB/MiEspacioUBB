@@ -130,6 +130,10 @@ jobs:
               echo "=== Configurando proxy reverso de Apache... ==="
               sudo a2enmod proxy proxy_http proxy_wstunnel rewrite 2>/dev/null || true
               
+              # Configurar Firewall
+              echo "=== Configurando Firewall... ==="
+              sudo ufw allow 1804/tcp || echo "Advertencia: No se pudo configurar UFW"
+
               # Crear configuración del VirtualHost
               echo 'Listen 1804' | sudo tee /etc/apache2/ports.conf > /dev/null
               echo '<VirtualHost *:1804>' | sudo tee /etc/apache2/sites-available/000-default.conf > /dev/null
@@ -172,7 +176,7 @@ jobs:
               echo '</VirtualHost>' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
 
               echo "=== Reiniciando Apache... ==="
-              sudo apachectl -k graceful
+              sudo systemctl restart apache2 || { echo "Error al reiniciar Apache"; sudo systemctl status apache2 --no-pager; exit 1; }
 
               # Gestión de procesos con PM2
               echo "=== Gestionando procesos con PM2... ==="

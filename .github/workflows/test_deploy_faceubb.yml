@@ -105,6 +105,7 @@ jobs:
               # instalar dependencias del BACKEND
               echo "Instalando dependencias del backend..."
               cd backend || { echo "No se pudo acceder al directorio del backend"; exit 1; }
+              rm -rf node_modules package-lock.json # Forzar instalación limpia
               npm install
               cd ..
 

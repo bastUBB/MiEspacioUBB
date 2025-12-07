@@ -148,6 +148,12 @@ jobs:
               BACKEND_URL_VAL="${{ secrets.BACKEND_URL }}"
               BACKEND_AUTHORITY=$(echo "$BACKEND_URL_VAL" | sed -E 's/^\w+:\/\///')
               
+              # DEBUG: Mostrar valores (TEMPORAL - REMOVER DESPUÉS)
+              echo "=== DEBUG: Configuración de Backend ==="
+              echo "BACKEND_URL completo: $BACKEND_URL_VAL"
+              echo "BACKEND_AUTHORITY extraído: $BACKEND_AUTHORITY"
+              echo "========================================"
+              
               # Crear configuración del VirtualHost
               echo '<VirtualHost *:80>' | sudo tee /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '    ServerAdmin webmaster@localhost' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null

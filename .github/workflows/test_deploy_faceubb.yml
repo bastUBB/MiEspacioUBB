@@ -26,6 +26,10 @@ jobs:
           cd backend || { echo "No se pudo acceder al directorio del backend"; exit 1; }
           npm cache clean --force
           npm ci
+          # Workaround para bug de npm con dependencias opcionales de Rollup
+          npm install --no-save @rollup/rollup-linux-x64-gnu
+        env:
+          npm_config_optional: true
 
       - name: Ejecutar pruebas # Ejecuta las pruebas del proyecto
         run: |

@@ -28,7 +28,7 @@ export function SocketProvider({ children }) {
             path: '/socket.io/',
             // transports: ['websocket', 'polling'], // Comentado para permitir polling por defecto (mejor compatibilidad)
             withCredentials: true,
-            reconnection: true,
+            reconnection: true, //
             reconnectionAttempts: 5,
             reconnectionDelay: 1000
         });

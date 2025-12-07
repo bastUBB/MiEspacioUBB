@@ -146,13 +146,10 @@ jobs:
               
               # Extraer host:port de la URL del backend
               BACKEND_URL_VAL="${{ secrets.BACKEND_URL }}"
+              # Remover protocolo (http:// o https://)
               BACKEND_AUTHORITY=$(echo "$BACKEND_URL_VAL" | sed -E 's/^\w+:\/\///')
-              
-              # DEBUG: Mostrar valores (TEMPORAL - REMOVER DESPUÉS)
-              echo "=== DEBUG: Configuración de Backend ==="
-              echo "BACKEND_URL completo: $BACKEND_URL_VAL"
-              echo "BACKEND_AUTHORITY extraído: $BACKEND_AUTHORITY"
-              echo "========================================"
+              # Remover /api o /api/ al final si existe
+              BACKEND_AUTHORITY=$(echo "$BACKEND_AUTHORITY" | sed -E 's/\/api\/?$//')
               
               # Crear configuración del VirtualHost
               echo '<VirtualHost *:80>' | sudo tee /etc/apache2/sites-available/000-default.conf > /dev/null

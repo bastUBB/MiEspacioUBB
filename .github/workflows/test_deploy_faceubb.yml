@@ -110,7 +110,7 @@ jobs:
               # instalar dependencias del BACKEND
               echo "Instalando dependencias del backend..."
               cd backend || { echo "No se pudo acceder al directorio del backend"; exit 1; }
-              npm ci
+              npm install
               cd ..
 
               # instalar dependencias del FRONTEND

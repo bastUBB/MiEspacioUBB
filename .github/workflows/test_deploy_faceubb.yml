@@ -154,10 +154,19 @@ jobs:
               echo '    RewriteEngine On' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '    RewriteCond %{REQUEST_URI}  ^/socket.io            [NC]' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '    RewriteCond %{HTTP:Upgrade} =websocket             [NC]' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo "    RewriteRule /(.*)           ws://localhost:5500/\$1 [P,L]" | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo "    RewriteRule /(.*)           ws://$BACKEND_AUTHORITY/\$1 [P,L]" | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '    RewriteCond %{REQUEST_URI}  ^/socket.io            [NC]' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
-              echo "    RewriteRule /(.*)           http://localhost:5500/\$1 [P,L]" | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo "    RewriteRule /(.*)           http://$BACKEND_AUTHORITY/\$1 [P,L]" | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo '' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              
+              echo '    # Fallback para SPA (React Router)' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo '    # No aplicar fallback a /api/ ni /socket.io/' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo '    RewriteCond %{REQUEST_URI} !^/api/' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo '    RewriteCond %{REQUEST_URI} !^/socket.io/' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo '    RewriteCond %{REQUEST_FILENAME} !-f' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo '    RewriteCond %{REQUEST_FILENAME} !-d' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
+              echo '    RewriteRule . /index.html [L]' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               echo '</VirtualHost>' | sudo tee -a /etc/apache2/sites-available/000-default.conf > /dev/null
               

@@ -1,6 +1,7 @@
 import User from "../models/user.model.js";
 import { comparePassword, hashPassword } from '../helpers/bcrypt.helper.js';
 import { registrarActualizacionPerfilService } from "./historial.service.js";
+
 export async function createUserService(dataUser) {
     try {
         const { rut, email } = dataUser;

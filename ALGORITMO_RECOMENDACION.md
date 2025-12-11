@@ -378,7 +378,7 @@ Apunte: {
 
 ### 5️⃣ Temporal (5%)
 
-**Objetivo:** Considerar frescura del contenido y patrones de uso temporal.
+**Objetivo:** Considerar frescura del contenido, patrones de uso temporal y relevancia por semestre académico.
 
 **Componentes:**
 
@@ -386,7 +386,7 @@ Apunte: {
 ScoreTemporal =
   (frescuraApunte × 0.40) +                  // Qué tan nuevo es
   (tendenciaInteracción × 0.35) +            // Actividad reciente del usuario
-  (momentoSemestre × 0.25)                    // Época académica
+  (momentoSemestre × 0.25)                    // Relevancia por semestre académico
 ```
 
 **1. Frescura del Apunte (40%):**
@@ -406,13 +406,56 @@ Score = min(AccionesRecientes / 10, 1.0)
 // Usuario inactivo → Score neutro (0.5)
 ```
 
-**3. Momento del Semestre (25%):**
+**3. Momento del Semestre (25%) - IMPLEMENTADO:**
 
-_Nota: Actualmente usa score neutro (0.5). Puede refinarse integrando calendario académico real para detectar épocas de:_
+**Algoritmo:** Extrae **TODOS** los semestres de las asignaturas cursantes y prioriza apuntes recientes de **CUALQUIERA** de esos semestres.
 
-- Inicio de semestre → Priorizar contenido introductorio
-- Pre-certámenes → Priorizar ejercicios y resúmenes
-- Fin de semestre → Priorizar material de repaso
+**Flujo:**
+
+1. **Extraer semestres** de todas las asignaturas cursantes del usuario
+2. **Obtener semestre** del apunte candidato
+3. **Comparar coincidencia** y aplicar scoring graduado
+
+**Scoring Graduado:**
+
+Si el apunte ES de uno de los semestres actuales:
+
+| Antigüedad         | Score | Razón                  |
+| ------------------ | ----- | ---------------------- |
+| < 7 días           | 1.0   | Muy reciente, ideal    |
+| 7-30 días          | 0.9   | Reciente, muy bueno    |
+| 30-90 días         | 0.7   | Relativamente reciente |
+| > 90 días          | 0.6   | Antiguo pero relevante |
+| Semestre diferente | 0.4   | Menor prioridad        |
+| Sin semestre/error | 0.5   | Score neutro           |
+
+**Ejemplo Multi-Semestre:**
+
+```javascript
+Usuario cursando:
+- "Cálculo I" (semestre 2)
+- "Programación Avanzada" (semestre 3)
+- "Base de Datos" (semestre 4)
+
+→ Semestres extraídos: [2, 3, 4]
+
+Apuntes candidatos:
+1. Prog Avanzada (sem 3) - subido hace 5 días  → score: 1.0 ✅
+2. Cálculo I (sem 2) - subido hace 15 días     → score: 0.9 ✅
+3. Base de Datos (sem 4) - subido hace 2 meses → score: 0.7 ✅
+4. Estadística (sem 5) - subido hace 3 días    → score: 0.4 ⚠️  (diferente semestre)
+5. Álgebra (sem 1) - subido ayer               → score: 0.4 ⚠️  (diferente semestre)
+
+// Nota: Los semestres 2, 3 y 4 tienen IGUAL prioridad base
+// La frescura (días desde subida) es el factor diferenciador
+```
+
+**Ventajas:**
+
+- ✅ **Contexto académico**: Entiende que un estudiante de semestre 3 necesita contenido de semestre 3
+- ✅ **Multi-semestre**: Soporta estudiantes cursando asignaturas de múltiples semestres simultáneamente
+- ✅ **Priorización inteligente**: Combina relevancia de semestre con frescura del contenido
+- ✅ **Robustez**: Maneja errores con score neutro (0.5)
 
 ---
 

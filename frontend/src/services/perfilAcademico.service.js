@@ -137,3 +137,29 @@ export async function actualizarPerfilAcademicoService(rutUser, perfilData) {
         throw error;
     }
 }
+
+export async function obtenerPopularidadUserService(rutUser) {
+    try {
+        const response = await axios.get('/api/perfilAcademico/popularidad/detail', {
+            params: { rutUser }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al obtener popularidad del usuario:", error);
+        throw error;
+    }
+}
+
+export async function obtenerValoracionPromedioApuntesService(rutUser) {
+    try {
+        const response = await axios.get('/api/perfilAcademico/valoracion-promedio/detail', {
+            params: { rutUser }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al obtener valoración promedio de apuntes:", error);
+        throw error;
+    }
+}

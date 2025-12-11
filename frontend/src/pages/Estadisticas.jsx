@@ -259,32 +259,54 @@ export default function Estadisticas() {
 
 // Componentes auxiliares
 function MetricCard({ IconComponent, title, value, color, live }) {
-  const colorClasses = {
-    purple: 'from-purple-500 to-purple-700',
-    pink: 'from-pink-500 to-pink-700',
-    indigo: 'from-indigo-500 to-indigo-700',
-    violet: 'from-violet-500 to-violet-700'
+  const colorStyles = {
+    purple: {
+      bg: 'from-white to-purple-50/50',
+      border: 'border-purple-100',
+      icon: 'text-purple-200',
+      textColor: 'text-purple-600',
+      bgBadge: 'bg-purple-50'
+    },
+    pink: {
+      bg: 'from-white to-pink-50/50',
+      border: 'border-pink-100',
+      icon: 'text-pink-200',
+      textColor: 'text-pink-600',
+      bgBadge: 'bg-pink-50'
+    },
+    indigo: {
+      bg: 'from-white to-indigo-50/50',
+      border: 'border-indigo-100',
+      icon: 'text-indigo-200',
+      textColor: 'text-indigo-600',
+      bgBadge: 'bg-indigo-50'
+    },
+    violet: {
+      bg: 'from-white to-violet-50/50',
+      border: 'border-violet-100',
+      icon: 'text-violet-200',
+      textColor: 'text-violet-600',
+      bgBadge: 'bg-violet-50'
+    }
   };
 
+  const styles = colorStyles[color];
+
   return (
-    <div className={`bg-gradient-to-br ${colorClasses[color]} rounded-xl shadow-lg p-6 text-white transform transition hover:scale-105`}>
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-white/80 text-sm font-medium">{title}</p>
-          <p className="text-3xl font-bold mt-2">
-            {typeof value === 'number' ? value.toLocaleString() : value}
-          </p>
-          {live && (
-            <span className="text-xs bg-white/20 px-2 py-1 rounded-full mt-2 inline-flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
-              EN VIVO
-            </span>
-          )}
-        </div>
-        <div className="bg-white/20 p-3 rounded-lg">
-          <IconComponent className="w-8 h-8" />
-        </div>
+    <div className={`bg-gradient-to-br ${styles.bg} rounded-xl p-4 shadow-sm border ${styles.border} hover:shadow-md transition-all hover:scale-105`}>
+      <div className="flex items-center justify-between mb-2">
+        <IconComponent className={`w-8 h-8 ${styles.icon}`} />
+        {live && (
+          <span className={`text-xs font-medium ${styles.textColor} ${styles.bgBadge} px-2 py-1 rounded-full flex items-center gap-1`}>
+            <span className="w-1.5 h-1.5 bg-current rounded-full animate-pulse"></span>
+            EN VIVO
+          </span>
+        )}
       </div>
+      <p className="text-2xl font-bold text-gray-900">
+        {typeof value === 'number' ? value.toLocaleString() : value}
+      </p>
+      <p className="text-xs text-gray-500">{title}</p>
     </div>
   );
 }

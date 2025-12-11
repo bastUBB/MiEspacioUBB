@@ -1219,7 +1219,7 @@ function DetalleApunte() {
                     </div>
                     <div className="flex items-center gap-1 mb-2">
                       <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-bold text-gray-900">{apunte.autorInfo.reputacion}</span>
+                      <span className="text-sm font-bold text-gray-900">{apunte.autorInfo.popularidad}</span>
                       <span className="text-xs text-gray-500">({apunte.autorInfo.totalValoraciones} valoraciones)</span>
                     </div>
                   </div>

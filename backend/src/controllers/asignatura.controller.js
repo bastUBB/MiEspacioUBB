@@ -6,7 +6,9 @@ import {
     deleteAsignaturaService,
     getUnidadesAsignaturaService,
     getAsignaturasSemestreActualService,
-    obtenerCantidadAsignaturasService
+    obtenerCantidadAsignaturasService,
+    agregarEtiquetasAsignaturaService,
+    sugerirEtiquetasAsignaturaService
 } from "../services/asignatura.service.js";
 import {
     asignaturaQueryValidation, asignaturaCreateValidation, asignaturaUpdateValidation,
@@ -138,6 +140,44 @@ export async function getAsignaturasSemestreActual(req, res) {
 
         handleSuccess(res, 200, "Asignaturas encontradas", asignaturas);
 
+    } catch (error) {
+        handleErrorServer(res, 500, error.message);
+    }
+}
+
+export async function agregarEtiquetasAsignatura(req, res) {
+    try {
+        const { value: valueQuery, error: errorQuery } = asignaturaQueryValidation.validate(req.query);
+
+        if (errorQuery) return handleErrorClient(res, 400, "Error de validación", errorQuery.message);
+
+        if (!req.body.etiquetas || !Array.isArray(req.body.etiquetas)) {
+            return handleErrorClient(res, 400, "Etiquetas requeridas como array");
+        }
+
+        const [asignatura, errorAsignatura] = await agregarEtiquetasAsignaturaService(valueQuery.codigo, req.body.etiquetas);
+
+        if (asignatura === 0) return handleSuccess(res, 200, "No hay etiquetas nuevas para agregar", []);
+
+        if (errorAsignatura) return handleErrorClient(res, 404, "Asignatura no encontrada", errorAsignatura);
+
+        handleSuccess(res, 200, "Etiquetas agregadas con éxito", asignatura);
+    } catch (error) {
+        handleErrorServer(res, 500, error.message);
+    }
+}
+
+export async function sugerirEtiquetasAsignatura(req, res) {
+    try {
+        const { value: valueQuery, error: errorQuery } = asignaturaQueryValidation.validate(req.query);
+
+        if (errorQuery) return handleErrorClient(res, 400, "Error de validación", errorQuery.message);
+
+        const [asignatura, errorAsignatura] = await sugerirEtiquetasAsignaturaService(valueQuery.codigo);
+
+        if (errorAsignatura) return handleErrorClient(res, 404, "Asignatura no encontrada", errorAsignatura);
+
+        handleSuccess(res, 200, "Etiquetas sugeridas con éxito", asignatura);
     } catch (error) {
         handleErrorServer(res, 500, error.message);
     }

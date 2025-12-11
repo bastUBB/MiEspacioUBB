@@ -40,6 +40,10 @@ const asignaturaSchema = new mongoose.Schema({
         type: String,
         cast: false,
     }],
+    etiquetasAñadidas: [{
+        type: String,
+        cast: false,
+    }],
 }, {
     versionKey: false,
     strict: true

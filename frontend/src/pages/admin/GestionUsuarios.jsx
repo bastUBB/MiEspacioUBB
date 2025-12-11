@@ -472,8 +472,8 @@ function GestionUsuarios() {
                                                         <p className="text-gray-900">{modalPerfil.perfil.nivel || 'N/A'}</p>
                                                     </div>
                                                     <div>
-                                                        <span className="font-medium text-gray-700">Reputación:</span>
-                                                        <p className="text-gray-900">{modalPerfil.perfil.reputacion || 0}</p>
+                                                        <span className="font-medium text-gray-700">Popularidad:</span>
+                                                        <p className="text-gray-900">{modalPerfil.perfil.popularidad || 0}</p>
                                                     </div>
                                                 </div>
                                             </div>

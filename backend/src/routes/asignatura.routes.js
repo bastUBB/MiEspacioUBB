@@ -8,7 +8,9 @@ import {
     updateAsignatura,
     deleteAsignatura,
     getAsignaturasSemestreActual,
-    obtenerCantidadAsignaturas
+    obtenerCantidadAsignaturas,
+    agregarEtiquetasAsignatura,
+    sugerirEtiquetasAsignatura
 } from "../controllers/asignatura.controller.js";
 
 const router = Router();
@@ -17,6 +19,8 @@ router.use(authenticateJWT);
 
 router
     .post("/", authorizeRoles("admin", "docente"), createAsignatura)
+    .post("/agregar-etiquetas", authorizeRoles("admin", "docente", "ayudante", "estudiante"), agregarEtiquetasAsignatura)
+    .get("/sugerir-etiquetas", authorizeRoles("admin", "docente", "ayudante", "estudiante"), sugerirEtiquetasAsignatura)
     .get("/detail", authorizeRoles("admin", "docente", "ayudante", "estudiante"), getAsignatura)
     .get("/", authorizeRoles("admin", "docente", "ayudante", "estudiante"), getAllAsignaturas)
     .get("/cantidad-total", authorizeRoles("admin"), obtenerCantidadAsignaturas)

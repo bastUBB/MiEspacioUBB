@@ -12,6 +12,14 @@ import InformeCurricularEditor from '../components/InformeCurricularEditor';
 import { getPerfilAcademicoService, actualizarPerfilAcademicoService } from '../services/perfilAcademico.service';
 import { getAsignaturasService } from '../services/asignatura.service';
 import { obtenerAñoIngresoService, actualizarUsuarioService } from '../services/user.service';
+import { getMiHistorialService } from '../services/historial.service';
+import {
+  getCategoryFromAction,
+  getActionStyle,
+  formatRelativeTime,
+  groupHistoryByPeriod,
+  formatActionForUser
+} from '../helpers/historialHelpers';
 
 function Profile() {
   const { user, loading: userLoading } = useContext(UserContext);
@@ -23,6 +31,8 @@ function Profile() {
   const [loadingPerfil, setLoadingPerfil] = useState(true);
   const [asignaturas, setAsignaturas] = useState([]);
   const [loadingAsignaturas, setLoadingAsignaturas] = useState(true);
+  const [historial, setHistorial] = useState([]);
+  const [loadingHistorial, setLoadingHistorial] = useState(true);
 
   // Datos del usuario
   const [userData, setUserData] = useState({
@@ -136,8 +146,26 @@ function Profile() {
 
     if (user) {
       fetchPerfil();
+      fetchHistorial();
     }
   }, [user]);
+
+  // Fetch user history
+  const fetchHistorial = async () => {
+    try {
+      const response = await getMiHistorialService(user.rut);
+
+      if (response.status === 'Success' && response.data) {
+        // Backend now returns acciones directly in response.data
+        setHistorial(response.data || []);
+      }
+    } catch (error) {
+      console.error('Error cargando historial:', error);
+      setHistorial([]);
+    } finally {
+      setLoadingHistorial(false);
+    }
+  };
 
   const handleEditUser = () => {
     setIsEditingUser(true);
@@ -167,6 +195,8 @@ function Profile() {
         setUserData({ ...tempUserData });
         setIsEditingUser(false);
         toast.success('Datos de usuario actualizados correctamente');
+        // Refresh history to show the new update
+        fetchHistorial();
       } else {
         toast.error(response.message || 'Error al actualizar los datos');
       }
@@ -232,6 +262,8 @@ function Profile() {
         setPerfilData({ ...tempPerfilData });
         setIsEditingPerfil(false);
         toast.success('Perfil académico actualizado correctamente');
+        // Refresh history to show the new update
+        fetchHistorial();
       } else {
         toast.error(response.message || 'Error al actualizar el perfil');
       }
@@ -761,26 +793,90 @@ function Profile() {
             )}
 
             {activeTab === 'activity' && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center animate-fade-in-up">
-                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Activity className="w-8 h-8 text-gray-400" />
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-fade-in-up">
+                <div className="p-6 border-b border-gray-50">
+                  <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-purple-600" />
+                    Actividad Reciente
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Historial detallado de tus interacciones y contribuciones
+                  </p>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Actividad Reciente</h3>
-                <p className="text-gray-500 max-w-md mx-auto">
-                  Aquí podrás ver un historial detallado de tus interacciones, descargas y contribuciones a la comunidad.
-                </p>
-                <div className="mt-8 space-y-4 text-left max-w-lg mx-auto">
-                  {/* Placeholder items */}
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
-                      <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">Actualizaste tu perfil académico</p>
-                        <p className="text-xs text-gray-500">Hace {i} días</p>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-gray-300" />
+
+                <div className="p-6">
+                  {loadingHistorial ? (
+                    <div className="space-y-4">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 animate-pulse">
+                          <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                            <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  ) : historial.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Activity className="w-8 h-8 text-gray-300" />
+                      </div>
+                      <h3 className="text-base font-semibold text-gray-900 mb-2">Sin actividad registrada</h3>
+                      <p className="text-sm text-gray-500 max-w-sm mx-auto">
+                        Cuando realices acciones como subir apuntes, comentar o actualizar tu perfil, aparecerán aquí.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {(() => {
+                        const grouped = groupHistoryByPeriod(historial);
+                        const sections = [
+                          { key: 'today', label: 'Hoy', data: grouped.today },
+                          { key: 'yesterday', label: 'Ayer', data: grouped.yesterday },
+                          { key: 'lastWeek', label: 'Últimos 7 días', data: grouped.lastWeek },
+                          { key: 'earlier', label: 'Anterior', data: grouped.earlier }
+                        ];
+
+                        return sections.map(section => (
+                          section.data.length > 0 && (
+                            <div key={section.key}>
+                              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                                {section.label}
+                              </h3>
+                              <div className="space-y-2">
+                                {section.data.map((accion, idx) => {
+                                  const category = getCategoryFromAction(accion.tipoAccion);
+                                  const style = getActionStyle(category);
+                                  const IconComponent = style.icon;
+
+                                  return (
+                                    <div
+                                      key={idx}
+                                      className={`group flex items-start gap-4 p-4 rounded-xl border ${style.border} ${style.bg} hover:shadow-md transition-all duration-300 cursor-pointer`}
+                                    >
+                                      <div className={`w-10 h-10 ${style.bg} rounded-lg flex items-center justify-center ${style.color} group-hover:scale-110 transition-transform flex-shrink-0`}>
+                                        <IconComponent className="w-5 h-5" />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-gray-900 leading-relaxed">
+                                          {formatActionForUser(accion.tipoAccion, userData.nombreCompleto)}
+                                        </p>
+                                        <p className="text-xs text-gray-500 mt-1 flex items-center gap-1.5">
+                                          <Calendar className="w-3 h-3" />
+                                          {formatRelativeTime(accion.fechaAccion)}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )
+                        ));
+                      })()}
+                    </div>
+                  )}
                 </div>
               </div>
             )}

@@ -306,12 +306,12 @@ export const perfilAcademicoUpdateValidation = joi.object({
             'number.base': 'El número de apuntes descargados debe ser un número',
             'number.min': 'El número de apuntes descargados no puede ser negativo',
         }),
-    reputacion: joi.number()
+    popularidad: joi.number()
         .default(0)
         .min(0)
         .messages({
-            'number.base': 'La reputación debe ser un número',
-            'number.min': 'La reputación no puede ser negativa',
+            'number.base': 'La popularidad debe ser un número',
+            'number.min': 'La popularidad no puede ser negativa',
         }),
     valoracionPerfil: joi.number()
         .default(0)
@@ -351,11 +351,11 @@ export const perfilAcademicoUpdateValidation = joi.object({
             "array.min": "Debe incluir al menos un ID de apunte.",
         })
 })
-    .or("rutUser", "asignaturasCursantes", "asignaturasInteres", "semestreActual", "apuntesSubidos", "apuntesDescargados", "informeCurricular", "reputacion", "metodosEstudiosPreferidos", "apuntesIDs")
+    .or("rutUser", "asignaturasCursantes", "asignaturasInteres", "semestreActual", "apuntesSubidos", "apuntesDescargados", "informeCurricular", "popularidad", "metodosEstudiosPreferidos", "apuntesIDs")
     .unknown(false)
     .messages({
         'object.unknown': 'No se permiten propiedades adicionales en el cuerpo de la solicitud',
-        'object.missing': 'Debe proporcionar al menos uno de los campos: rutUser, asignaturasCursantes, asignaturasInteres, semestreActual, apuntesSubidos, apuntesDescargados, informeCurricular, reputacion, metodosEstudiosPreferidos o apuntesIDs',
+        'object.missing': 'Debe proporcionar al menos uno de los campos: rutUser, asignaturasCursantes, asignaturasInteres, semestreActual, apuntesSubidos, apuntesDescargados, informeCurricular, popularidad, metodosEstudiosPreferidos o apuntesIDs',
     });
 
 export const busquedaApuntesValidation = joi.object({

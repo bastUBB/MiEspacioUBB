@@ -219,7 +219,7 @@ export async function getApunteByIdService(apunteID) {
                 apunteObj.autorInfo = {
                     nombreCompleto: autorInfo.nombreCompleto,
                     nivel: perfilAutor.nivel || 'Bronce',
-                    reputacion: perfilAutor.reputacion || 0,
+                    popularidad: perfilAutor.popularidad || 0,
                     totalApuntes: perfilAutor.apuntesIDs?.length || 0,
                     totalValoraciones: perfilAutor.cantidadValoraciones || 0
                 };
@@ -227,7 +227,7 @@ export async function getApunteByIdService(apunteID) {
                 apunteObj.autorInfo = {
                     nombreCompleto: autorInfo.nombreCompleto,
                     nivel: 'Bronce',
-                    reputacion: 0,
+                    popularidad: 0,
                     totalApuntes: 0,
                     totalValoraciones: 0
                 };

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../context/userContextProvider';
 import { crearApunteService } from '../services/apunte.service';
 import { poseePerfilAcademicoService } from '../services/perfilAcademico.service';
-import { getAsignaturasService } from '../services/asignatura.service';
+import { getAsignaturasService, sugerirEtiquetasAsignaturaService, agregarEtiquetasAsignaturaService } from '../services/asignatura.service';
 
 export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
   const navigate = useNavigate();
@@ -31,6 +31,8 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
   const [loadingAsignaturas, setLoadingAsignaturas] = useState(true);
   const [subjectSearch, setSubjectSearch] = useState('');
   const [showSubjectDropdown, setShowSubjectDropdown] = useState(false);
+  const [etiquetasSugeridas, setEtiquetasSugeridas] = useState([]);
+  const [loadingSugerencias, setLoadingSugerencias] = useState(false);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -281,6 +283,47 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
     setEtiquetas(prev => prev.filter(et => et !== etiquetaAEliminar));
   };
 
+  // Fetch tag suggestions when subject CODE changes
+  useEffect(() => {
+    const fetchSugerencias = async () => {
+      if (formData.subjectCode && formData.subjectCode.trim()) {
+        setLoadingSugerencias(true);
+        try {
+          const response = await sugerirEtiquetasAsignaturaService(formData.subjectCode);
+          if (response.status === 'Success' && response.data) {
+            setEtiquetasSugeridas(response.data || []);
+          } else {
+            setEtiquetasSugeridas([]);
+          }
+        } catch (error) {
+          console.error('Error al cargar sugerencias:', error);
+          setEtiquetasSugeridas([]);
+        } finally {
+          setLoadingSugerencias(false);
+        }
+      } else {
+        setEtiquetasSugeridas([]);
+      }
+    };
+
+    fetchSugerencias();
+  }, [formData.subjectCode]);
+
+  const agregarEtiquetaSugerida = (etiqueta) => {
+    if (etiquetas.includes(etiqueta.toLowerCase())) {
+      toast.error('Esta etiqueta ya está agregada', { duration: 2000, icon: '⚠️' });
+      return;
+    }
+
+    if (etiquetas.length >= 5) {
+      toast.error('Máximo 5 etiquetas permitidas', { duration: 3000, icon: '⚠️' });
+      return;
+    }
+
+    setEtiquetas(prev => [...prev, etiqueta]);
+    toast.success(`Etiqueta "${etiqueta}" agregada`, { duration: 2000, icon: '✅' });
+  };
+
   const handleKeyPressEtiqueta = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -401,6 +444,14 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
       const response = await crearApunteService(apunteData, formData.file);
 
       if (response.status === 'Success') {
+        // Save tags to the subject for future suggestions
+        try {
+          await agregarEtiquetasAsignaturaService(formData.subject, etiquetas.map(e => e.toLowerCase().trim()));
+        } catch (tagError) {
+          console.error('Error al guardar etiquetas en la asignatura:', tagError);
+          // Don't show error to user as the upload was successful
+        }
+
         toast.success('¡Apunte subido exitosamente!', { duration: 4000, icon: '🎉' });
         resetForm();
         onClose();
@@ -559,56 +610,6 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
                 </h3>
 
                 <div className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Etiquetas
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={currentEtiqueta}
-                        onChange={(e) => setCurrentEtiqueta(e.target.value)}
-                        onKeyDown={handleKeyPressEtiqueta}
-                        className="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-200 outline-none"
-                        placeholder="Escribe una etiqueta"
-                        maxLength={30}
-                      />
-                      <button
-                        type="button"
-                        onClick={agregarEtiqueta}
-                        className="px-5 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white rounded-xl transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2 font-medium"
-                      >
-                        <Plus size={20} />
-                        Agregar
-                      </button>
-                    </div>
-
-                    {etiquetas.length > 0 && (
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {etiquetas.map((etiqueta, index) => (
-                          <div
-                            key={index}
-                            className="group bg-gradient-to-r from-violet-500 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
-                          >
-                            <Tag size={14} />
-                            <span>{etiqueta}</span>
-                            <button
-                              type="button"
-                              onClick={() => eliminarEtiqueta(etiqueta)}
-                              className="ml-1 hover:bg-white/25 rounded-full p-1 transition-colors"
-                            >
-                              <X size={14} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    <p className="text-xs text-gray-500 mt-2 ml-1">
-                      {etiquetas.length}/5 etiquetas • 3-30 caracteres por etiqueta
-                    </p>
-                  </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="relative" ref={dropdownRef}>
                       <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
@@ -653,7 +654,11 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
                                   key={asignatura._id}
                                   type="button"
                                   onClick={() => {
-                                    setFormData(prev => ({ ...prev, subject: asignatura.nombre }));
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      subject: asignatura.nombre,
+                                      subjectCode: asignatura.codigo
+                                    }));
                                     setShowSubjectDropdown(false);
                                     setSubjectSearch('');
                                   }}
@@ -707,6 +712,101 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
                         <option value="Otro">Otro</option>
                       </select>
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Etiquetas
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={currentEtiqueta}
+                        onChange={(e) => setCurrentEtiqueta(e.target.value)}
+                        onKeyDown={handleKeyPressEtiqueta}
+                        className="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-200 outline-none"
+                        placeholder="Escribe una etiqueta"
+                        maxLength={30}
+                      />
+                      <button
+                        type="button"
+                        onClick={agregarEtiqueta}
+                        className="px-5 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white rounded-xl transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2 font-medium"
+                      >
+                        <Plus size={20} />
+                        Agregar
+                      </button>
+                    </div>
+
+                    {etiquetas.length > 0 && (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {etiquetas.map((etiqueta, index) => (
+                          <div
+                            key={index}
+                            className="group bg-gradient-to-r from-violet-500 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
+                          >
+                            <Tag size={14} />
+                            <span>{etiqueta}</span>
+                            <button
+                              type="button"
+                              onClick={() => eliminarEtiqueta(etiqueta)}
+                              className="ml-1 hover:bg-white/25 rounded-full p-1 transition-colors"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <p className="text-xs text-gray-500 mt-2 ml-1">
+                      {etiquetas.length}/5 etiquetas • 3-30 caracteres por etiqueta
+                    </p>
+
+                    {/* Sugerencias de etiquetas */}
+                    {formData.subject && etiquetasSugeridas.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-violet-100">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
+                            <Sparkles size={14} className="text-violet-600" />
+                            Sugerencias basadas en "{formData.subject}"
+                          </p>
+                          <span className="text-xs text-gray-500">
+                            {etiquetasSugeridas.length} {etiquetasSugeridas.length === 1 ? 'sugerencia' : 'sugerencias'}
+                          </span>
+                        </div>
+                        <div className="max-h-32 overflow-y-auto pr-1 custom-scrollbar">
+                          <div className="flex flex-wrap gap-2">
+                            {etiquetasSugeridas.map((etiqueta, index) => (
+                              <button
+                                key={index}
+                                type="button"
+                                onClick={() => agregarEtiquetaSugerida(etiqueta)}
+                                disabled={etiquetas.includes(etiqueta.toLowerCase())}
+                                className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-200 flex-shrink-0 ${etiquetas.includes(etiqueta.toLowerCase())
+                                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                                    : 'bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100 hover:border-violet-300 hover:scale-105'
+                                  }`}
+                              >
+                                {etiqueta}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        {etiquetasSugeridas.length > 10 && (
+                          <p className="text-xs text-gray-500 mt-2 italic">
+                            💡 Usa scroll para ver más sugerencias
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {loadingSugerencias && formData.subject && (
+                      <div className="mt-3 text-xs text-gray-500 flex items-center gap-2">
+                        <div className="animate-spin h-3 w-3 border-2 border-violet-600 border-t-transparent rounded-full"></div>
+                        Cargando sugerencias...
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

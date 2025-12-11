@@ -11,7 +11,8 @@ import {
     obtenerNumeroDescargasApuntesService,
     createPerfilAcademicoDocenteService,
     createPerfilAcademicoAyudanteService,
-    obtenerMayoresContribuidoresService
+    obtenerMayoresContribuidoresService,
+    obtenerPopularidadUsuarioService
 } from "../services/perfilAcademico.service.js";
 import {
     perfilAcademicoQueryValidation,
@@ -239,6 +240,22 @@ export async function obtenerMayoresContribuidores(req, res) {
         if (errorContribuidores) return handleErrorServer(res, 400, "Error al obtener los mayores contribuidores", errorContribuidores);
 
         return handleSuccess(res, 200, "Mayores contribuidores obtenidos con éxito", contribuidores);
+    } catch (error) {
+        handleErrorServer(res, 500, "Error interno del servidor", error.message);
+    }
+}
+
+export async function obtenerPopularidadUsuario(req, res) {
+    try {
+        const { value: valueQuery, error: errorQuery } = perfilAcademicoQueryValidation.validate(req.query);
+
+        if (errorQuery) return handleErrorClient(res, 400, "Error de validacion", errorQuery.message);
+
+        const [popularidad, errorPopularidad] = await obtenerPopularidadUsuarioService(valueQuery.rutUser);
+
+        if (errorPopularidad) return handleErrorServer(res, 400, "Error al obtener la popularidad del usuario", errorPopularidad);
+
+        return handleSuccess(res, 200, "Popularidad del usuario obtenida con éxito", popularidad);
     } catch (error) {
         handleErrorServer(res, 500, "Error interno del servidor", error.message);
     }

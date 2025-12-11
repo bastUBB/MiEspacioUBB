@@ -13,7 +13,8 @@ import {
     busquedaApuntesMismaAsignatura,
     obtenerValoracionPromedioApuntes,
     obtenerNumeroDescargasApuntes,
-    obtenerMayoresContribuidores
+    obtenerMayoresContribuidores,
+    obtenerPopularidadUsuario
 } from '../controllers/perfilAcademico.controller.js';
 
 const router = Router();
@@ -29,6 +30,7 @@ router
     .get("/detail", authorizeRoles("admin", "docente", "ayudante", "estudiante"), getPerfilAcademico)
     .get("/poseePFA", authorizeRoles("admin", "docente", "ayudante", "estudiante"), poseePerfilAcademico)
     .get("/numero-apuntes/detail", authorizeRoles("admin", "docente", "ayudante", "estudiante"), numeroApuntesUser)
+    .get("/popularidad/detail", authorizeRoles("admin", "docente", "ayudante", "estudiante"), obtenerPopularidadUsuario)
     .get("/valoracion-promedio/detail", authorizeRoles("admin", "docente", "ayudante", "estudiante"), obtenerValoracionPromedioApuntes)
     .get("/numero-descargas/detail", authorizeRoles("admin", "docente", "ayudante", "estudiante"), obtenerNumeroDescargasApuntes)
     .get("/mayores-contribuidores", authorizeRoles("admin", "docente", "ayudante", "estudiante"), obtenerMayoresContribuidores)

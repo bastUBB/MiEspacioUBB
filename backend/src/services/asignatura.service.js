@@ -158,3 +158,42 @@ export async function getAsignaturasSemestreActualService(query) {
         return [null, 'Error interno del servidor'];
     }
 }
+
+export async function agregarEtiquetasAsignaturaService(codigoAsignatura, etiquetas) {
+    try {
+        const existingAsignatura = await Asignatura.findOne({ codigo: codigoAsignatura });
+
+        if (!existingAsignatura) return [null, 'Asignatura no encontrada'];
+
+        //verificar si ya existe esta etiqueta
+        const etiquetasExistentes = existingAsignatura.etiquetasAñadidas;
+
+        const etiquetasNuevas = etiquetas.filter((etiqueta) => !etiquetasExistentes.includes(etiqueta));
+
+        if (etiquetasNuevas.length === 0) return [0, 'No hay etiquetas nuevas para agregar'];
+
+        existingAsignatura.etiquetasAñadidas.push(...etiquetasNuevas);
+
+        const updatedAsignatura = await existingAsignatura.save();
+
+        if (!updatedAsignatura) return [null, 'Error al agregar las etiquetas'];
+
+        return [updatedAsignatura, null];
+    } catch (error) {
+        console.error('Error al agregar las etiquetas:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function sugerirEtiquetasAsignaturaService(codigoAsignatura) {
+    try {
+        const existingAsignatura = await Asignatura.findOne({ codigo: codigoAsignatura });
+
+        if (!existingAsignatura) return [null, 'Asignatura no encontrada'];
+
+        return [existingAsignatura.etiquetasAñadidas, null];
+    } catch (error) {
+        console.error('Error al obtener las etiquetas de la asignatura:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}

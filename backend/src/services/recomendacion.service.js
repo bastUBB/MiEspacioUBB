@@ -1,6 +1,7 @@
 import Apunte from '../models/apunte.model.js';
 import perfilAcademico from '../models/perfilAcademico.model.js';
 import HistorialUsuario from '../models/historialUsuario.model.js';
+import Asignatura from '../models/asignatura.model.js';
 import {
     PESOS_DIMENSIONES,
     CONFIG_DIVERSIDAD,
@@ -42,16 +43,18 @@ export async function generarRecomendacionPersonalizadaService(rutUser, limite =
         }
 
         // 3. Calcular scores para cada candidato
-        const apuntesConScore = candidatos.map(apunte => {
-            const score = calcularScoreFinal(apunte, usuario, historial);
-            const explicacion = generarExplicacionRecomendacion(apunte, usuario, score);
+        const apuntesConScore = await Promise.all(
+            candidatos.map(async (apunte) => {
+                const score = await calcularScoreFinal(apunte, usuario, historial);
+                const explicacion = generarExplicacionRecomendacion(apunte, usuario, score);
 
-            return {
-                apunte,
-                score,
-                explicacion
-            };
-        });
+                return {
+                    apunte,
+                    score,
+                    explicacion
+                };
+            })
+        );
 
         // 4. Aplicar diversificación y ordenamiento
         const recomendacionesDiversificadas = aplicarDiversificacion(
@@ -125,7 +128,7 @@ async function filtrarApuntesCandidatos(usuario) {
  * @param {Object} historial - Historial del usuario
  * @returns {Number} - Score final [0, 1]
  */
-function calcularScoreFinal(apunte, usuario, historial) {
+async function calcularScoreFinal(apunte, usuario, historial) {
     // Calcular cada dimensión del score
     const scoreRelevancia = calcularRelevanciaAcademica(
         apunte,
@@ -147,9 +150,10 @@ function calcularScoreFinal(apunte, usuario, historial) {
         usuario
     ) * PESOS_DIMENSIONES.calidad;
 
-    const scoreTemporal = calcularScoreTemporal(
+    const scoreTemporal = await calcularScoreTemporal(
         apunte,
-        historial
+        historial,
+        usuario
     ) * PESOS_DIMENSIONES.temporal;
 
     // Sumar dimensiones
@@ -339,9 +343,9 @@ function calcularScoreCalidad(apunte, usuario) {
 
 /**
  * Dimensión 5: Factor Temporal (5%)
- * Considera frescura del apunte y patrones temporales
+ * Considera frescura del apunte, patrones temporales y relevancia por semestre
  */
-function calcularScoreTemporal(apunte, historial) {
+async function calcularScoreTemporal(apunte, historial, usuario) {
     let score = 0;
 
     // Componente 1: Frescura del apunte (40%)
@@ -364,11 +368,65 @@ function calcularScoreTemporal(apunte, historial) {
         score += 0.5 * 0.35; // Score neutro si no hay historial
     }
 
-    // Componente 3: Momento del semestre (25%)
-    // Esto podría refinarse según calendario académico real
-    score += 0.5 * 0.25;
+    // Componente 3: Momento del Semestre (25%) - MEJORADO
+    const scoreSemestre = await calcularScoreSemestre(apunte, usuario);
+    score += scoreSemestre * 0.25;
 
     return Math.min(score, 1.0);
+}
+
+/**
+ * Calcula score basado en coincidencia de semestre y frescura
+ * Extrae TODOS los semestres de las asignaturas cursantes y prioriza apuntes
+ * recientes de CUALQUIERA de esos semestres
+ */
+async function calcularScoreSemestre(apunte, usuario) {
+    try {
+        // 1. Obtener semestres de TODAS las asignaturas cursantes
+        const nombresCursantes = usuario.asignaturasCursantes || [];
+
+        if (nombresCursantes.length === 0) {
+            return 0.5; // Score neutro si no hay asignaturas cursantes
+        }
+
+        const asignaturasCursantesConSemestre = await Asignatura.find({
+            nombre: { $in: nombresCursantes }
+        });
+
+        const semestres = asignaturasCursantesConSemestre.map(a => a.semestre);
+
+        // Si no se encontraron semestres, score neutro
+        if (semestres.length === 0) {
+            return 0.5;
+        }
+
+        // 2. Verificar si el apunte es de una asignatura y obtener su semestre
+        const asignaturaApunte = await Asignatura.findOne({
+            nombre: apunte.asignatura
+        });
+
+        if (!asignaturaApunte) {
+            return 0.5; // Score neutro si no se encuentra la asignatura
+        }
+
+        // 3. Calcular score basado en coincidencia de semestre y frescura
+        if (semestres.includes(asignaturaApunte.semestre)) {
+            // El apunte ES de uno de los semestres que está cursando
+            const diasDesdeSubida = (new Date() - new Date(apunte.fechaSubida)) / (1000 * 60 * 60 * 24);
+
+            // Priorizar apuntes recientes de semestres actuales
+            if (diasDesdeSubida < 7) return 1.0;      // < 1 semana: excelente
+            if (diasDesdeSubida < 30) return 0.9;     // < 1 mes: muy bueno
+            if (diasDesdeSubida < 90) return 0.7;     // < 3 meses: bueno
+            return 0.6;                                // Más antiguo pero del semestre: aceptable
+        }
+
+        // El apunte NO es de los semestres actuales
+        return 0.4; // Menor prioridad para semestres diferentes
+    } catch (error) {
+        console.error('Error calculando score de semestre:', error);
+        return 0.5; // Score neutro en caso de error
+    }
 }
 
 /**
@@ -471,14 +529,17 @@ export async function obtenerRecomendacionesPorAsignaturaService(rutUser, asigna
         // Si hay usuario con perfil, aplicar scoring
         let recomendaciones;
         if (usuario) {
-            recomendaciones = apuntes.map(apunte => {
-                const score = calcularScoreFinal(apunte, usuario, null);
-                return {
-                    apunte,
-                    scoreRecomendacion: parseFloat(score.toFixed(3)),
-                    razonRecomendacion: generarExplicacionRecomendacion(apunte, usuario, score)
-                };
-            }).sort((a, b) => b.scoreRecomendacion - a.scoreRecomendacion);
+            recomendaciones = await Promise.all(
+                apuntes.map(async (apunte) => {
+                    const score = await calcularScoreFinal(apunte, usuario, null);
+                    return {
+                        apunte,
+                        scoreRecomendacion: parseFloat(score.toFixed(3)),
+                        razonRecomendacion: generarExplicacionRecomendacion(apunte, usuario, score)
+                    };
+                })
+            );
+            recomendaciones.sort((a, b) => b.scoreRecomendacion - a.scoreRecomendacion);
         } else {
             recomendaciones = apuntes.map(apunte => ({
                 apunte,

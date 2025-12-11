@@ -500,3 +500,24 @@ export async function registrarDeleteEncuestaService(rutUser, encuestaID) {
         return [null, 'Error interno del servidor'];
     }
 }
+
+export async function obtenerMiHistorialService(rutUser) {
+    try {
+        console.log(rutUser);
+
+        const userExist = await User.findOne({ rut: rutUser });
+
+        if (!userExist) return [null, 'El usuario no existe'];
+
+        const historialUsuario = await HistorialUsuario.findOne({ rutUser: rutUser });
+
+        if (!historialUsuario) return [null, 'El usuario no tiene historial registrado'];
+
+        console.log(historialUsuario.acciones);
+
+        return [historialUsuario.acciones, null];
+    } catch (error) {
+        console.error('Error al obtener el historial del usuario:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}

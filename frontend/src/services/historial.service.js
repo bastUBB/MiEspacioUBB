@@ -12,3 +12,16 @@ export async function getHistorialUsuarioService(rutUser) {
         throw error;
     }
 }
+
+export async function getMiHistorialService(rutUser) {
+    try {
+        const response = await axios.get('/api/historial/mi-historial', {
+            params: { rutUser }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al obtener mi historial:", error);
+        throw error;
+    }
+}

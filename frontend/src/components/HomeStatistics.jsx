@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../context/userContextProvider';
 import { TrendingUp, Award, FileText, Star, Download, Eye, Calendar, Trophy } from 'lucide-react';
 import { obtenerMisApuntesByRutService, obtenerMejorApunteUserService } from '../services/apunte.service';
+import { obtenerPopularidadUserService, obtenerValoracionPromedioApuntesService } from '../services/perfilAcademico.service';
 import { formatDateToLocal } from '../helpers/dateFormatter.helper';
 import { toast } from 'react-hot-toast';
 
@@ -13,7 +14,7 @@ function HomeStatistics() {
         totalVisualizaciones: 0,
         totalDescargas: 0,
         promedioValoracion: 0,
-        reputacion: 0,
+        popularidad: 0,
         mejorApunte: null
     });
     const [misApuntes, setMisApuntes] = useState([]);
@@ -48,21 +49,35 @@ function HomeStatistics() {
                 // Calcular estadísticas
                 const totalVisualizaciones = apuntes.reduce((sum, a) => sum + (a.visualizaciones || 0), 0);
                 const totalDescargas = apuntes.reduce((sum, a) => sum + (a.descargas || 0), 0);
-                const totalValoraciones = apuntes.reduce((sum, a) => sum + (a.valoracion?.cantidadValoraciones || 0), 0);
 
-                const promedioValoracion = apuntes.length > 0
-                    ? apuntes.reduce((sum, a) => sum + (a.valoracion?.promedioValoracion || 0), 0) / apuntes.length
-                    : 0;
+                // Obtener valoración promedio desde el backend
+                let promedioValoracion = 0;
+                try {
+                    const valoracionResponse = await obtenerValoracionPromedioApuntesService(user.rut);
+                    if (valoracionResponse.status === 'Success') {
+                        promedioValoracion = valoracionResponse.data || 0;
+                    }
+                } catch (error) {
+                    console.error('Error obteniendo valoración promedio:', error);
+                }
 
-                // Calcular reputación: (Apuntes * 50) + (Valoraciones * 10)
-                const reputacion = (apuntes.length * 50) + (totalValoraciones * 10);
+                // Obtener popularidad desde el backend
+                let popularidad = 0;
+                try {
+                    const popularidadResponse = await obtenerPopularidadUserService(user.rut);
+                    if (popularidadResponse.status === 'Success') {
+                        popularidad = popularidadResponse.data || 0;
+                    }
+                } catch (error) {
+                    console.error('Error obteniendo popularidad:', error);
+                }
 
                 setStats({
                     totalApuntes: apuntes.length,
                     totalVisualizaciones,
                     totalDescargas,
                     promedioValoracion,
-                    reputacion,
+                    popularidad,
                     mejorApunte
                 });
 
@@ -80,7 +95,7 @@ function HomeStatistics() {
                     totalVisualizaciones: 0,
                     totalDescargas: 0,
                     promedioValoracion: 0,
-                    reputacion: 0,
+                    popularidad: 0,
                     mejorApunte: null
                 });
             } finally {
@@ -155,10 +170,10 @@ function HomeStatistics() {
                     <div className="flex items-center justify-between mb-2">
                         <Trophy className="w-8 h-8 text-orange-200" />
                         <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-full">
-                            Reputación
+                            Popularidad
                         </span>
                     </div>
-                    <p className="text-2xl font-bold text-gray-900">{stats.reputacion}</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.popularidad}</p>
                     <p className="text-xs text-gray-500">Puntos</p>
                 </div>
             </div>

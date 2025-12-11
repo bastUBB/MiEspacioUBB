@@ -2,6 +2,7 @@ import perfilAcademico from "../models/perfilAcademico.model.js";
 import User from "../models/user.model.js";
 import Asignatura from "../models/asignatura.model.js";
 import Apunte from "../models/apunte.model.js";
+import Comentario from "../models/comentario.model.js";
 import { registrarCreacionPerfilAcademicoService, registrarActualizacionPerfilAcademicoService } from "./historial.service.js";
 
 export async function createPerfilAcademicoService(dataPerfilAcademico) {
@@ -364,21 +365,16 @@ export async function obtenerValoracionPromedioApuntesService(rutUser) {
 
         if (!apuntes || apuntes.length === 0) return [0, null];
 
-        const { sumaTotal, cantidadTotal } = apuntes.reduce((acc, apunte) => {
-            const cantidadValoraciones = apunte.valoracion?.cantidadValoraciones || 0;
+        // Calcular promedio simple de las valoraciones de los apuntes
+        const sumaPromedios = apuntes.reduce((sum, apunte) => {
+            return sum + (apunte.valoracion?.promedioValoracion || 0);
+        }, 0);
 
-            const promedioValoracion = apunte.valoracion?.promedioValoracion || 0;
+        const valoracionPromedio = apuntes.length > 0 ? sumaPromedios / apuntes.length : 0;
 
-            const sumaApunte = promedioValoracion * cantidadValoraciones;
+        perfil.valoracionPromedioApuntes = valoracionPromedio;
 
-            return {
-                sumaTotal: acc.sumaTotal + sumaApunte,
-
-                cantidadTotal: acc.cantidadTotal + cantidadValoraciones
-            };
-        }, { sumaTotal: 0, cantidadTotal: 0 });
-
-        const valoracionPromedio = cantidadTotal > 0 ? sumaTotal / cantidadTotal : 0;
+        await perfil.save();
 
         return [valoracionPromedio, null];
     } catch (error) {
@@ -427,5 +423,53 @@ export async function obtenerMayoresContribuidoresService() {
     }
 }
 
+export async function obtenerPopularidadUsuarioService(rutUser) {
+    try {
+        const userExist = await User.findOne({ rut: rutUser });
 
+        if (!userExist) return [null, 'No existe un usuario con el RUT proporcionado'];
 
+        const perfil = await perfilAcademico.findOne({ rutUser: rutUser });
+
+        if (!perfil) return [null, 'No existe un perfil académico para los datos proporcionados'];
+
+        // obtener la valoracion promedio de los apuntes del usuario
+        const valoracionPromedioApuntes = perfil.valoracionPromedioApuntes;
+
+        if (!valoracionPromedioApuntes) return [null, 'El usuario no ha realizado valoraciones de apuntes'];
+
+        // obtener todos los apuntes del usuario
+        const apuntes = await Apunte.find({ rutAutorSubida: rutUser });
+
+        if (!apuntes || apuntes.length === 0) return [null, 'El usuario no ha subido apuntes'];
+
+        // cantidad de apuntes
+        const cantidadApuntes = apuntes.length;
+
+        if (!cantidadApuntes) return [null, 'El usuario no ha subido apuntes'];
+
+        // obtener cantidad apuntes descargados
+        const cantidadApuntesDescargados = perfil.apuntesDescargados;
+
+        if (!cantidadApuntesDescargados || cantidadApuntesDescargados === 0) return [null, 'El usuario no ha descargado apuntes'];
+
+        // obtener cantidad apuntes valorados
+        const cantidadApuntesValorados = perfil.apuntesValorados.length;
+
+        // obtener la cantidad de comentarios que ha realizado el usuario a diversos apuntes
+        const cantidadComentarios = await Comentario.countDocuments({ rutUsuario: rutUser });
+
+        // formula simple de popularidad
+        const popularidad = (cantidadApuntes * valoracionPromedioApuntes) + (cantidadComentarios * 0.1) + (cantidadApuntesValorados * 0.05);
+
+        // Guardar popularidad en el perfil
+        perfil.popularidad = popularidad;
+
+        await perfil.save();
+
+        return [popularidad, null];
+    } catch (error) {
+        console.error('Error al obtener la popularidad del usuario:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}

@@ -51,20 +51,23 @@ const perfilAcademicoSchema = mongoose.Schema({
     }],
     apuntesSubidos: {
         type: Number,
-        cast: false
+        cast: false,
+        default: 0
     },
     valoracionPromedioApuntes: {
         type: Number,
-        cast: false
+        cast: false,
+        default: 0
     },
     apuntesDescargados: {
         type: Number,
-        cast: false
+        cast: false,
+        default: 0
     },
-    //TODO: Pensar bien en un sistema completo de reputacion
-    reputacion: {
+    popularidad: {
         type: Number,
-        cast: false
+        cast: false,
+        default: 0
     },
     apuntesIDs: [{
         type: mongoose.Schema.Types.ObjectId,

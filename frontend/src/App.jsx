@@ -41,6 +41,7 @@ import MisEncuestas from './pages/admin/MisEncuestas.jsx'
 import { Toaster } from 'react-hot-toast'
 import { UserContextProvider } from './context/userContextProvider.jsx'
 import { SocketProvider } from './context/SocketContext.jsx'
+import { NotificationProvider } from './context/NotificationContext.jsx'
 import { RoleProtectedRoute, UnauthorizedPage } from './components/roleProtectedRoute.jsx'
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
 
@@ -85,22 +86,24 @@ function App() {
     <div className="w-screen h-screen overflow-y-auto">
       <UserContextProvider>
         <SocketProvider>
-          {!hideNavbar}
-          <Toaster position="bottom-right" toastOptions={{ duration: 2000 }} />
-          <Routes>
+          <NotificationProvider>
+            {!hideNavbar}
+            <Toaster position="bottom-right" toastOptions={{ duration: 2000 }} />
+            <Routes>
 
-            <Route path="/login" element={<Login />} />
+              <Route path="/login" element={<Login />} />
 
-            <Route path="/register" element={<Register />} />
+              <Route path="/register" element={<Register />} />
 
-            <Route path="/verify-email/:token" element={<VerifyEmail />} />
+              <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
-            {/* Rutas protegidas */}
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <RedireccionRol />
-              </ProtectedRoute>
-            } />
+              {/* Rutas protegidas */}
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <RedireccionRol />
+                </ProtectedRoute>
+              } />
+
 
             {/* Redirigir raíz al dashboard (maneja autenticación y rol) */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -183,6 +186,7 @@ function App() {
 
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </NotificationProvider>
         </SocketProvider>
       </UserContextProvider>
     </div>

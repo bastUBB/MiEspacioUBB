@@ -11,7 +11,6 @@ import SubirApunteModal from '../../components/SubirApunteModal';
 import SubirEncuestaModal from '../../components/SubirEncuestaModal';
 import { obtenerApuntesMasValoradosService, obtenerApuntesMasVisualizadosService, obtenerAsignaturasConMasApuntesService } from '../../services/apunte.service';
 import { obtenerMisApuntesByRutService } from '../../services/apunte.service';
-import { obtenerTodasMisNotificacionesService, actualizarEstadoLeidoService, borrarNotificacionesLeidasService } from '../../services/notificacion.service';
 import { numeroApuntesUserService, obtenerMayoresContribuidoresService } from '../../services/perfilAcademico.service';
 
 function HomeDocente() {
@@ -24,8 +23,6 @@ function HomeDocente() {
     // Estados para datos del backend
     const [apuntes, setApuntes] = useState([]);
 
-    const [notifications, setNotifications] = useState([]);
-    const [notificationCount, setNotificationCount] = useState(0);
     const [userStats, setUserStats] = useState({
         notesUploaded: 0,
         ratingsReceived: 0,
@@ -247,51 +244,6 @@ function HomeDocente() {
         };
     }, [user]);
 
-    // Cargar notificaciones
-    useEffect(() => {
-        let isMounted = true;
-        let interval;
-
-        const fetchNotifications = async () => {
-            if (!user?.rut) {
-                return;
-            }
-
-            try {
-                const response = await obtenerTodasMisNotificacionesService(user.rut);
-
-                if (!isMounted) return;
-
-                if (response.status === 'Success' && response.data) {
-                    const notifArray = Array.isArray(response.data) ? response.data : [];
-                    setNotifications(notifArray);
-                    setNotificationCount(notifArray.length);
-                } else {
-                    setNotifications([]);
-                    setNotificationCount(0);
-                }
-            } catch (error) {
-                if (!isMounted) return;
-
-                setNotifications([]);
-                setNotificationCount(0);
-
-                console.error('Error cargando notificaciones:', error);
-            }
-        };
-
-        if (user && user.rut) {
-            fetchNotifications();
-
-            interval = setInterval(fetchNotifications, 30000);
-        }
-
-        return () => {
-            isMounted = false;
-            if (interval) clearInterval(interval);
-        };
-    }, [user]);
-
     // Obtener top apuntes por valoración
     const getTopApuntes = () => {
         const sortedApuntes = [...apuntes].sort((a, b) => {
@@ -305,42 +257,6 @@ function HomeDocente() {
             rating: apunte.valoracion?.promedioValoracion || 0,
             author: apunte.autorSubida
         }));
-    };
-
-    // Navegación específica para Docente
-    const handleHomeClick = () => {
-        navigate('/docente/home');
-    };
-
-    const handleProfileClick = () => {
-        navigate('/docente/profile');
-    };
-
-    const handleExplorarClick = () => {
-        navigate('/docente/explorar');
-    };
-
-    const handleMisApuntesClick = () => {
-        navigate('/docente/mis-aportes');
-    };
-
-    const handleEstadisticasClick = () => {
-        navigate('/docente/estadisticas');
-    };
-
-    const handleConfigClick = () => {
-        navigate('/docente/configuracion');
-    };
-
-    const handleEncuestasClick = () => {
-        navigate('/docente/encuestas');
-    };
-
-    const handleLogout = () => {
-        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        localStorage.removeItem('user');
-        toast.success('Sesión cerrada exitosamente');
-        navigate('/login');
     };
 
     const handleUploadClick = () => {
@@ -377,53 +293,6 @@ function HomeDocente() {
         }
     };
 
-    const handleNotificationClick = async (notification) => {
-        try {
-            await actualizarEstadoLeidoService(notification._id);
-
-            setNotifications(prev => prev.filter(n => n._id !== notification._id));
-            setNotificationCount(prev => Math.max(0, prev - 1));
-
-            toast.success('Notificación marcada como leída');
-        } catch (error) {
-            console.error('Error al marcar notificación como leída:', error);
-            toast.error('Error al marcar la notificación');
-        }
-    };
-
-    const handleMarkAsRead = async (notificationId) => {
-        try {
-            await actualizarEstadoLeidoService(notificationId);
-
-            setNotifications(prev => prev.filter(n => n._id !== notificationId));
-            setNotificationCount(prev => Math.max(0, prev - 1));
-
-            toast.success('Notificación marcada como leída');
-        } catch (error) {
-            console.error('Error al marcar notificación como leída:', error);
-            toast.error('Error al marcar la notificación');
-        }
-    };
-
-    const handleClearAll = async () => {
-        if (!user?.rut) return;
-
-        try {
-            const markPromises = notifications.map(n => actualizarEstadoLeidoService(n._id));
-            await Promise.all(markPromises);
-
-            await borrarNotificacionesLeidasService(user.rut);
-
-            setNotifications([]);
-            setNotificationCount(0);
-
-            toast.success('Todas las notificaciones han sido marcadas como leídas');
-        } catch (error) {
-            console.error('Error al limpiar notificaciones:', error);
-            toast.error('Error al limpiar las notificaciones');
-        }
-    };
-
     if (userLoading) {
         return (
             <div className="flex items-center justify-center h-screen">
@@ -434,21 +303,7 @@ function HomeDocente() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
-            <Header
-                notificationCount={notificationCount}
-                notifications={notifications}
-                onNotificationClick={handleNotificationClick}
-                onMarkAsRead={handleMarkAsRead}
-                onClearAll={handleClearAll}
-                onProfileClick={handleProfileClick}
-                onHomeClick={handleHomeClick}
-                onExplorarClick={handleExplorarClick}
-                onMisApuntesClick={handleMisApuntesClick}
-                onEstadisticasClick={handleEstadisticasClick}
-                onEncuestasClick={handleEncuestasClick}
-                onLogout={handleLogout}
-                onConfigClick={handleConfigClick}
-            />
+            <Header />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">

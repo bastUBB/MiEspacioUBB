@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { UserContext } from './userContextProvider';
 
-const SocketContext = createContext();
+export const SocketContext = createContext();
 
 export function SocketProvider({ children }) {
     const { user } = useContext(UserContext);

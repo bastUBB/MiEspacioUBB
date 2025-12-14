@@ -55,4 +55,15 @@ export function getActiveUsersList() {
     return Array.from(usuariosActivos.values());
 }
 
+// Función para emitir evento a un usuario específico por RUT
+export function emitToUser(rut, event, data) {
+    if (!io) return;
+
+    for (const [socketId, userData] of usuariosActivos.entries()) {
+        if (userData.rut === rut) {
+            io.to(socketId).emit(event, data);
+        }
+    }
+}
+
 export { io };

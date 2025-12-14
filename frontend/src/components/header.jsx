@@ -1,14 +1,16 @@
 import { useState, useRef, useEffect, useContext } from 'react';
-import { Bell, User, BookOpen, BarChart3, FileText, Home, Compass, Check, LogOut, ChevronDown } from 'lucide-react';
+import { Bell, User, BookOpen, BarChart3, FileText, Home, Compass, Check, LogOut, ChevronDown, MessageSquare, Star, ThumbsUp, ThumbsDown, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { UserContext } from '../context/userContextProvider';
+import { NotificationContext } from '../context/NotificationContext';
 import { toast } from 'react-hot-toast';
 import logoMiEspacioUBB from '../assets/logo_miespacioubb.svg';
 
-const Header = ({ notificationCount = 0, notifications = [], onNotificationClick, onMarkAsRead, onClearAll }) => {
+const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
+  const { notifications, unreadCount, markAsRead, clearAll } = useContext(NotificationContext);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showExplorarMenu, setShowExplorarMenu] = useState(false);
@@ -75,19 +77,19 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
     switch (tipo) {
       case 'Nuevo comentario':
       case 'Respuesta a comentario':
-        return '💬';
+        return <MessageSquare className="w-5 h-5 text-blue-500" />;
       case 'Nueva valoración apunte':
-        return '⭐';
+        return <Star className="w-5 h-5 text-yellow-500" />;
       case 'Nuevo Like':
-        return '👍';
+        return <ThumbsUp className="w-5 h-5 text-green-500" />;
       case 'Nuevo Dislike':
-        return '👎';
+        return <ThumbsDown className="w-5 h-5 text-red-500" />;
       case 'Nuevo reporte':
-        return '🚨';
+        return <AlertTriangle className="w-5 h-5 text-orange-500" />;
       case 'Reporte resuelto':
-        return '✅';
+        return <CheckCircle className="w-5 h-5 text-green-600" />;
       default:
-        return '🔔';
+        return <Bell className="w-5 h-5 text-purple-500" />;
     }
   };
 
@@ -178,34 +180,32 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
                 className="relative p-2 text-gray-600 hover:text-purple-600 transition-colors"
               >
                 <Bell className="w-5 h-5" />
-                {notificationCount > 0 && (
+                {unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
-                    {notificationCount > 9 ? '9+' : notificationCount}
+                    {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
               </button>
 
               {/* Dropdown de notificaciones */}
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-purple-100 overflow-hidden">
-                  <div className="bg-gradient-to-r from-purple-600 via-violet-600 to-cyan-500 px-6 py-4">
+                <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
+                  <div className="px-5 py-4 border-b border-gray-100 bg-white">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Bell className="w-5 h-5 text-white" />
-                        <h3 className="text-white font-bold text-lg">Notificaciones</h3>
-                        {notifications.length > 0 && (
-                          <span className="bg-white/20 text-white text-xs font-semibold px-2 py-1 rounded-full">
-                            {notifications.length}
+                        <h3 className="text-gray-800 font-bold text-lg">Notificaciones</h3>
+                        {unreadCount > 0 && (
+                          <span className="bg-purple-100 text-purple-600 text-xs font-bold px-2 py-0.5 rounded-full">
+                            {unreadCount}
                           </span>
                         )}
                       </div>
                       {notifications.length > 0 && (
                         <button
-                          onClick={onClearAll}
-                          className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-200 hover:scale-105"
+                          onClick={clearAll}
+                          className="text-xs font-medium text-gray-500 hover:text-purple-600 transition-colors"
                         >
-                          <Check className="w-4 h-4" />
-                          <span>Marcar todas</span>
+                          Marcar todas como leídas
                         </button>
                       )}
                     </div>
@@ -213,64 +213,57 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
 
                   <div className="max-h-[32rem] overflow-y-auto">
                     {notifications.length === 0 ? (
-                      <div className="p-12 text-center">
-                        <div className="bg-gradient-to-br from-purple-50 to-violet-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <Bell className="w-10 h-10 text-purple-300" />
+                      <div className="p-8 text-center">
+                        <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <Bell className="w-8 h-8 text-gray-400" />
                         </div>
-                        <p className="text-gray-500 font-medium">No tienes notificaciones nuevas</p>
-                        <p className="text-gray-400 text-sm mt-1">Te avisaremos cuando haya algo nuevo</p>
+                        <p className="text-gray-600 font-medium">Sin notificaciones</p>
+                        <p className="text-gray-400 text-xs mt-1">Te avisaremos cuando haya actividad</p>
                       </div>
                     ) : (
                       <div>
                         {notifications.map((notif, index) => (
                           <div
                             key={notif._id}
-                            className={`p-4 hover:bg-gradient-to-r hover:from-purple-50 hover:to-violet-50 transition-all duration-200 cursor-pointer group border-b border-gray-100 ${index === notifications.length - 1 ? 'border-b-0' : ''
-                              }`}
+                            className={`p-4 hover:bg-gray-50 transition-colors duration-200 cursor-pointer border-b border-gray-50 ${index === notifications.length - 1 ? 'border-b-0' : ''
+                              } ${!notif.estadoLeido ? 'bg-purple-50/30' : ''}`}
                             onClick={() => {
                               if (notif.apunteId) {
                                 setShowNotifications(false);
                                 navigate(`/${role}/apunte/${notif.apunteId}`);
-                              } else {
-                                onNotificationClick && onNotificationClick(notif);
+                              }
+                              if (!notif.estadoLeido) {
+                                markAsRead(notif._id);
                               }
                             }}
                           >
                             <div className="flex items-start gap-3">
                               <div className="flex-shrink-0">
-                                <div className={`w-10 h-10 ${notif.apunteId ? 'bg-gradient-to-br from-purple-200 to-violet-200' : 'bg-gradient-to-br from-purple-100 to-violet-100'} rounded-full flex items-center justify-center text-xl`}>
+                                <div className={`w-10 h-10 ${notif.apunteId ? 'bg-purple-50 text-purple-600' : 'bg-gray-50 text-gray-600'} rounded-full flex items-center justify-center text-xl`}>
                                   {getNotificationIcon(notif.tipoNotificacion)}
                                 </div>
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <p className="text-sm font-bold text-gray-900 mb-0.5">
+                                  <p className="text-sm font-semibold text-gray-800 mb-0.5">
                                     {notif.tipoNotificacion}
                                   </p>
                                   {notif.apunteId && (
-                                    <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">Ver apunte</span>
+                                    <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded border border-gray-200">Ver apunte</span>
                                   )}
                                 </div>
-                                <p className="text-sm text-gray-600 leading-relaxed">
+                                <p className="text-sm text-gray-500 leading-relaxed">
                                   {notif.mensaje}
                                 </p>
-                                <p className="text-xs text-purple-600 font-medium mt-1.5">
+                                <p className="text-xs text-gray-400 mt-1.5">
                                   {formatFecha(notif.createdAt)}
                                 </p>
                               </div>
-                              <div className="flex-shrink-0">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onMarkAsRead && onMarkAsRead(notif._id);
-                                  }}
-                                  className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white rounded-lg transition-all duration-200 hover:scale-105 text-xs font-medium shadow-sm"
-                                  title="Marcar como leída"
-                                >
-                                  <Check className="w-3.5 h-3.5" />
-                                  <span>Leída</span>
-                                </button>
-                              </div>
+                              {!notif.estadoLeido && (
+                                <div className="flex-shrink-0 self-center">
+                                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -281,39 +274,60 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
               )}
             </div>
 
+            {/* Profile Menu */}
             <div className="relative" ref={profileMenuRef}>
               <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="transition-transform hover:scale-110"
+                className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors focus:outline-none"
               >
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-violet-600 rounded-full flex items-center justify-center cursor-pointer">
-                  <User className="w-4 h-4 text-white" />
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold shadow-md">
+                  {user?.nombreCompleto?.charAt(0).toUpperCase() || <User className="w-5 h-5" />}
                 </div>
+                <span className="hidden md:block font-medium max-w-[100px] truncate">
+                  {user?.nombreCompleto?.split(' ')[0] || 'Usuario'}
+                </span>
+                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} />
               </button>
 
-              {/* Dropdown de perfil */}
               {showProfileMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
-                  <button
-                    onClick={() => {
-                      setShowProfileMenu(false);
-                      handleProfileClick();
-                    }}
-                    className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 text-gray-700 hover:text-purple-600"
-                  >
-                    <User className="w-4 h-4" />
-                    <span className="font-medium">Mi Perfil</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowProfileMenu(false);
-                      handleLogout();
-                    }}
-                    className="w-full px-4 py-3 text-left hover:bg-red-50 transition-colors flex items-center gap-3 text-red-600 hover:text-red-700 border-t border-gray-100"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span className="font-medium">Cerrar Sesión</span>
-                  </button>
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden py-1 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                    <p className="text-sm font-bold text-gray-900 truncate">{user?.nombreCompleto}</p>
+                    <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                  </div>
+                  
+                  <div className="py-1">
+                    <button
+                      onClick={() => {
+                        setShowProfileMenu(false);
+                        handleProfileClick();
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 flex items-center gap-2 transition-colors"
+                    >
+                      <User className="w-4 h-4" />
+                      Mi Perfil
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowProfileMenu(false);
+                        handleMisAportesClick();
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 flex items-center gap-2 transition-colors"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Mis Aportes
+                    </button>
+                  </div>
+
+                  <div className="border-t border-gray-100 py-1">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Cerrar Sesión
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

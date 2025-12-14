@@ -1,5 +1,6 @@
 import Notificacion from "../models/notificacion.model.js";
 import User from "../models/user.model.js";
+import { emitToUser } from '../config/configSocket.js';
 
 /*.valid('Nuevo comentario', 'Respuesta a comentario' 'Nuevo reporte', 'Apunte compartido (solo si implemento un modulo especifico)', 
 'Reporte resuelto', 'Nueva valoración apunte', 'Nuevo Like', 'Nuevo Dislike', ) */
@@ -40,6 +41,9 @@ export async function notificacionNuevoComentarioApunteService(rutUsuarioComenta
 
         await usuarioDestinatario.save();
 
+        // Emitir evento de socket
+        emitToUser(rutUsuarioDestinatario, 'notification:new', nuevaNotificacion);
+
         return [nuevaNotificacion, null];
     } catch (error) {
         console.error('Error al crear la notificación:', error);
@@ -69,6 +73,9 @@ export async function notificacionRespuestaComentarioService(rutUsuarioRespuesta
 
         await usuarioDestinatario.save();
 
+        // Emitir evento de socket
+        emitToUser(rutUsuarioDestinatario, 'notification:new', nuevaNotificacion);
+
         return [nuevaNotificacion, apunteID, null];
     } catch (error) {
         console.error('Error al crear la notificación:', error);
@@ -95,6 +102,8 @@ export async function notificacionNuevosReportesService(cantidadReportesPendient
         for (const admin of admins) {
             admin.notificaciones.push(nuevaNotificacion._id);
             await admin.save();
+            // Emitir evento de socket a cada admin
+            emitToUser(admin.rut, 'notification:new', nuevaNotificacion);
         }
         return [nuevaNotificacion, null];
     } catch (error) {

@@ -61,3 +61,14 @@ export async function obtenerCantidadReportesPendientesService() {
         throw error;
     }
 }
+
+export async function obtenerReportesService() {
+    try {
+        const response = await axios.get('/api/reportes/all-reportes');
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al obtener reportes:", error);
+        throw error;
+    }
+}

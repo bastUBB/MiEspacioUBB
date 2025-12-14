@@ -35,7 +35,7 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
   }, []);
 
   // Handlers de navegación
-  const role = user?.rol || 'estudiante';
+  const role = user?.role || 'estudiante';
 
   const handleHomeClick = () => navigate(`/${role}/home`);
   const handleProfileClick = () => navigate(`/${role}/profile`);
@@ -227,18 +227,30 @@ const Header = ({ notificationCount = 0, notifications = [], onNotificationClick
                             key={notif._id}
                             className={`p-4 hover:bg-gradient-to-r hover:from-purple-50 hover:to-violet-50 transition-all duration-200 cursor-pointer group border-b border-gray-100 ${index === notifications.length - 1 ? 'border-b-0' : ''
                               }`}
-                            onClick={() => onNotificationClick && onNotificationClick(notif)}
+                            onClick={() => {
+                              if (notif.apunteId) {
+                                setShowNotifications(false);
+                                navigate(`/${role}/apunte/${notif.apunteId}`);
+                              } else {
+                                onNotificationClick && onNotificationClick(notif);
+                              }
+                            }}
                           >
                             <div className="flex items-start gap-3">
                               <div className="flex-shrink-0">
-                                <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-violet-100 rounded-full flex items-center justify-center text-xl">
+                                <div className={`w-10 h-10 ${notif.apunteId ? 'bg-gradient-to-br from-purple-200 to-violet-200' : 'bg-gradient-to-br from-purple-100 to-violet-100'} rounded-full flex items-center justify-center text-xl`}>
                                   {getNotificationIcon(notif.tipoNotificacion)}
                                 </div>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-bold text-gray-900 mb-0.5">
-                                  {notif.tipoNotificacion}
-                                </p>
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm font-bold text-gray-900 mb-0.5">
+                                    {notif.tipoNotificacion}
+                                  </p>
+                                  {notif.apunteId && (
+                                    <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">Ver apunte</span>
+                                  )}
+                                </div>
                                 <p className="text-sm text-gray-600 leading-relaxed">
                                   {notif.mensaje}
                                 </p>

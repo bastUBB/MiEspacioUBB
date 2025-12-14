@@ -6,6 +6,7 @@ import { FileText, Star, Eye, Edit2, Trash2, Filter, Calendar, Download } from '
 import Header from '../components/header';
 import { obtenerMisApuntesByRutService } from '../services/apunte.service';
 import { parseCustomDate, formatDateToLocal } from '../helpers/dateFormatter.helper';
+import { getRoleBasePath } from '../helpers/roleBasePath.helper';
 
 function MisApuntes() {
   const { user, loading: userLoading } = useContext(UserContext);
@@ -16,6 +17,9 @@ function MisApuntes() {
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all'); // all, active, inactive
   const [sortBy, setSortBy] = useState('recent');
+
+  // Obtener el prefijo de ruta basado en el rol del usuario
+  const basePath = getRoleBasePath(user?.role);
 
   useEffect(() => {
     if (!userLoading && !user) {
@@ -70,12 +74,12 @@ function MisApuntes() {
     setFilteredApuntes(filtered);
   }, [filterStatus, sortBy, apuntes]);
 
-  const handleHomeClick = () => navigate('/estudiante/home');
-  const handleProfileClick = () => navigate('/estudiante/profile');
-  const handleExplorarClick = () => navigate('/estudiante/explorar');
+  const handleHomeClick = () => navigate(`${basePath}/home`);
+  const handleProfileClick = () => navigate(`${basePath}/profile`);
+  const handleExplorarClick = () => navigate(`${basePath}/explorar`);
   const handleMisApuntesClick = () => { }; // Ya estamos aquí
-  const handleEstadisticasClick = () => navigate('/estudiante/estadisticas');
-  const handleConfigClick = () => navigate('/estudiante/configuracion');
+  const handleEstadisticasClick = () => navigate(`${basePath}/estadisticas`);
+  const handleConfigClick = () => navigate(`${basePath}/configuracion`);
 
   const handleLogout = () => {
     document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
@@ -281,7 +285,7 @@ function MisApuntes() {
             <h3 className="text-xl font-semibold text-gray-600 mb-2">No tienes apuntes</h3>
             <p className="text-gray-500 mb-4">Comienza a compartir tu conocimiento con la comunidad</p>
             <button
-              onClick={() => navigate('/estudiante/home')}
+              onClick={() => navigate(`${basePath}/home`)}
               className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors cursor-pointer"
             >
               Subir mi primer apunte

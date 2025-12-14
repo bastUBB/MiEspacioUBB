@@ -14,7 +14,10 @@ import {
     obtenerApuntesMasComentadosService,
     obtenerCrecimientoMensualService,
     obtenerApunteMasDescargadoService,
-    obtenerDiaMasSemanaActivoService
+    obtenerDiaMasSemanaActivoService,
+    obtenerAsignaturasSinApuntesService,
+    obtenerReportesPendientesService,
+    obtenerUltimosReportesService
 } from '../services/estadisticas.service.js';
 import { handleErrorServer, handleSuccess } from '../handlers/responseHandlers.js';
 
@@ -206,6 +209,42 @@ export async function obtenerDiaMasSemanaActivo(req, res) {
         return handleSuccess(res, 200, 'Día más activo obtenido', data);
     } catch (error) {
         console.error('Error en obtenerDiaMasSemanaActivo:', error);
+        return handleErrorServer(res, 500, 'Error interno del servidor');
+    }
+}
+
+// 25. Asignaturas Sin Apuntes
+export async function obtenerAsignaturasSinApuntes(req, res) {
+    try {
+        const [data, error] = await obtenerAsignaturasSinApuntesService();
+        if (error) return handleErrorServer(res, 500, error);
+        return handleSuccess(res, 200, 'Asignaturas sin apuntes obtenidas', data);
+    } catch (error) {
+        console.error('Error en obtenerAsignaturasSinApuntes:', error);
+        return handleErrorServer(res, 500, 'Error interno del servidor');
+    }
+}
+
+// 26. Reportes Pendientes
+export async function obtenerReportesPendientes(req, res) {
+    try {
+        const [data, error] = await obtenerReportesPendientesService();
+        if (error) return handleErrorServer(res, 500, error);
+        return handleSuccess(res, 200, 'Reportes pendientes obtenidos', data);
+    } catch (error) {
+        console.error('Error en obtenerReportesPendientes:', error);
+        return handleErrorServer(res, 500, 'Error interno del servidor');
+    }
+}
+
+// 27. Últimos Reportes
+export async function obtenerUltimosReportes(req, res) {
+    try {
+        const [data, error] = await obtenerUltimosReportesService();
+        if (error) return handleErrorServer(res, 500, error);
+        return handleSuccess(res, 200, 'Últimos reportes obtenidos', data);
+    } catch (error) {
+        console.error('Error en obtenerUltimosReportes:', error);
         return handleErrorServer(res, 500, 'Error interno del servidor');
     }
 }

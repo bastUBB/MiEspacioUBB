@@ -20,7 +20,9 @@ import {
     obtenerLinkDescargaApunteURLFirmadaService,
     sumarDescargaApunteUsuarioService,
     obtenerMejorApunteUserService,
-    obtenerApuntesRandomService
+    obtenerApuntesRandomService,
+    cambiarEstadoApunteService,
+    eliminarValoracionApunteService
 } from '../services/apunte.service.js';
 import {
     busquedaApuntesMismoAutorService,
@@ -29,7 +31,7 @@ import {
 import { comentarioCreateValidation, comentarioRespuestaValidation } from '../validations/comentario.validation.js';
 import {
     apunteQueryValidation, apunteCreateValidation, apunteUpdateValidation, visualizacionValidation,
-    valoracionValidation
+    valoracionValidation, valoracionDeleteValidation
 } from '../validations/apunte.validation.js';
 import { busquedaApuntesValidation, perfilAcademicoQueryValidation } from '../validations/perfilAcademico.validation.js';
 import { reporteCreateValidation } from '../validations/reporte.validation.js';
@@ -469,5 +471,61 @@ export async function obtenerApuntesRandom(req, res) {
         return handleErrorServer(res, 500, 'Error interno del servidor');
     }
 }
+
+export async function cambiarEstadoApunte(req, res) {
+    try {
+        const { value: valueQuery, error: errorQuery } = apunteQueryValidation.validate(req.query);
+
+        if (errorQuery) return handleErrorClient(res, 400, 'ID de apunte inválido', errorQuery.message);
+
+        const { nuevoEstado, motivo } = req.body;
+
+        if (!nuevoEstado || !motivo) {
+            return handleErrorClient(res, 400, 'Datos incompletos', 'Se requieren nuevoEstado y motivo');
+        }
+
+        if (motivo.length < 10) {
+            return handleErrorClient(res, 400, 'Motivo muy corto', 'El motivo debe tener al menos 10 caracteres');
+        }
+
+        const rutUsuarioAccion = req.user.rut;
+
+        const [resultado, cambioError] = await cambiarEstadoApunteService(
+            valueQuery.apunteID,
+            nuevoEstado,
+            motivo,
+            rutUsuarioAccion
+        );
+
+        if (cambioError) return handleErrorClient(res, 400, 'Error al cambiar estado', cambioError);
+
+        return handleSuccess(res, 200, 'Estado del apunte cambiado exitosamente', resultado);
+    } catch (error) {
+        console.error('Error al cambiar estado del apunte:', error);
+        return handleErrorServer(res, 500, 'Error interno del servidor');
+    }
+}
+
+export async function eliminarValoracionApunte(req, res) {
+    try {
+        const { value: valueID, error: errorID } = apunteQueryValidation.validate(req.query);
+
+        if (errorID) return handleErrorClient(res, 400, 'ID de apunte inválido', errorID.message);
+
+        const { value: valueValoracion, error: errorValoracion } = valoracionDeleteValidation.validate(req.body);
+
+        if (errorValoracion) return handleErrorClient(res, 400, 'Datos de valoración inválidos', errorValoracion.message);
+
+        const [apunteActualizado, valoracionError] = await eliminarValoracionApunteService(valueID.apunteID, valueValoracion.rutUserValoracion);
+
+        if (valoracionError) return handleErrorServer(res, 500, 'Error al eliminar valoración', valoracionError);
+
+        return handleSuccess(res, 200, 'Valoración eliminada exitosamente', apunteActualizado);
+    } catch (error) {
+        console.error('Error al eliminar valoración:', error);
+        return handleErrorServer(res, 500, 'Error interno del servidor');
+    }
+}
+
 
 

@@ -5,6 +5,7 @@ import { BookOpen, MessageSquare } from 'lucide-react';
 import Header from '../components/header';
 import ExplorarApuntes from './ExplorarApuntes';
 import ExploradorEncuestas from './ExploradorEncuestas';
+import { getRoleBasePath } from '../helpers/roleBasePath.helper';
 
 function Explorar() {
     const { user, loading: userLoading } = useContext(UserContext);
@@ -13,6 +14,9 @@ function Explorar() {
 
     // Obtener tab desde URL o default a 'apuntes'
     const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'apuntes');
+
+    // Obtener el prefijo de ruta basado en el rol del usuario
+    const basePath = getRoleBasePath(user?.role);
 
     useEffect(() => {
         if (!userLoading && !user) {
@@ -43,11 +47,11 @@ function Explorar() {
             <Header
                 notificationCount={0}
                 notifications={[]}
-                onHomeClick={() => navigate('/estudiante/home')}
-                onProfileClick={() => navigate('/estudiante/profile')}
+                onHomeClick={() => navigate(`${basePath}/home`)}
+                onProfileClick={() => navigate(`${basePath}/profile`)}
                 onExplorarClick={() => { }} // Ya estamos aquí
-                onMisApuntesClick={() => navigate('/estudiante/mis-aportes')}
-                onEstadisticasClick={() => navigate('/estudiante/estadisticas')}
+                onMisApuntesClick={() => navigate(`${basePath}/mis-aportes`)}
+                onEstadisticasClick={() => navigate(`${basePath}/estadisticas`)}
                 onEncuestasClick={() => setActiveTab('encuestas')}
                 onLogout={() => {
                     localStorage.removeItem('token');

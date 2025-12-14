@@ -1,19 +1,19 @@
 import { useState, useEffect, useContext } from 'react';
-import { UserContext } from '../context/userContextProvider';
+import { UserContext } from '../../context/userContextProvider';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import Header from '../components/header';
-import WelcomeSection from '../components/seccionBienvenido';
-import HomeStatistics from '../components/HomeStatistics';
-import GeneradorRecomendaciones from '../components/GeneradorRecomendaciones';
-import Sidebar from '../components/sidebar';
-import FloatingActionButton from '../components/botonAccionFlotante';
-import SubirApunteModal from '../components/SubirApunteModal';
-import SubirEncuestaModal from '../components/SubirEncuestaModal';
-import { obtenerApuntesMasValoradosService, obtenerApuntesMasVisualizadosService, obtenerAsignaturasConMasApuntesService } from '../services/apunte.service';
-import { obtenerMisApuntesByRutService } from '../services/apunte.service';
-import { obtenerTodasMisNotificacionesService, actualizarEstadoLeidoService, borrarNotificacionesLeidasService } from '../services/notificacion.service';
-import { numeroApuntesUserService, obtenerMayoresContribuidoresService } from '../services/perfilAcademico.service';
+import Header from '../../components/header';
+import WelcomeSection from '../../components/seccionBienvenido';
+import HomeStatistics from '../../components/HomeStatistics';
+import GeneradorRecomendaciones from '../../components/GeneradorRecomendaciones';
+import Sidebar from '../../components/sidebar';
+import FloatingActionButton from '../../components/botonAccionFlotante';
+import SubirApunteModal from '../../components/SubirApunteModal';
+import SubirEncuestaModal from '../../components/SubirEncuestaModal';
+import { obtenerApuntesMasValoradosService, obtenerApuntesMasVisualizadosService, obtenerAsignaturasConMasApuntesService } from '../../services/apunte.service';
+import { obtenerMisApuntesByRutService } from '../../services/apunte.service';
+import { obtenerTodasMisNotificacionesService, actualizarEstadoLeidoService, borrarNotificacionesLeidasService } from '../../services/notificacion.service';
+import { numeroApuntesUserService, obtenerMayoresContribuidoresService } from '../../services/perfilAcademico.service';
 
 function Home() {
   const { user, loading: userLoading } = useContext(UserContext);

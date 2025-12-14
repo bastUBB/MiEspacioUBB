@@ -16,6 +16,11 @@ const historialUsuario = new mongoose.Schema({
             type: String,
             required: true,
             cast: false
+        },
+        apunteId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Apunte',
+            default: null
         }
     }],
 }, {

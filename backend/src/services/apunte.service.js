@@ -397,11 +397,9 @@ export async function getAllApuntesService() {
 
 export async function obtenerCantidadApuntesService() {
     try {
-        const cantidadApuntes = await Apunte.find();
+        const cantidadApuntes = await Apunte.countDocuments();
 
-        if (!cantidadApuntes || cantidadApuntes.length === 0) return [null, 'No hay apuntes registrados en la BD'];
-
-        return [cantidadApuntes.length, null];
+        return [cantidadApuntes, null];
     } catch (error) {
         console.error('Error al obtener la cantidad de apuntes:', error);
         return [null, 'Error interno del servidor'];
@@ -866,6 +864,109 @@ export async function obtenerApuntesRandomService() {
         return [apuntesRandom, null];
     } catch (error) {
         console.error('Error al obtener apuntes aleatorios:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+// Función para que admin/docente cambie el estado de un apunte directamente
+export async function cambiarEstadoApunteService(apunteID, nuevoEstado, motivo, rutUsuarioAccion) {
+    try {
+        const apunteExist = await Apunte.findById(apunteID);
+
+        if (!apunteExist) return [null, 'El apunte no existe'];
+
+        const estadosPermitidos = ['Activo', 'Bajo Revisión', 'Suspendido'];
+        if (!estadosPermitidos.includes(nuevoEstado)) {
+            return [null, 'Estado no válido'];
+        }
+
+        // Si el estado ya es el mismo, no hacer nada
+        if (apunteExist.estado === nuevoEstado) {
+            return [null, 'El apunte ya tiene ese estado'];
+        }
+
+        const estadoAnterior = apunteExist.estado;
+
+        // Crear reporte automático con el motivo del cambio
+        const nuevoReporte = new Reporte({
+            rutUsuarioReportado: apunteExist.rutAutorSubida,
+            rutUsuarioReporte: rutUsuarioAccion,
+            motivo: `Cambio de estado de ${estadoAnterior} a ${nuevoEstado}`,
+            descripcion: motivo,
+            fecha: obtenerDiaActual(),
+            estado: 'Pendiente', // Queda pendiente para revisión
+            apunteId: mongoose.Types.ObjectId.createFromHexString(apunteID)
+        });
+
+        await nuevoReporte.save();
+
+        // Agregar el reporte al apunte
+        apunteExist.reportes.push(nuevoReporte._id);
+        apunteExist.estado = nuevoEstado;
+
+        await apunteExist.save();
+
+        return [{
+            apunte: apunteExist,
+            reporte: nuevoReporte,
+            estadoAnterior,
+            nuevoEstado
+        }, null];
+
+    } catch (error) {
+        console.error('Error al cambiar estado del apunte:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function eliminarValoracionApunteService(apunteID, rutUserValoracion) {
+    try {
+        const perfilUsuarioValoracion = await perfilAcademico.findOne({ rutUser: rutUserValoracion });
+
+        if (!perfilUsuarioValoracion) return [null, 'El usuario no posee perfil académico'];
+
+        const valoracionIndex = perfilUsuarioValoracion.apuntesValorados.findIndex(
+            v => v.apunteID.toString() === apunteID.toString()
+        );
+
+        if (valoracionIndex === -1) return [null, 'El usuario no ha valorado este apunte'];
+
+        const valoracionAnterior = perfilUsuarioValoracion.apuntesValorados[valoracionIndex].valoracion;
+
+        // Eliminar la valoración del perfil
+        perfilUsuarioValoracion.apuntesValorados.splice(valoracionIndex, 1);
+        await perfilUsuarioValoracion.save();
+
+        const apunteExist = await Apunte.findById(apunteID);
+
+        if (!apunteExist) return [null, 'El apunte no existe'];
+
+        // Recalcular el promedio de valoración
+        const cantidadValoraciones = apunteExist.valoracion?.cantidadValoraciones || 0;
+        const promedioActual = apunteExist.valoracion?.promedioValoracion || 0;
+
+        if (cantidadValoraciones <= 1) {
+            // Si era la única valoración, resetear a 0
+            apunteExist.valoracion = {
+                cantidadValoraciones: 0,
+                promedioValoracion: 0
+            };
+        } else {
+            // Restar la valoración anterior
+            const sumaTotal = (promedioActual * cantidadValoraciones) - valoracionAnterior;
+            const nuevaCantidad = cantidadValoraciones - 1;
+            const nuevoPromedio = sumaTotal / nuevaCantidad;
+
+            apunteExist.valoracion.cantidadValoraciones = nuevaCantidad;
+            apunteExist.valoracion.promedioValoracion = parseFloat(nuevoPromedio.toFixed(2));
+        }
+
+        await apunteExist.save();
+
+        return [apunteExist, null];
+
+    } catch (error) {
+        console.error('Error al eliminar la valoración del apunte:', error);
         return [null, 'Error interno del servidor'];
     }
 }

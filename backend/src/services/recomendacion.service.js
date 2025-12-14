@@ -18,12 +18,6 @@ import {
     sonSimilares
 } from '../helpers/recomendacion.helper.js';
 
-/**
- * Genera recomendaciones personalizadas para un usuario
- * @param {String} rutUser - RUT del usuario
- * @param {Number} limite - Cantidad máxima de recomendaciones (default: 20)
- * @returns {Array} [recomendaciones, error]
- */
 export async function generarRecomendacionPersonalizadaService(rutUser, limite = 20) {
     try {
         // 1. Obtener contexto del usuario
@@ -81,11 +75,6 @@ export async function generarRecomendacionPersonalizadaService(rutUser, limite =
     }
 }
 
-/**
- * Filtra apuntes candidatos según criterios del perfil del usuario
- * @param {Object} usuario - Perfil académico del usuario
- * @returns {Array} [candidatos, error]
- */
 async function filtrarApuntesCandidatos(usuario) {
     try {
         // Construir lista de asignaturas relevantes
@@ -121,13 +110,6 @@ async function filtrarApuntesCandidatos(usuario) {
     }
 }
 
-/**
- * Calcula el score final de un apunte para un usuario
- * @param {Object} apunte - Apunte a evaluar
- * @param {Object} usuario - Perfil académico del usuario
- * @param {Object} historial - Historial del usuario
- * @returns {Number} - Score final [0, 1]
- */
 async function calcularScoreFinal(apunte, usuario, historial) {
     // Calcular cada dimensión del score
     const scoreRelevancia = calcularRelevanciaAcademica(
@@ -167,10 +149,6 @@ async function calcularScoreFinal(apunte, usuario, historial) {
     return scoreBase * boost * penalizacion;
 }
 
-/**
- * Dimensión 1: Relevancia Académica (35%)
- * Evalúa qué tan relevante es el apunte según asignaturas del usuario
- */
 function calcularRelevanciaAcademica(apunte, usuario) {
     let score = 0;
 
@@ -212,15 +190,6 @@ function calcularRelevanciaAcademica(apunte, usuario) {
     return Math.min(score, 1.0);
 }
 
-/**
- * Dimensión 2: Afinidad por Rendimiento (25%)
- * Ajusta recomendaciones según el desempeño académico del usuario
- * 
- * Soporta 3 escenarios:
- * 1. Usuario tiene notas → calcula promedio y usa matriz
- * 2. Usuario NO tiene notas pero SÍ tiene ordenComplejidad → infiere rendimiento
- * 3. Usuario NO tiene ninguno → score neutro (0.5)
- */
 function calcularAfinidadRendimiento(apunte, usuario) {
     // Buscar información de la asignatura en el curricular
     const infoAsignatura = usuario.informeCurricular.find(
@@ -288,10 +257,6 @@ function calcularAfinidadRendimiento(apunte, usuario) {
     return preferencias[apunte.complejidad]?.[nivelRendimiento] || 0.5;
 }
 
-/**
- * Dimensión 3: Match con Método de Estudio (20%)
- * Evalúa compatibilidad entre tipo de apunte y métodos preferidos del usuario
- */
 function calcularMatchMetodoEstudio(apunte, usuario) {
     if (!usuario.metodosEstudiosPreferidos ||
         usuario.metodosEstudiosPreferidos.length === 0) {
@@ -311,10 +276,6 @@ function calcularMatchMetodoEstudio(apunte, usuario) {
     return overlap;
 }
 
-/**
- * Dimensión 4: Calidad del Apunte (15%)
- * Evalúa calidad basándose en valoraciones y reputación
- */
 function calcularScoreCalidad(apunte, usuario) {
     let score = 0;
 
@@ -341,10 +302,6 @@ function calcularScoreCalidad(apunte, usuario) {
     return Math.min(score, 1.0);
 }
 
-/**
- * Dimensión 5: Factor Temporal (5%)
- * Considera frescura del apunte, patrones temporales y relevancia por semestre
- */
 async function calcularScoreTemporal(apunte, historial, usuario) {
     let score = 0;
 
@@ -375,11 +332,6 @@ async function calcularScoreTemporal(apunte, historial, usuario) {
     return Math.min(score, 1.0);
 }
 
-/**
- * Calcula score basado en coincidencia de semestre y frescura
- * Extrae TODOS los semestres de las asignaturas cursantes y prioriza apuntes
- * recientes de CUALQUIERA de esos semestres
- */
 async function calcularScoreSemestre(apunte, usuario) {
     try {
         // 1. Obtener semestres de TODAS las asignaturas cursantes
@@ -429,9 +381,6 @@ async function calcularScoreSemestre(apunte, usuario) {
     }
 }
 
-/**
- * Genera una explicación legible de por qué se recomienda un apunte
- */
 function generarExplicacionRecomendacion(apunte, usuario, score) {
     const razones = [];
 
@@ -475,10 +424,6 @@ function generarExplicacionRecomendacion(apunte, usuario, score) {
     return razones.join(' • ');
 }
 
-/**
- * Obtiene apuntes recomendados para usuarios sin perfil académico
- * (Recomendaciones genéricas basadas en popularidad)
- */
 export async function obtenerRecomendacionesGenericasService(limite = 20) {
     try {
         const apuntesPopulares = await Apunte.find({ estado: 'Activo' })
@@ -503,9 +448,6 @@ export async function obtenerRecomendacionesGenericasService(limite = 20) {
     }
 }
 
-/**
- * Obtiene recomendaciones por asignatura específica
- */
 export async function obtenerRecomendacionesPorAsignaturaService(rutUser, asignatura, limite = 10) {
     try {
         const usuario = await perfilAcademico.findOne({ rutUser });

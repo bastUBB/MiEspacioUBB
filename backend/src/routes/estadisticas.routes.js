@@ -15,7 +15,10 @@ import {
     obtenerApuntesMasComentados,
     obtenerCrecimientoMensual,
     obtenerApunteMasDescargado,
-    obtenerDiaMasSemanaActivo
+    obtenerDiaMasSemanaActivo,
+    obtenerAsignaturasSinApuntes,
+    obtenerReportesPendientes,
+    obtenerUltimosReportes
 } from '../controllers/estadisticas.controller.js';
 import { authenticateJWT, authorizeRoles } from "../middlewares/auth.middleware.js";
 
@@ -39,6 +42,9 @@ router
     .get('/valoracion-promedio', authorizeRoles("admin", "estudiante", "docente", "ayudante"), obtenerValoracionPromedioSistema)
     .get('/apuntes-mas-comentados', authorizeRoles("admin", "estudiante", "docente", "ayudante"), obtenerApuntesMasComentados)
     .get('/crecimiento-mensual', authorizeRoles("admin", "estudiante", "docente", "ayudante"), obtenerCrecimientoMensual)
-    .get('/apunte-mas-descargado', authorizeRoles("admin", "estudiante", "docente", "ayudante"), obtenerApunteMasDescargado);
+    .get('/apunte-mas-descargado', authorizeRoles("admin", "estudiante", "docente", "ayudante"), obtenerApunteMasDescargado)
+    .get('/asignaturas-sin-apuntes', authorizeRoles("admin"), obtenerAsignaturasSinApuntes)
+    .get('/reportes-pendientes', authorizeRoles("admin"), obtenerReportesPendientes)
+    .get('/ultimos-reportes', authorizeRoles("admin"), obtenerUltimosReportes);
 
 export default router;

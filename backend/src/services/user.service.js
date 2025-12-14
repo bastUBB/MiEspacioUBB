@@ -145,11 +145,9 @@ export async function obtenerAñoIngresoAplicacionService(query) {
 
 export async function obtenerCantidadUsuariosService() {
     try {
-        const cantidadUsuarios = await User.find();
+        const cantidadUsuarios = await User.countDocuments();
 
-        if (!cantidadUsuarios || cantidadUsuarios.length === 0) return [null, 'No se encontraron usuarios'];
-
-        return [cantidadUsuarios.length, null];
+        return [cantidadUsuarios, null];
     } catch (error) {
         console.error('Error al obtener la cantidad de usuarios:', error);
         return [null, 'Error interno del servidor'];

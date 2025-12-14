@@ -60,11 +60,9 @@ export async function getAllAsignaturasService() {
 
 export async function obtenerCantidadAsignaturasService() {
     try {
-        const cantidadAsignaturas = await Asignatura.find();
+        const cantidadAsignaturas = await Asignatura.countDocuments();
 
-        if (!cantidadAsignaturas || cantidadAsignaturas.length === 0) return [null, 'No hay asignaturas registradas'];
-
-        return [cantidadAsignaturas.length, null];
+        return [cantidadAsignaturas, null];
     } catch (error) {
         console.error('Error al obtener la cantidad de asignaturas:', error);
         return [null, 'Error interno del servidor'];

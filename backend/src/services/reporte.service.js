@@ -47,25 +47,36 @@ export async function obtenerMisReportesService(rutUsuarioReporte) {
 //Para el admin
 export async function getAllReportesPendientesPorFechaService() {
     try {
-        const reportesPendientes = await Reporte.find({ estado: 'Pendiente' });
+        const reportesPendientes = await Reporte.find({ estado: 'Pendiente' })
+            .populate('apunteId', 'nombre descripcion asignatura estado');
 
-        if (!reportesPendientes || reportesPendientes.length === 0) return [null, 'No hay reportes pendientes'];
+        // Retornar array vacío si no hay reportes, no un error
+        if (!reportesPendientes || reportesPendientes.length === 0) {
+            return [[], null];
+        }
 
+        // Ordenar por fecha (manejar posibles formatos inválidos)
         reportesPendientes.sort((a, b) => {
-            const [diaA, mesA, anioA] = a.fecha.split('-').map(Number);
-            const [diaB, mesB, anioB] = b.fecha.split('-').map(Number);
-            const fechaA = new Date(anioA, mesA - 1, diaA);
-            const fechaB = new Date(anioB, mesB - 1, diaB);
-            return fechaA - fechaB;
+            try {
+                const [diaA, mesA, anioA] = a.fecha.split('-').map(Number);
+                const [diaB, mesB, anioB] = b.fecha.split('-').map(Number);
+                const fechaA = new Date(anioA, mesA - 1, diaA);
+                const fechaB = new Date(anioB, mesB - 1, diaB);
+                return fechaA - fechaB;
+            } catch {
+                return 0; // Si hay error en formato, no cambiar orden
+            }
         });
 
-        const [nuevaNotificacion, errorNotificacion] = await notificacionNuevosReportesService(reportesPendientes.length);
-
-        if (errorNotificacion) return [null, errorNotificacion];
+        // Notificación es opcional, no debe bloquear la respuesta
+        try {
+            await notificacionNuevosReportesService(reportesPendientes.length);
+        } catch (notifError) {
+        }
 
         return [reportesPendientes, null];
     } catch (error) {
-        console.error('Error al obtener los reportes pendientes:', error);
+        console.error('Error al obtener reportes pendientes:', error);
         return [null, 'Error interno del servidor'];
     }
 }
@@ -97,15 +108,25 @@ export async function actualizarEstadoReporteService(reporteID, resolucion) {
 
 export async function obtenerCantidadReportesPendientesService() {
     try {
-        const cantidadReportesPendientes = await Reporte.find({ estado: 'Pendiente' });
+        const cantidadReportesPendientes = await Reporte.countDocuments({ estado: 'Pendiente' });
 
-        if (!cantidadReportesPendientes || cantidadReportesPendientes.length === 0) return [null, 'No hay reportes pendientes'];
-
-        return [cantidadReportesPendientes.length, null];
+        return [cantidadReportesPendientes, null];
     } catch (error) {
         console.error('Error al obtener la cantidad de reportes pendientes:', error);
         return [null, 'Error interno del servidor'];
     }
 }
 
+export async function obtenerReportesService() {
+    try {
+        const reportes = await Reporte.find();
+
+        if (!reportes || reportes.length === 0) return [null, 'No hay reportes'];
+
+        return [reportes, null];
+    } catch (error) {
+        console.error('Error al obtener reportes:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
 

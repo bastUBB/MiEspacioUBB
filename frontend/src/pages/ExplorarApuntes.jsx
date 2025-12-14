@@ -6,6 +6,7 @@ import { Search, Filter, BookOpen, Star, Eye, Calendar, Tag } from 'lucide-react
 import Header from '../components/header';
 import { obtenerApuntesRandomService } from '../services/apunte.service';
 import { parseCustomDate } from '../helpers/dateFormatter.helper';
+import { getRoleBasePath } from '../helpers/roleBasePath.helper';
 
 function ExplorarApuntes({ embedded = false }) {
   const { user, loading: userLoading } = useContext(UserContext);
@@ -17,6 +18,9 @@ function ExplorarApuntes({ embedded = false }) {
   const [filteredApuntes, setFilteredApuntes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('rating'); // rating, downloads, recent
+
+  // Obtener el prefijo de ruta basado en el rol del usuario
+  const basePath = getRoleBasePath(user?.role);
 
   // const categories = [
   //   { id: 'all', name: 'Todos', color: 'purple' },
@@ -175,7 +179,7 @@ function ExplorarApuntes({ embedded = false }) {
           {filteredApuntes.map((apunte) => (
             <div
               key={apunte._id}
-              onClick={() => navigate(`/estudiante/apunte/${apunte._id}`)}
+              onClick={() => navigate(`${basePath}/apunte/${apunte._id}`)}
               className="bg-gradient-to-br from-white to-purple-50/20 rounded-xl shadow-sm hover:shadow-lg transition-all hover:scale-105 cursor-pointer overflow-hidden border border-gray-100"
             >
               <div className="p-6">

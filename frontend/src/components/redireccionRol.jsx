@@ -8,22 +8,8 @@ export default function RoleBasedRedirect() {
 
   useEffect(() => {
     if (!loading && user) {
-      switch (user.role) {
-        case 'admin':
-          navigate('/admin', { replace: true });
-          break;
-        case 'docente':
-          navigate('/docente', { replace: true });
-          break;
-        case 'ayudante':
-          navigate('/ayudante', { replace: true });
-          break;
-        case 'estudiante':
-          navigate('/estudiante', { replace: true });
-          break;
-        default:
-          navigate('/unauthorized', { replace: true });
-      }
+      // Todos los roles pasan primero por la página de bienvenida
+      navigate('/bienvenida', { replace: true });
     }
   }, [user, loading, navigate]);
 

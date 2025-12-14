@@ -28,7 +28,8 @@ export async function registrarSubidaApunteService(rutUser, apunteID) {
         if (historialUsuario) {
             const nuevaAccion = {
                 tipoAccion: `El usuario ${nombreUsuario} ha subido el apunte ${nombreApunte}.`,
-                fechaAccion: fechaActual
+                fechaAccion: fechaActual,
+                apunteId: apunteID
             };
 
             historialUsuario.acciones.push(nuevaAccion);
@@ -42,7 +43,8 @@ export async function registrarSubidaApunteService(rutUser, apunteID) {
             rutUser: rutUser,
             acciones: [{
                 tipoAccion: `El usuario ${nombreUsuario} ha subido el apunte ${nombreApunte}.`,
-                fechaAccion: fechaActual
+                fechaAccion: fechaActual,
+                apunteId: apunteID
             }]
         });
 
@@ -75,7 +77,8 @@ export async function registrarDescargaApunteService(rutUser, apunteID) {
         if (historialUsuario) {
             const nuevaAccion = {
                 tipoAccion: `El usuario ${nombreUsuario} ha descargado el apunte ${nombreApunte}.`,
-                fechaAccion: fechaActual
+                fechaAccion: fechaActual,
+                apunteId: apunteID
             };
 
             historialUsuario.acciones.push(nuevaAccion);
@@ -89,7 +92,8 @@ export async function registrarDescargaApunteService(rutUser, apunteID) {
             rutUser: rutUser,
             acciones: [{
                 tipoAccion: `El usuario ${nombreUsuario} ha descargado el apunte ${nombreApunte}.`,
-                fechaAccion: fechaActual
+                fechaAccion: fechaActual,
+                apunteId: apunteID
             }]
         });
 
@@ -121,7 +125,8 @@ export async function registrarComentarioService(rutUser, apunteID) {
         if (historialUsuario) {
             const nuevaAccion = {
                 tipoAccion: `El usuario ${nombreUsuario} ha comentado en el apunte ${nombreApunte}.`,
-                fechaAccion: fechaActual
+                fechaAccion: fechaActual,
+                apunteId: apunteID
             };
 
             historialUsuario.acciones.push(nuevaAccion);
@@ -135,7 +140,8 @@ export async function registrarComentarioService(rutUser, apunteID) {
             rutUser: rutUser,
             acciones: [{
                 tipoAccion: `El usuario ${nombreUsuario} ha comentado en el apunte ${nombreApunte}.`,
-                fechaAccion: fechaActual
+                fechaAccion: fechaActual,
+                apunteId: apunteID
             }]
         });
 
@@ -175,7 +181,8 @@ export async function registrarRespuestaComentarioService(rutUser, comentarioPad
         if (historialUsuario) {
             const nuevaAccion = {
                 tipoAccion: `El usuario ${nombreUsuario} ha respondido al comentario de ${nombreAutorComentarioPadre} en el apunte ${nombreApunte}.`,
-                fechaAccion: fechaActual
+                fechaAccion: fechaActual,
+                apunteId: apunteDelComentarioPadreID
             };
 
             historialUsuario.acciones.push(nuevaAccion);
@@ -189,7 +196,8 @@ export async function registrarRespuestaComentarioService(rutUser, comentarioPad
             rutUser: rutUser,
             acciones: [{
                 tipoAccion: `El usuario ${nombreUsuario} ha respondido al comentario de ${nombreAutorComentarioPadre} en el apunte ${nombreApunte}.`,
-                fechaAccion: fechaActual
+                fechaAccion: fechaActual,
+                apunteId: apunteDelComentarioPadreID
             }]
         });
 
@@ -255,7 +263,8 @@ export async function registrarValoracionApunteService(rutUser, apunteID) {
         if (historialUsuario) {
             const nuevaAccion = {
                 tipoAccion: `El usuario ${userExist.nombreCompleto} ha valorado el apunte ${apunteExist.nombre}.`,
-                fechaAccion: fechaActual
+                fechaAccion: fechaActual,
+                apunteId: apunteID
             };
 
             historialUsuario.acciones.push(nuevaAccion);
@@ -269,7 +278,8 @@ export async function registrarValoracionApunteService(rutUser, apunteID) {
             rutUser: rutUser,
             acciones: [{
                 tipoAccion: `El usuario ${userExist.nombreCompleto} ha valorado el apunte ${apunteExist.nombre}.`,
-                fechaAccion: fechaActual
+                fechaAccion: fechaActual,
+                apunteId: apunteID
             }]
         });
 

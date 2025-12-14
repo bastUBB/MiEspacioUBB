@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast';
 import {
   BookOpen, Download, Star, Eye, Calendar, Tag, User, MessageSquare,
   ThumbsUp, Share2, Bookmark, Clock, Award, TrendingUp, Send,
-  ChevronRight, FileText, Heart, MoreVertical, Flag, Users, Loader2, ChevronLeft
+  ChevronRight, FileText, Heart, MoreVertical, Flag, Users, Loader2, ChevronLeft, AlertTriangle, X
 } from 'lucide-react';
 import Header from '../components/header';
 import ReportModal from '../components/ReportModal';
@@ -25,8 +25,11 @@ import {
   darLikeComentarioService,
   darDislikeComentarioService,
   crearRespuestaComentarioApunteService,
-  registrarDescargaApunteService
+  registrarDescargaApunteService,
+  cambiarEstadoApunteService,
+  eliminarValoracionApunteService
 } from '../services/apunte.service';
+import { getRoleBasePath } from '../helpers/roleBasePath.helper';
 
 // Configurar worker de PDF.js usando CDN
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -35,6 +38,9 @@ function DetalleApunte() {
   const { id } = useParams();
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
+
+  // Obtener el prefijo de ruta basado en el rol del usuario
+  const basePath = getRoleBasePath(user?.role);
 
   const [loading, setLoading] = useState(true);
   const [apunte, setApunte] = useState(null);
@@ -59,12 +65,17 @@ function DetalleApunte() {
   const [downloadUrl, setDownloadUrl] = useState(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
+  // Estados para modal de revisión (admin/docente)
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [motivoRevision, setMotivoRevision] = useState('');
+  const [procesandoRevision, setProcesandoRevision] = useState(false);
+
   useEffect(() => {
     // Validar que el ID existe y no está undefined
     if (!id || id === 'undefined') {
       console.error('ID de apunte inválido:', id);
       toast.error('ID de apunte inválido');
-      navigate('/estudiante/home');
+      navigate(`${basePath}/home`);
       return;
     }
 
@@ -174,13 +185,13 @@ function DetalleApunte() {
       } else {
         console.error('Respuesta sin éxito:', responseApunte);
         toast.error(`No se pudo cargar el apunte: ${responseApunte.message || 'Error desconocido'}`);
-        navigate('/estudiante/home');
+        navigate(`${basePath}/home`);
       }
     } catch (error) {
       console.error('Error al cargar apunte:', error);
       const errorMsg = error.response?.data?.message || error.message || 'Error desconocido';
       toast.error(`Error al cargar el apunte: ${errorMsg}`);
-      navigate('/estudiante/home');
+      navigate(`${basePath}/home`);
     } finally {
       setLoading(false);
     }
@@ -285,6 +296,33 @@ function DetalleApunte() {
       } else {
         toast.error(errorMessage);
       }
+    }
+  };
+
+  const handleRemoveRating = async () => {
+    if (!user) return;
+
+    try {
+      const response = await eliminarValoracionApunteService(id, user.rut);
+
+      if (response.status === 'Success') {
+        setUserRating(0);
+        setHoverRating(0);
+        
+        if (response.data && response.data.valoracion) {
+          setApunte(prev => ({
+            ...prev,
+            valoracion: response.data.valoracion
+          }));
+        }
+        
+        toast.success('Valoración eliminada exitosamente');
+      } else {
+        toast.error(response.message || 'Error al eliminar valoración');
+      }
+    } catch (error) {
+      console.error('Error al eliminar valoración:', error);
+      toast.error('Error al eliminar valoración');
     }
   };
 
@@ -415,12 +453,12 @@ function DetalleApunte() {
     );
   }
 
-  const handleHomeClick = () => navigate('/estudiante/home');
-  const handleProfileClick = () => navigate('/estudiante/profile');
-  const handleExplorarClick = () => navigate('/estudiante/explorar');
-  const handleMisApuntesClick = () => navigate('/estudiante/mis-aportes');
-  const handleEstadisticasClick = () => navigate('/estudiante/estadisticas');
-  const handleConfigClick = () => navigate('/estudiante/configuracion');
+  const handleHomeClick = () => navigate(`${basePath}/home`);
+  const handleProfileClick = () => navigate(`${basePath}/profile`);
+  const handleExplorarClick = () => navigate(`${basePath}/explorar`);
+  const handleMisApuntesClick = () => navigate(`${basePath}/mis-aportes`);
+  const handleEstadisticasClick = () => navigate(`${basePath}/estadisticas`);
+  const handleConfigClick = () => navigate(`${basePath}/configuracion`);
 
   const handleLogout = () => {
     // Limpiar token y datos del usuario
@@ -431,7 +469,7 @@ function DetalleApunte() {
   };
 
   const handleNavigateToProfile = (rut) => {
-    navigate(`/estudiante/profile/${rut}`);
+    navigate(`${basePath}/profile/${rut}`);
   };
 
   const handleComentario = async () => {
@@ -653,9 +691,9 @@ function DetalleApunte() {
 
         {/* Hero Section */}
         <div className="relative overflow-hidden bg-white rounded-3xl shadow-sm border border-gray-100 mb-8 group hover:shadow-md transition-all duration-300">
-          <div className="absolute top-0 left-0 w-full h-48 bg-gradient-to-r from-purple-400 to-purple-600"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-violet-400 to-fuchsia-400"></div>
 
-          <div className="relative px-8 pb-8 pt-20">
+          <div className="relative px-8 py-8">
             <div className="flex flex-col md:flex-row items-start md:items-end gap-6">
               <div className="relative">
                 <div className="w-24 h-24 bg-white rounded-2xl p-1 shadow-xl ring-4 ring-white">
@@ -788,6 +826,16 @@ function DetalleApunte() {
                     >
                       <Share2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
                     </button>
+                    {/* Botón cambiar estado para docente/ayudante */}
+                    {(user?.role === 'docente' || user?.role === 'ayudante') && (
+                      <button
+                        onClick={() => setIsReviewModalOpen(true)}
+                        className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all group"
+                        title="Cambiar Estado del Apunte"
+                      >
+                        <AlertTriangle className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -1166,6 +1214,17 @@ function DetalleApunte() {
                     </button>
                   ))}
                 </div>
+                {userRating > 0 && (
+                  <div className="text-center mt-3">
+                    <button
+                      onClick={handleRemoveRating}
+                      className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center justify-center gap-1 mx-auto transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                      Eliminar mi valoración
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1246,6 +1305,17 @@ function DetalleApunte() {
               </div>
             </div>
 
+            {/* Poner en Revisión - Solo para admin/docente */}
+            {user && (user.rol === 'admin' || user.rol === 'docente') && apunte.estado !== 'Bajo Revisión' && apunte.estado !== 'Suspendido' && (
+              <button
+                onClick={() => setIsReviewModalOpen(true)}
+                className="w-full py-3 bg-amber-50 text-amber-600 rounded-xl hover:bg-amber-100 transition-all flex items-center justify-center gap-2 border border-amber-100 font-medium text-sm mb-3"
+              >
+                <AlertTriangle className="w-4 h-4" />
+                Poner en Revisión
+              </button>
+            )}
+
             {/* Reportar */}
             <button
               onClick={() => setIsReportModalOpen(true)}
@@ -1276,7 +1346,7 @@ function DetalleApunte() {
               <div
                 key={apunteItem._id}
                 className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
-                onClick={() => navigate(`/estudiante/apunte/${apunteItem._id}`)}
+                onClick={() => navigate(`${basePath}/apunte/${apunteItem._id}`)}
               >
                 <div className="h-2 bg-gradient-to-r from-purple-600 to-indigo-600"></div>
                 <div className="p-6">
@@ -1318,7 +1388,7 @@ function DetalleApunte() {
               <div
                 key={apunteItem._id}
                 className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
-                onClick={() => navigate(`/estudiante/apunte/${apunteItem._id}`)}
+                onClick={() => navigate(`${basePath}/apunte/${apunteItem._id}`)}
               >
                 <div className="h-2 bg-gradient-to-r from-indigo-600 to-purple-600"></div>
                 <div className="p-6">
@@ -1353,6 +1423,106 @@ function DetalleApunte() {
         autorRut={apunte?.rutAutorSubida}
         userRut={user?.rut}
       />
+
+      {/* Modal Poner en Revisión - Solo admin/docente */}
+      {isReviewModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-revision" role="dialog" aria-modal="true">
+          <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md transition-all" onClick={() => setIsReviewModalOpen(false)}></div>
+
+          <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
+            <div className="relative w-full max-w-lg transform overflow-hidden rounded-3xl bg-white shadow-2xl transition-all" onClick={(e) => e.stopPropagation()}>
+              {/* Header */}
+              <div className="relative bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 px-8 py-6 border-b border-amber-100">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl shadow-lg">
+                        <AlertTriangle className="w-6 h-6 text-white" />
+                      </div>
+                      <h2 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-500 bg-clip-text text-transparent">
+                        Poner en Revisión
+                      </h2>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsReviewModalOpen(false)}
+                    className="ml-4 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all duration-200"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Contenido */}
+              <div className="p-8 space-y-6">
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                  <p className="text-sm text-amber-800">
+                    <strong>Apunte:</strong> {apunte?.nombre}
+                  </p>
+                  <p className="text-sm text-amber-800 mt-1">
+                    <strong>Autor:</strong> {apunte?.autorSubida}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Motivo del cambio de estado *
+                  </label>
+                  <textarea
+                    value={motivoRevision}
+                    onChange={(e) => setMotivoRevision(e.target.value)}
+                    disabled={procesandoRevision}
+                    rows={4}
+                    className="w-full px-4 py-3 border border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none transition-all"
+                    placeholder="Describe la razón por la que se pone en revisión este apunte (mín. 10 caracteres)..."
+                  />
+                  <p className={`text-xs mt-1 ${motivoRevision.length < 10 ? 'text-gray-500' : 'text-green-600'}`}>
+                    {motivoRevision.length}/10 caracteres mínimos
+                  </p>
+                </div>
+
+                <div className="flex gap-4">
+                  <button
+                    onClick={async () => {
+                      if (motivoRevision.length < 10) {
+                        toast.error('El motivo debe tener al menos 10 caracteres');
+                        return;
+                      }
+                      try {
+                        setProcesandoRevision(true);
+                        await cambiarEstadoApunteService(id, 'Bajo Revisión', motivoRevision);
+                        toast.success('Apunte puesto en revisión');
+                        setIsReviewModalOpen(false);
+                        setMotivoRevision('');
+                        loadApunte(); // Recargar apunte
+                      } catch (error) {
+                        console.error('Error al cambiar estado:', error);
+                        toast.error(error.response?.data?.details || 'Error al cambiar estado');
+                      } finally {
+                        setProcesandoRevision(false);
+                      }
+                    }}
+                    disabled={procesandoRevision || motivoRevision.length < 10}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all font-medium shadow-lg hover:shadow-xl disabled:opacity-50"
+                  >
+                    {procesandoRevision ? 'Procesando...' : 'Confirmar'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsReviewModalOpen(false);
+                      setMotivoRevision('');
+                    }}
+                    disabled={procesandoRevision}
+                    className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-medium disabled:opacity-50"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -16,6 +16,11 @@ const notificacionSchema = new mongoose.Schema({
         default: false,
         cast: false
     },
+    apunteId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Apunte',
+        default: null
+    },
 }, {
     versionKey: false,
     strict: true,

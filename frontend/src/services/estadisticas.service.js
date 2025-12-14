@@ -125,7 +125,7 @@ export async function obtenerDiaMasActivoSemanaService() {
 };
 
 // Engagement
-export async function obtenerValoracionPromedioService() {
+export async function obtenerValoracionPromedioSistemaService() {
     try {
         const response = await axios.get(`/api/estadisticas/valoracion-promedio`, { withCredentials: true });
         return response.data;
@@ -165,3 +165,35 @@ export async function obtenerApunteMasDescargadoService() {
         return { status: 'Error', message: error.response?.data?.message || 'Error al obtener datos' };
     }
 };
+
+// Admin Dashboard Specifics
+export async function obtenerAsignaturasSinApuntesService() {
+    try {
+        const response = await axios.get(`/api/estadisticas/asignaturas-sin-apuntes`, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error('Error al obtener asignaturas sin apuntes:', error);
+        return { status: 'Error', message: error.response?.data?.message || 'Error al obtener datos' };
+    }
+};
+
+export async function obtenerReportesPendientesService() {
+    try {
+        const response = await axios.get(`/api/estadisticas/reportes-pendientes`, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error('Error al obtener reportes pendientes:', error);
+        return { status: 'Error', message: error.response?.data?.message || 'Error al obtener datos' };
+    }
+};
+
+export async function obtenerUltimosReportesService() {
+    try {
+        const response = await axios.get(`/api/estadisticas/ultimos-reportes`, { withCredentials: true });
+        return response.data;
+    } catch (error) {
+        console.error('Error al obtener últimos reportes:', error);
+        return { status: 'Error', message: error.response?.data?.message || 'Error al obtener datos' };
+    }
+};
+

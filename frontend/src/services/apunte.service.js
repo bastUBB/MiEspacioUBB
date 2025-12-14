@@ -189,6 +189,20 @@ export async function actualizarValoracionApunteService(apunteID, rutUsuarioValo
     }
 }
 
+export async function eliminarValoracionApunteService(apunteID, rutUsuarioValoracion) {
+    try {
+        const response = await axios.delete('/api/apuntes/valoracion/detail', {
+            params: { apunteID },
+            data: { rutUserValoracion: rutUsuarioValoracion }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al eliminar valoración de apunte:", error);
+        throw error;
+    }
+}
+
 export async function crearReporteApunteService(apunteID, reporteData) {
     try {
         const response = await axios.post('/api/apuntes/reporte/detail', reporteData, {
@@ -333,6 +347,20 @@ export async function obtenerApuntesRandomService() {
         return response.data;
     } catch (error) {
         console.error('Error al obtener apuntes aleatorios:', error);
+        throw error;
+    }
+}
+
+export async function cambiarEstadoApunteService(apunteID, nuevoEstado, motivo) {
+    try {
+        const response = await axios.patch('/api/apuntes/cambiar-estado/detail',
+            { nuevoEstado, motivo },
+            { params: { apunteID } }
+        );
+
+        return response.data;
+    } catch (error) {
+        console.error('Error al cambiar estado del apunte:', error);
         throw error;
     }
 }

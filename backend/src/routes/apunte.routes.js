@@ -27,7 +27,9 @@ import {
     obtenerLinkDescargaApunte,
     registrarDescargaApunte,
     obtenerMejorApunteUser,
-    obtenerApuntesRandom
+    obtenerApuntesRandom,
+    cambiarEstadoApunte,
+    eliminarValoracionApunte
 } from '../controllers/apunte.controller.js';
 
 const router = Router();
@@ -65,7 +67,9 @@ router
     .post('/respuesta-comentario/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), crearRespuestaComentarioApunte)
     .post('/valoracion/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), realizarValoracionApunte)
     .put('/valoracion/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), actualizarValoracionApunte)
-    .post('/reporte/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), crearReporteApunte);
+    .delete('/valoracion/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), eliminarValoracionApunte)
+    .post('/reporte/detail', authorizeRoles('admin', 'docente', 'estudiante', 'ayudante'), crearReporteApunte)
+    .patch('/cambiar-estado/detail', authorizeRoles('admin', 'docente'), cambiarEstadoApunte);
 
 router.use(handleMulterError);
 

@@ -1,11 +1,30 @@
 import { BookOpen, Users, TrendingUp, Download, Star, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useContext } from 'react';
+import { UserContext } from '../context/userContextProvider';
 
 const Bienvenida = () => {
   const navigate = useNavigate();
+  const { user } = useContext(UserContext);
 
   const handleGetStarted = () => {
-    navigate('/dashboard');
+    // Redirigir según el rol del usuario
+    switch (user?.role) {
+      case 'admin':
+        navigate('/admin');
+        break;
+      case 'docente':
+        navigate('/docente');
+        break;
+      case 'ayudante':
+        navigate('/ayudante');
+        break;
+      case 'estudiante':
+        navigate('/estudiante');
+        break;
+      default:
+        navigate('/login');
+    }
   };
 
   return (

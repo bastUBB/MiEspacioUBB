@@ -109,39 +109,6 @@ function HomeAdmin() {
             iconColor: 'text-teal-600'
         },
         {
-            title: 'Funciones Estudiante',
-            description: 'Gestionar funciones de estudiantes',
-            icon: <GraduationCap className="w-12 h-12" />,
-            count: null,
-            countLabel: null,
-            gradient: 'from-indigo-500 to-blue-500',
-            path: '/admin/funciones-estudiante',
-            bgIcon: 'bg-indigo-100',
-            iconColor: 'text-indigo-600'
-        },
-        {
-            title: 'Funciones Docente',
-            description: 'Gestionar funciones de docentes',
-            icon: <Briefcase className="w-12 h-12" />,
-            count: null,
-            countLabel: null,
-            gradient: 'from-amber-500 to-yellow-500',
-            path: '/admin/funciones-docente',
-            bgIcon: 'bg-amber-100',
-            iconColor: 'text-amber-600'
-        },
-        {
-            title: 'Funciones Ayudante',
-            description: 'Gestionar funciones de ayudantes',
-            icon: <UserCheck className="w-12 h-12" />,
-            count: null,
-            countLabel: null,
-            gradient: 'from-emerald-500 to-green-500',
-            path: '/admin/funciones-ayudante',
-            bgIcon: 'bg-emerald-100',
-            iconColor: 'text-emerald-600'
-        },
-        {
             title: 'Estadísticas',
             description: 'Ver métricas y estadísticas del sistema',
             icon: <BarChart3 className="w-12 h-12" />,
@@ -234,23 +201,6 @@ function HomeAdmin() {
                                 </div>
                             </div>
                         ))}
-                    </div>
-
-                    {/* Quick Info */}
-                    <div className="mt-12 bg-white rounded-xl shadow-md p-6 border border-blue-100">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                            Información del Sistema
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="text-center p-4 bg-green-50 rounded-lg">
-                                <p className="text-3xl font-bold text-green-600">0</p>
-                                <p className="text-sm text-gray-600 mt-1">Usuarios Conectados</p>
-                            </div>
-                            <div className="text-center p-4 bg-blue-50 rounded-lg">
-                                <p className="text-3xl font-bold text-blue-600">0</p>
-                                <p className="text-sm text-gray-600 mt-1">Sugerencias Recibidas</p>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

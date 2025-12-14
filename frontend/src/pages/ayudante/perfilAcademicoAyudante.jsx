@@ -1,7 +1,7 @@
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { GraduationCap, ArrowRight, ArrowLeft, Check, BookOpen, Star, Users, Sparkles } from 'lucide-react';
+import { GraduationCap, ArrowRight, ArrowLeft, Check, BookOpen, Star, Brain, Users, Sparkles, XCircle, CheckSquare } from 'lucide-react';
 import { UserContext } from '../../context/userContextProvider.jsx';
 import MallaCurricular from '../../components/MallaCurricular.jsx';
 import CalificacionComplejidad from '../../components/CalificacionComplejidad';
@@ -24,6 +24,7 @@ function InicioPerfilAcademicoAyudante() {
             ordenComplejidad: []
         },
         asignaturasInteres: [],
+        metodosEstudiosPreferidos: [],
         asignaturasImpartidasActuales: []
     });
     const [isComplete, setIsComplete] = useState(false);
@@ -88,6 +89,11 @@ function InicioPerfilAcademicoAyudante() {
                 return;
             }
 
+            if (!formData.metodosEstudiosPreferidos || formData.metodosEstudiosPreferidos.length === 0) {
+                toast.error('Debes seleccionar al menos un método de estudio preferido');
+                return;
+            }
+
             if (!formData.asignaturasImpartidasActuales || formData.asignaturasImpartidasActuales.length === 0) {
                 toast.error('Debes seleccionar al menos una asignatura que ayudas a impartir');
                 return;
@@ -100,7 +106,8 @@ function InicioPerfilAcademicoAyudante() {
                 asignaturasInteres: formData.asignaturasInteres.length > 0
                     ? formData.asignaturasInteres.map(a => a.nombre)
                     : [],
-                asignaturasImpartidasActuales: formData.asignaturasImpartidasActuales.map(a => a.nombre)
+                asignaturasImpartidasActuales: formData.asignaturasImpartidasActuales.map(a => a.nombre),
+                metodosEstudiosPreferidos: formData.metodosEstudiosPreferidos
             };
 
             const response = await crearPerfilAcademicoAyudanteService(profileData);
@@ -137,7 +144,8 @@ function InicioPerfilAcademicoAyudante() {
         { title: 'Asignaturas Cursantes', icon: BookOpen },
         { title: 'Notas/Complejidad', icon: Star },
         { title: 'Asignaturas de Interés', icon: GraduationCap },
-        { title: 'Asignaturas que Ayudas', icon: Users }
+        { title: 'Preferencias de Estudio', icon: Brain },
+        { title: 'Asignatura(s) en la(s) que eres Ayudante', icon: Users }
     ];
 
     const handleNext = () => {
@@ -154,6 +162,59 @@ function InicioPerfilAcademicoAyudante() {
         }
     };
 
+    const noteTypes = [
+        'Manuscritos',
+        'Documentos tipeados',
+        'Resúmenes conceptuales',
+        'Mapas mentales',
+        'Diagramas y esquemas',
+        'Resolución de ejercicios',
+        'Flashcards',
+        'Formularios',
+        'Presentaciones',
+        'Ninguno',
+        'Otros'
+    ];
+
+    const toggleNoteType = (noteType) => {
+        const isSelected = formData.metodosEstudiosPreferidos.includes(noteType);
+
+        if (isSelected) {
+            setFormData({
+                ...formData,
+                metodosEstudiosPreferidos: formData.metodosEstudiosPreferidos.filter(type => type !== noteType)
+            });
+        } else {
+            if (noteType === 'Ninguno') {
+                setFormData({
+                    ...formData,
+                    metodosEstudiosPreferidos: ['Ninguno']
+                });
+            } else {
+                const metodosActualizados = formData.metodosEstudiosPreferidos.filter(type => type !== 'Ninguno');
+                setFormData({
+                    ...formData,
+                    metodosEstudiosPreferidos: [...metodosActualizados, noteType]
+                });
+            }
+        }
+    };
+
+    const selectAllEstudios = () => {
+        const todosExceptoNinguno = noteTypes.filter(type => type !== 'Ninguno');
+        setFormData({
+            ...formData,
+            metodosEstudiosPreferidos: todosExceptoNinguno
+        });
+    };
+
+    const clearAllEstudios = () => {
+        setFormData({
+            ...formData,
+            metodosEstudiosPreferidos: []
+        });
+    };
+
     const canProceed = () => {
         switch (currentStep) {
             case 0: return formData.asignaturasCursantes.length > 0;
@@ -167,7 +228,8 @@ function InicioPerfilAcademicoAyudante() {
                 return false;
             }
             case 2: return true;
-            case 3: return formData.asignaturasImpartidasActuales.length > 0;
+            case 3: return formData.metodosEstudiosPreferidos.length > 0;
+            case 4: return formData.asignaturasImpartidasActuales.length > 0;
             default: return false;
         }
     };
@@ -321,8 +383,59 @@ function InicioPerfilAcademicoAyudante() {
                             </div>
                         )}
 
-                        {/* Step 3: Asignaturas que Ayudas */}
+                        {/* Step 3: Preferencias de Estudio */}
                         {currentStep === 3 && (
+                            <div className="space-y-4 sm:space-y-6">
+                                <div>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Métodos de estudio preferidos
+                                        </label>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={selectAllEstudios}
+                                                disabled={formData.metodosEstudiosPreferidos.length === noteTypes.length - 1}
+                                                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all text-xs font-medium ${formData.metodosEstudiosPreferidos.length < noteTypes.length - 1
+                                                    ? 'bg-green-50 text-green-600 hover:bg-green-100 border border-green-200'
+                                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                    }`}
+                                            >
+                                                <CheckSquare className="w-3.5 h-3.5" />
+                                                Marcar Todos
+                                            </button>
+                                            <button
+                                                onClick={clearAllEstudios}
+                                                disabled={formData.metodosEstudiosPreferidos.length === 0}
+                                                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all text-xs font-medium ${formData.metodosEstudiosPreferidos.length > 0
+                                                    ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
+                                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                    }`}
+                                            >
+                                                <XCircle className="w-3.5 h-3.5" />
+                                                Desmarcar Todos
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                                        {noteTypes.map(noteType => (
+                                            <button
+                                                key={noteType}
+                                                onClick={() => toggleNoteType(noteType)}
+                                                className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all duration-200 text-left ${formData.metodosEstudiosPreferidos.includes(noteType)
+                                                    ? 'border-purple-500 bg-purple-50 text-purple-700'
+                                                    : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+                                                    }`}
+                                            >
+                                                <div className="font-medium text-sm sm:text-base">{noteType}</div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Step 4: Asignaturas que Ayudas */}
+                        {currentStep === 4 && (
                             <div>
                                 <p className="text-gray-600 mb-4">Selecciona las asignaturas en las que trabajas como ayudante</p>
                                 <MallaCurricular

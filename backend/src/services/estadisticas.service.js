@@ -1,6 +1,7 @@
 import Asignatura from "../models/asignatura.model.js";
 import User from "../models/user.model.js";
 import Apunte from "../models/apunte.model.js";
+import Reporte from "../models/reporte.model.js";
 import { getActiveUsersCount } from "../config/configSocket.js";
 import { semanaActual } from "../helpers/ayudasVarias.helper.js";
 
@@ -388,6 +389,55 @@ export async function obtenerDiaMasSemanaActivoService() {
         }, null];
     } catch (error) {
         console.error('Error al obtener día más activo:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function obtenerAsignaturasSinApuntesService() {
+    try {
+        // Obtener todas las asignaturas
+        const asignaturas = await Asignatura.find({}, 'nombre codigo area');
+        
+        // Obtener IDs de asignaturas que tienen apuntes activos
+        const asignaturasConApuntes = await Apunte.distinct('asignatura', { estado: 'Activo' });
+        
+        // Filtrar las que no están en la lista de apuntes (comparando por nombre o ID según tu modelo)
+        // Nota: En tu modelo Apunte, 'asignatura' parece ser un String (nombre) según obtenerTop5AsignaturasService
+        // Si es ObjectId, cambiar la lógica. Asumiré String nombre por consistencia con servicios anteriores.
+        
+        const asignaturasSinApuntes = asignaturas.filter(asig => !asignaturasConApuntes.includes(asig.nombre));
+        
+        return [asignaturasSinApuntes, null];
+    } catch (error) {
+        console.error('Error al obtener asignaturas sin apuntes:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function obtenerReportesPendientesService() {
+    try {
+        const total = await Reporte.countDocuments({ estado: 'Pendiente' });
+        return [{ total }, null];
+    } catch (error) {
+        console.error('Error al obtener reportes pendientes:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
+
+export async function obtenerUltimosReportesService() {
+    try {
+        const reportes = await Reporte.find()
+            .sort({ fecha: -1 }) // Asumiendo que fecha es string ISO o Date. Si es string DD-MM-YYYY, el sort puede fallar.
+            // Revisando modelo Reporte: fecha: { type: String }. 
+            // Si el formato no es sortable, esto podría ser un problema. 
+            // Asumiremos que se guarda en formato ISO o similar, o aceptaremos el orden de inserción natural (_id).
+            .sort({ _id: -1 }) // Fallback seguro: orden de creación
+            .limit(5)
+            .populate('apunteId', 'nombre'); // Si apunteId es ref
+            
+        return [reportes, null];
+    } catch (error) {
+        console.error('Error al obtener últimos reportes:', error);
         return [null, 'Error interno del servidor'];
     }
 }

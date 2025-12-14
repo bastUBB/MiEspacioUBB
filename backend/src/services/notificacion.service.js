@@ -26,7 +26,8 @@ export async function notificacionNuevoComentarioApunteService(rutUsuarioComenta
 
         const nuevaNotificacion = new Notificacion({
             tipoNotificacion: 'Nuevo comentario',
-            mensaje: `${userComentario.nombreCompleto} ha comentado en tu apunte.`
+            mensaje: `${userComentario.nombreCompleto} ha comentado en tu apunte.`,
+            apunteId: apunteID
         });
 
         await nuevaNotificacion.save();
@@ -54,7 +55,8 @@ export async function notificacionRespuestaComentarioService(rutUsuarioRespuesta
 
         const nuevaNotificacion = new Notificacion({
             tipoNotificacion: 'Respuesta a comentario',
-            mensaje: `${userRespuesta.nombreCompleto} ha respondido a tu comentario.`
+            mensaje: `${userRespuesta.nombreCompleto} ha respondido a tu comentario.`,
+            apunteId: apunteID
         });
 
         await nuevaNotificacion.save();
@@ -129,7 +131,8 @@ export async function notificacionNuevaValoracionApunteService(rutAutorApunte, r
     try {
         const nuevaNotificacion = new Notificacion({
             tipoNotificacion: 'Nueva valoración apunte',
-            mensaje: `${rutUserValoracion} ha valorado tu apunte.`
+            mensaje: `${rutUserValoracion} ha valorado tu apunte.`,
+            apunteId: apunteID
         });
 
         await nuevaNotificacion.save();

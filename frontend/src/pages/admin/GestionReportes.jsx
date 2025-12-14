@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, CheckCircle, X, HelpCircle, User, Calendar, FileText, ExternalLink } from 'lucide-react';
 import TablaGestion from '@components/tablaGestion.jsx';
-import { getAllReportesPendientesPorFechaService, actualizarEstadoReporteService } from '@services/reporte.service.js';
+import { getAllReportesPendientesPorFechaService, actualizarEstadoReporteService, obtenerReportesService } from '@services/reporte.service.js';
 import toast from 'react-hot-toast';
+import AdminHeader from '../../components/AdminHeader';
 
 function GestionReportes() {
     const navigate = useNavigate();
@@ -12,25 +13,28 @@ function GestionReportes() {
     const [modalResolver, setModalResolver] = useState({ isOpen: false, reporte: null });
     const [resolucion, setResolucion] = useState('');
     const [procesando, setProcesando] = useState(false);
+    const [vistaActual, setVistaActual] = useState('pendientes'); // 'pendientes' | 'todos'
 
     useEffect(() => {
-        cargarReportes();
-    }, []);
+        if (vistaActual === 'pendientes') {
+            cargarReportesPendientes();
+        } else {
+            cargarTodosReportes();
+        }
+    }, [vistaActual]);
 
-    const cargarReportes = async () => {
+    const cargarReportesPendientes = async () => {
         try {
             setLoading(true);
             const response = await getAllReportesPendientesPorFechaService();
 
             if (response?.data) {
-                // Formatear los datos para la tabla
                 const reportesFormateados = response.data.map(reporte => ({
                     id: reporte._id,
-                    tipo: reporte.tipo || 'General',
                     rutReportado: reporte.rutUsuarioReportado || 'N/A',
                     rutReportante: reporte.rutUsuarioReporte || 'N/A',
                     motivo: reporte.motivo || 'Sin motivo especificado',
-                    fecha: new Date(reporte.fechaReporte).toLocaleDateString('es-ES'),
+                    fecha: reporte.fecha || 'Sin fecha',
                     estado: reporte.estado || 'Pendiente',
                     _raw: reporte
                 }));
@@ -38,10 +42,38 @@ function GestionReportes() {
                 setReportes(reportesFormateados);
             } else {
                 setReportes([]);
-                toast.error('No se pudieron cargar los reportes');
             }
         } catch (error) {
             console.error('Error cargando reportes:', error);
+            toast.error('Error al cargar los reportes');
+            setReportes([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const cargarTodosReportes = async () => {
+        try {
+            setLoading(true);
+            const response = await obtenerReportesService();
+
+            if (response?.data) {
+                const reportesFormateados = response.data.map(reporte => ({
+                    id: reporte._id,
+                    rutReportado: reporte.rutUsuarioReportado || 'N/A',
+                    rutReportante: reporte.rutUsuarioReporte || 'N/A',
+                    motivo: reporte.motivo || 'Sin motivo especificado',
+                    fecha: reporte.fecha || 'Sin fecha',
+                    estado: reporte.estado || 'Pendiente',
+                    _raw: reporte
+                }));
+
+                setReportes(reportesFormateados);
+            } else {
+                setReportes([]);
+            }
+        } catch (error) {
+            console.error('Error cargando todos los reportes:', error);
             toast.error('Error al cargar los reportes');
             setReportes([]);
         } finally {
@@ -72,7 +104,7 @@ function GestionReportes() {
             if (response?.status === 'Success') {
                 toast.success('Reporte resuelto exitosamente');
                 cerrarModal();
-                cargarReportes(); // Recargar la lista
+                vistaActual === 'pendientes' ? cargarReportesPendientes() : cargarTodosReportes();
             } else {
                 toast.error(response?.details || 'Error al resolver el reporte');
             }
@@ -84,12 +116,16 @@ function GestionReportes() {
         }
     };
 
+    const handleProfileClick = () => {
+        navigate('/admin/perfil');
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        navigate('/login');
+    };
+
     const columns = [
-        {
-            key: 'tipo',
-            title: 'Tipo',
-            align: 'left'
-        },
         {
             key: 'rutReportado',
             title: 'Usuario Reportado',
@@ -120,9 +156,9 @@ function GestionReportes() {
             title: 'Estado',
             align: 'center',
             render: (item) => (
-                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${item.estado === 'Pendiente' ? 'bg-yellow-100 text-yellow-800' :
-                        item.estado === 'Resuelto' ? 'bg-green-100 text-green-800' :
-                            'bg-red-100 text-red-800'
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${item.estado === 'Pendiente' ? 'bg-yellow-100 text-yellow-800' :
+                    item.estado === 'Resuelto' ? 'bg-green-100 text-green-800' :
+                        'bg-red-100 text-red-800'
                     }`}>
                     {item.estado}
                 </span>
@@ -146,119 +182,254 @@ function GestionReportes() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 p-4 sm:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-6 flex items-center gap-4">
-                    <button
-                        onClick={() => navigate('/admin/home')}
-                        className="p-2 hover:bg-white rounded-lg transition-colors"
-                    >
-                        <ArrowLeft className="w-6 h-6 text-gray-600" />
-                    </button>
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Gestión de Reportes</h1>
-                        <p className="text-gray-600">Administra y resuelve los reportes pendientes del sistema</p>
-                    </div>
-                </div>
-
-                {/* Tabla de Reportes */}
-                <TablaGestion
-                    data={reportes}
-                    columns={columns}
-                    title="Reportes Pendientes"
-                    icon={<AlertTriangle className="w-5 h-5" />}
-                    onEdit={handleEditAction}
-                    onDelete={null}
-                    onCreate={null}
-                    showCreateButton={false}
-                    searchPlaceholder="Buscar por RUT, motivo, tipo..."
-                    emptyMessage="No hay reportes pendientes"
-                />
-
-                {/* Modal Resolver Reporte */}
-                {modalResolver.isOpen && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                            {/* Header del Modal */}
-                            <div className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white p-6 rounded-t-2xl">
-                                <h2 className="text-2xl font-bold flex items-center gap-2">
-                                    <CheckCircle className="w-6 h-6" />
-                                    Resolver Reporte
-                                </h2>
-                            </div>
-
-                            {/* Contenido del Modal */}
-                            <div className="p-6">
-                                {/* Información del Reporte */}
-                                <div className="bg-blue-50 p-4 rounded-lg mb-6">
-                                    <h3 className="font-semibold text-blue-900 mb-3">Información del Reporte</h3>
-                                    <div className="grid grid-cols-2 gap-3 text-sm">
-                                        <div>
-                                            <span className="font-medium text-gray-700">Tipo:</span>
-                                            <p className="text-gray-900">{modalResolver.reporte?.tipo}</p>
-                                        </div>
-                                        <div>
-                                            <span className="font-medium text-gray-700">Fecha:</span>
-                                            <p className="text-gray-900">{modalResolver.reporte?.fecha}</p>
-                                        </div>
-                                        <div>
-                                            <span className="font-medium text-gray-700">Reportado:</span>
-                                            <p className="text-gray-900">{modalResolver.reporte?.rutReportado}</p>
-                                        </div>
-                                        <div>
-                                            <span className="font-medium text-gray-700">Reportante:</span>
-                                            <p className="text-gray-900">{modalResolver.reporte?.rutReportante}</p>
-                                        </div>
-                                        <div className="col-span-2">
-                                            <span className="font-medium text-gray-700">Motivo:</span>
-                                            <p className="text-gray-900 mt-1">{modalResolver.reporte?.motivo}</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Campo de Resolución */}
-                                <div className="mb-6">
-                                    <label className="block text-gray-700 font-semibold mb-2">
-                                        Resolución del Reporte *
-                                    </label>
-                                    <textarea
-                                        value={resolucion}
-                                        onChange={(e) => setResolucion(e.target.value)}
-                                        placeholder="Describe la resolución o acción tomada respecto a este reporte..."
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[120px] resize-none"
-                                        disabled={procesando}
-                                    />
-                                    <p className="text-sm text-gray-500 mt-1">
-                                        Esta información quedará registrada permanentemente
-                                    </p>
-                                </div>
-
-                                {/* Botones de Acción */}
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={cerrarModal}
-                                        disabled={procesando}
-                                        className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        <XCircle className="w-5 h-5 inline mr-2" />
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        onClick={confirmarResolucion}
-                                        disabled={procesando || !resolucion.trim()}
-                                        className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        <CheckCircle className="w-5 h-5 inline mr-2" />
-                                        {procesando ? 'Procesando...' : 'Resolver Reporte'}
-                                    </button>
+        <>
+            <AdminHeader onProfileClick={handleProfileClick} onLogout={handleLogout} />
+            <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-cyan-50 p-4 sm:p-6 lg:p-8">
+                <div className="max-w-7xl mx-auto">
+                    {/* Header */}
+                    <div className="mb-8">
+                        <button
+                            onClick={() => navigate('/admin/home')}
+                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white/70 hover:bg-white hover:text-purple-600 rounded-xl border border-gray-200 hover:border-purple-200 shadow-sm hover:shadow-md transition-all duration-200 mb-4"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            Volver al Panel
+                        </button>
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-3xl font-bold text-gray-900">
+                                Gestión de Reportes
+                            </h1>
+                            <div className="relative group">
+                                <HelpCircle className="w-5 h-5 text-gray-400 hover:text-purple-500 cursor-help transition-colors" />
+                                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-64 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 shadow-xl">
+                                    Administra y resuelve los reportes pendientes del sistema
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                )}
+
+                    {/* Toggle Buttons */}
+                    <div className="flex gap-2 mb-6">
+                        <button
+                            onClick={() => setVistaActual('pendientes')}
+                            className={`px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 flex items-center gap-2 ${vistaActual === 'pendientes'
+                                ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-200'
+                                : 'bg-white text-gray-600 border border-gray-200 hover:border-orange-300 hover:text-orange-600'
+                                }`}
+                        >
+                            <AlertTriangle className="w-4 h-4" />
+                            Pendientes
+                        </button>
+                        <button
+                            onClick={() => setVistaActual('todos')}
+                            className={`px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 flex items-center gap-2 ${vistaActual === 'todos'
+                                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-200'
+                                : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                                }`}
+                        >
+                            <FileText className="w-4 h-4" />
+                            Ver Todos
+                        </button>
+                    </div>
+
+                    {/* Tabla de Reportes */}
+                    <TablaGestion
+                        data={reportes}
+                        columns={columns}
+                        title="Reportes Pendientes"
+                        icon={<AlertTriangle className="w-5 h-5" />}
+                        onEdit={handleEditAction}
+                        onDelete={null}
+                        onCreate={null}
+                        showCreateButton={false}
+                        searchPlaceholder="Buscar por RUT, motivo, fecha..."
+                        emptyMessage="No hay reportes pendientes"
+                    />
+
+                    {/* Modal Resolver Reporte */}
+                    {modalResolver.isOpen && (
+                        <div className="fixed inset-0 z-50 overflow-y-auto animate-in fade-in duration-200" aria-labelledby="modal-reporte" role="dialog" aria-modal="true">
+                            <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md transition-all" onClick={cerrarModal}></div>
+
+                            <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
+                                <div className="relative w-full max-w-2xl transform overflow-hidden rounded-3xl bg-white shadow-2xl transition-all" onClick={(e) => e.stopPropagation()}>
+                                    {/* Header con gradiente */}
+                                    <div className="relative bg-gradient-to-br from-purple-50 via-violet-50 to-cyan-50 px-8 py-6 border-b border-purple-100">
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl shadow-lg">
+                                                        <AlertTriangle className="w-6 h-6 text-white" />
+                                                    </div>
+                                                    <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-cyan-500 bg-clip-text text-transparent">
+                                                        {modalResolver.reporte?.estado === 'Pendiente' ? 'Resolver Reporte' : 'Detalles del Reporte'}
+                                                    </h2>
+                                                    {modalResolver.reporte?.estado === 'Pendiente' && (
+                                                        <div className="relative group">
+                                                            <HelpCircle className="w-5 h-5 text-gray-400 hover:text-purple-500 cursor-help transition-colors" />
+                                                            <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-64 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 shadow-xl">
+                                                                Revisa la información y proporciona una resolución
+                                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900"></div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={cerrarModal}
+                                                className="ml-4 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all duration-200"
+                                                aria-label="Cerrar modal"
+                                            >
+                                                <X className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Contenido del Modal */}
+                                    <div className="p-8 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+                                        {/* Información del Reporte */}
+                                        <div className="bg-gradient-to-br from-orange-50 to-white border border-orange-100 rounded-2xl p-6 shadow-sm">
+                                            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                                <AlertTriangle className="w-5 h-5 text-orange-600" />
+                                                Información del Reporte
+                                            </h3>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="bg-white rounded-xl p-4 border border-orange-100">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <Calendar className="w-4 h-4 text-orange-600" />
+                                                        <span className="text-sm font-medium text-gray-500">Motivo</span>
+                                                    </div>
+                                                    <p className="text-gray-900 font-medium">{modalResolver.reporte?.motivo}</p>
+                                                </div>
+                                                <div className="bg-white rounded-xl p-4 border border-orange-100">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <Calendar className="w-4 h-4 text-orange-600" />
+                                                        <span className="text-sm font-medium text-gray-500">Fecha</span>
+                                                    </div>
+                                                    <p className="text-gray-900 font-medium">{modalResolver.reporte?.fecha}</p>
+                                                </div>
+                                                <div className="bg-white rounded-xl p-4 border border-orange-100">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <User className="w-4 h-4 text-orange-600" />
+                                                        <span className="text-sm font-medium text-gray-500">Usuario Reportado</span>
+                                                    </div>
+                                                    <p className="text-gray-900 font-medium">{modalResolver.reporte?.rutReportado}</p>
+                                                </div>
+                                                <div className="bg-white rounded-xl p-4 border border-orange-100">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <User className="w-4 h-4 text-orange-600" />
+                                                        <span className="text-sm font-medium text-gray-500">Reportante</span>
+                                                    </div>
+                                                    <p className="text-gray-900 font-medium">{modalResolver.reporte?.rutReportante}</p>
+                                                </div>
+                                            </div>
+                                            {/* Descripción del Reporte */}
+                                            <div className="mt-4 bg-white rounded-xl p-4 border border-orange-100">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <FileText className="w-4 h-4 text-orange-600" />
+                                                    <span className="text-sm font-medium text-gray-500">Descripción del Reporte</span>
+                                                </div>
+                                                <p className="text-gray-900">{modalResolver.reporte?._raw?.descripcion || 'Sin descripción'}</p>
+                                            </div>
+                                            {/* Link al Apunte si existe */}
+                                            {modalResolver.reporte?._raw?.apunteId && (
+                                                <div className="mt-4">
+                                                    <a
+                                                        href={`/estudiante/apunte/${modalResolver.reporte._raw.apunteId._id || modalResolver.reporte._raw.apunteId}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        // className con el mismo formato anaranjado que los anteriores
+                                                        className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
+                                                    >
+                                                        <ExternalLink className="w-4 h-4" />
+                                                        Ver Apunte Reportado
+                                                    </a>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Campo de Resolución - Solo para reportes pendientes */}
+                                        {modalResolver.reporte?.estado === 'Pendiente' ? (
+                                            <>
+                                                <div className="bg-gradient-to-br from-green-50 to-white border border-green-100 rounded-2xl p-6 shadow-sm">
+                                                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                                        <CheckCircle className="w-5 h-5 text-green-600" />
+                                                        Resolución
+                                                    </h3>
+                                                    <textarea
+                                                        value={resolucion}
+                                                        onChange={(e) => setResolucion(e.target.value)}
+                                                        placeholder="Describe la resolución o acción tomada respecto a este reporte..."
+                                                        className="w-full px-4 py-3 border border-green-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent min-h-[120px] resize-none transition-all"
+                                                        disabled={procesando}
+                                                    />
+                                                    <p className="text-sm text-gray-500 mt-2">
+                                                        Esta información quedará registrada permanentemente
+                                                    </p>
+                                                </div>
+
+                                                {/* Botones de Acción */}
+                                                <div className="flex gap-4">
+                                                    <button
+                                                        onClick={confirmarResolucion}
+                                                        disabled={procesando || !resolucion.trim()}
+                                                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-violet-500 text-white rounded-xl hover:from-purple-700 hover:to-violet-600 transition-all font-medium shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        <CheckCircle className="w-5 h-5" />
+                                                        {procesando ? 'Procesando...' : 'Resolver Reporte'}
+                                                    </button>
+                                                    <button
+                                                        onClick={cerrarModal}
+                                                        disabled={procesando}
+                                                        className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-medium disabled:opacity-50"
+                                                    >
+                                                        Cancelar
+                                                    </button>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                {/* Mostrar resolución existente para reportes resueltos */}
+                                                <div className="bg-gradient-to-br from-green-50 to-white border border-green-100 rounded-2xl p-6 shadow-sm">
+                                                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                                        <CheckCircle className="w-5 h-5 text-green-600" />
+                                                        Resolución Aplicada
+                                                    </h3>
+                                                    <div className="bg-white rounded-xl p-4 border border-green-100">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${modalResolver.reporte?.estado === 'Resuelto'
+                                                                    ? 'bg-green-100 text-green-700'
+                                                                    : 'bg-red-100 text-red-700'
+                                                                }`}>
+                                                                {modalResolver.reporte?.estado}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-gray-900">
+                                                            {modalResolver.reporte?._raw?.resolucion || 'Sin información de resolución registrada'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Botón Cerrar */}
+                                                <div className="flex justify-end">
+                                                    <button
+                                                        onClick={cerrarModal}
+                                                        className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-medium"
+                                                    >
+                                                        Cerrar
+                                                    </button>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
-        </div>
+        </>
     );
 }
 

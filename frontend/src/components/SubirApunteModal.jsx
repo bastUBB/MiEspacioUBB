@@ -500,17 +500,27 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
           <div className="relative bg-gradient-to-br from-purple-50 via-violet-50 to-cyan-50 px-8 py-8 border-b border-purple-100">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-center gap-3">
                   <div className="p-2 bg-gradient-to-r from-purple-600 to-cyan-500 rounded-xl shadow-lg">
                     <Sparkles className="text-white" size={24} />
                   </div>
                   <h2 className="text-3xl font-bold text-gray-900">
                     Compartir Apunte
                   </h2>
+                  <div className="relative group">
+                    <button className="text-gray-400 hover:text-purple-500 cursor-help transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                      </svg>
+                    </button>
+                    <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-64 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 shadow-xl">
+                      Ayuda a otros estudiantes compartiendo tu conocimiento y materiales de estudio
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900"></div>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-gray-600 text-sm ml-14">
-                  Ayuda a otros estudiantes compartiendo tu conocimiento
-                </p>
               </div>
               <button
                 onClick={onClose}
@@ -539,7 +549,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
 
                 <div className="space-y-5">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                    <label htmlFor="name" className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                       <PencilLine size={16} className="text-purple-600" />
                       Nombre del Apunte
                     </label>
@@ -559,7 +569,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
                   </div>
 
                   <div>
-                    <label htmlFor="authors" className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                    <label htmlFor="authors" className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                       <Users size={16} className="text-purple-600" />
                       Autores
                     </label>
@@ -579,7 +589,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
                   </div>
 
                   <div>
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                    <label htmlFor="description" className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                       <AlignLeft size={16} className="text-purple-600" />
                       Descripción
                     </label>
@@ -612,7 +622,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
                 <div className="space-y-5">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="relative" ref={dropdownRef}>
-                      <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                         <BookOpen size={16} className="text-violet-600" />
                         Asignatura
                       </label>
@@ -679,7 +689,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
                     </div>
 
                     <div>
-                      <label htmlFor="noteType" className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      <label htmlFor="noteType" className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                         <FolderOpen size={16} className="text-violet-600" />
                         Tipo de Apunte
                       </label>
@@ -715,7 +725,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="text-sm font-medium text-gray-700 mb-2">
                       Etiquetas
                     </label>
                     <div className="flex gap-2">
@@ -784,8 +794,8 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
                                 onClick={() => agregarEtiquetaSugerida(etiqueta)}
                                 disabled={etiquetas.includes(etiqueta.toLowerCase())}
                                 className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-200 flex-shrink-0 ${etiquetas.includes(etiqueta.toLowerCase())
-                                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                                    : 'bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100 hover:border-violet-300 hover:scale-105'
+                                  ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                                  : 'bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100 hover:border-violet-300 hover:scale-105'
                                   }`}
                               >
                                 {etiqueta}

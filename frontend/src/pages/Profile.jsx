@@ -20,6 +20,7 @@ import {
   groupHistoryByPeriod,
   formatActionForUser
 } from '../helpers/historialHelpers';
+import { getRoleBasePath } from '../helpers/roleBasePath.helper';
 
 function Profile() {
   const { user, loading: userLoading } = useContext(UserContext);
@@ -48,7 +49,8 @@ function Profile() {
     asignaturasCursantes: [],
     asignaturasInteres: [],
     metodosEstudiosPreferidos: [],
-    informeCurricular: []
+    informeCurricular: [],
+    asignaturasImpartidasActuales: []
   });
 
   // Estados temporales para edición
@@ -132,7 +134,8 @@ function Profile() {
             asignaturasCursantes: response.data.asignaturasCursantes || [],
             asignaturasInteres: response.data.asignaturasInteres || [],
             metodosEstudiosPreferidos: response.data.metodosEstudiosPreferidos || [],
-            informeCurricular: response.data.informeCurricular || []
+            informeCurricular: response.data.informeCurricular || [],
+            asignaturasImpartidasActuales: response.data.asignaturasImpartidasActuales || []
           };
           setPerfilData(data);
           setTempPerfilData(data);
@@ -366,12 +369,15 @@ function Profile() {
     }));
   };
 
-  const handleHomeClick = () => navigate('/estudiante/home');
+  // Obtener el prefijo de ruta basado en el rol del usuario
+  const basePath = getRoleBasePath(user?.role);
+
+  const handleHomeClick = () => navigate(`${basePath}/home`);
   const handleProfileClick = () => { };
-  const handleExplorarClick = () => navigate('/estudiante/explorar');
-  const handleMisApuntesClick = () => navigate('/estudiante/mis-aportes');
-  const handleEstadisticasClick = () => navigate('/estudiante/estadisticas');
-  const handleConfigClick = () => navigate('/estudiante/configuracion');
+  const handleExplorarClick = () => navigate(`${basePath}/explorar`);
+  const handleMisApuntesClick = () => navigate(`${basePath}/mis-aportes`);
+  const handleEstadisticasClick = () => navigate(`${basePath}/estadisticas`);
+  const handleConfigClick = () => navigate(`${basePath}/configuracion`);
 
   const handleLogout = () => {
     document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
@@ -409,9 +415,9 @@ function Profile() {
 
         {/* Hero Section */}
         <div className="relative overflow-hidden bg-white rounded-3xl shadow-sm border border-gray-100 mb-8 group hover:shadow-md transition-all duration-300">
-          <div className="absolute top-0 left-0 w-full h-60 bg-gradient-to-r from-purple-400 to-purple-600"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-violet-400 to-fuchsia-400"></div>
 
-          <div className="relative px-8 pb-8 pt-16">
+          <div className="relative px-8 py-8">
             <div className="flex flex-col md:flex-row items-start md:items-end gap-6">
               <div className="relative">
                 <div className="w-32 h-32 bg-white rounded-full p-1 shadow-lg ring-4 ring-white/50">
@@ -565,230 +571,275 @@ function Profile() {
 
             {activeTab === 'academic' && (
               <div className="space-y-6 animate-fade-in-up">
-                {/* Asignaturas Cursantes */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                  <div className="p-6 border-b border-gray-50 flex justify-between items-center">
-                    <div>
+
+                {/* Sección para Docente/Ayudante: Asignaturas que Imparte */}
+                {(user?.role === 'docente' || user?.role === 'ayudante') && (
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="p-6 border-b border-gray-50">
                       <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <Layers className="w-5 h-5 text-purple-600" />
-                        Asignaturas en Curso
+                        <GraduationCap className="w-5 h-5 text-blue-600" />
+                        {user?.role === 'docente' ? 'Asignaturas que Imparte' : 'Asignaturas en las que eres Ayudante'}
                       </h2>
-                      <p className="text-sm text-gray-500">Materias que estás cursando este semestre</p>
+                      <p className="text-sm text-gray-500">
+                        {user?.role === 'docente'
+                          ? 'Materias que impartes actualmente'
+                          : 'Materias en las que apoyas como ayudante'}
+                      </p>
                     </div>
-                    {!isEditingPerfil ? (
-                      <button
-                        onClick={handleEditPerfil}
-                        className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
-                      >
-                        <Edit2 className="w-5 h-5" />
-                      </button>
-                    ) : (
-                      <div className="flex gap-2">
-                        <button onClick={handleSavePerfil} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all"><Save className="w-5 h-5" /></button>
-                        <button onClick={handleCancelPerfilEdit} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"><X className="w-5 h-5" /></button>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="p-6">
-                    {isEditingPerfil && (
-                      <div className="mb-4 space-y-3">
-                        <select
-                          defaultValue={""}
-                          onChange={(e) => handleAddAsignaturaCursante(e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
-                          disabled={loadingAsignaturas}
-                        >
-                          <option value="" disabled>+ Agregar asignatura en curso...</option>
-                          {asignaturas.map((asig) => (
-                            <option key={asig._id} value={asig.nombre}>{asig.nombre}</option>
-                          ))}
-                        </select>
-
-                        <div className="flex gap-2">
-                          <button
-                            onClick={handleSelectAllCursantes}
-                            className="text-xs px-3 py-1.5 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors font-medium"
-                          >
-                            Seleccionar Todas
-                          </button>
-                          <button
-                            onClick={handleDeselectAllCursantes}
-                            className="text-xs px-3 py-1.5 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition-colors font-medium"
-                          >
-                            Deseleccionar Todas
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {(isEditingPerfil ? tempPerfilData.asignaturasCursantes : perfilData.asignaturasCursantes).map((asig, index) => (
-                        <div key={index} className="group relative bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all duration-300 hover:border-purple-200">
-                          <div className="flex items-start justify-between">
+                    <div className="p-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {perfilData.asignaturasImpartidasActuales.map((asig, index) => (
+                          <div key={index} className="group relative bg-gradient-to-br from-white to-blue-50 border border-blue-200 rounded-xl p-4 hover:shadow-md transition-all duration-300 hover:border-blue-300">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
+                              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
                                 <BookOpen className="w-5 h-5" />
                               </div>
                               <div>
                                 <h3 className="font-semibold text-gray-900">{asig}</h3>
-                                <p className="text-xs text-gray-500">En curso</p>
+                                <p className="text-xs text-gray-500">{user?.role === 'docente' ? 'Impartiendo' : 'Ayudantía'}</p>
                               </div>
                             </div>
-                            {isEditingPerfil && (
-                              <button onClick={() => handleRemoveAsignaturaCursante(asig)} className="text-gray-400 hover:text-red-500 transition-colors">
-                                <X className="w-4 h-4" />
-                              </button>
-                            )}
                           </div>
-                        </div>
-                      ))}
-                      {(isEditingPerfil ? tempPerfilData.asignaturasCursantes : perfilData.asignaturasCursantes).length === 0 && (
-                        <div className="col-span-2 text-center py-8 border-2 border-dashed border-gray-200 rounded-xl">
-                          <p className="text-gray-500">No tienes asignaturas registradas</p>
-                        </div>
-                      )}
+                        ))}
+                        {perfilData.asignaturasImpartidasActuales.length === 0 && (
+                          <div className="col-span-2 text-center py-8 border-2 border-dashed border-gray-200 rounded-xl">
+                            <p className="text-gray-500">No tienes asignaturas registradas</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
-                {/* Intereses y Métodos */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <Zap className="w-5 h-5 text-yellow-500" />
-                      Intereses
-                    </h3>
-                    {isEditingPerfil && (
-                      <div className="mb-3">
-                        <select
-                          defaultValue={""}
-                          onChange={(e) => handleAddAsignaturaInteres(e.target.value)}
-                          className="w-full px-3 py-2 mb-2 text-sm border border-gray-300 rounded-lg"
-                        >
-                          <option value="" disabled>+ Agregar interés...</option>
-                          {asignaturas.map((asig) => (
-                            <option key={asig._id} value={asig.nombre}>{asig.nombre}</option>
+                {/* Secciones para Estudiante/Ayudante (no docente) */}
+                {user?.role !== 'docente' && (
+                  <>
+                    {/* Asignaturas Cursantes */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                      <div className="p-6 border-b border-gray-50 flex justify-between items-center">
+                        <div>
+                          <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <Layers className="w-5 h-5 text-purple-600" />
+                            Asignaturas en Curso
+                          </h2>
+                          <p className="text-sm text-gray-500">Materias que estás cursando este semestre</p>
+                        </div>
+                        {!isEditingPerfil ? (
+                          <button
+                            onClick={handleEditPerfil}
+                            className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
+                          >
+                            <Edit2 className="w-5 h-5" />
+                          </button>
+                        ) : (
+                          <div className="flex gap-2">
+                            <button onClick={handleSavePerfil} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all"><Save className="w-5 h-5" /></button>
+                            <button onClick={handleCancelPerfilEdit} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"><X className="w-5 h-5" /></button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-6">
+                        {isEditingPerfil && (
+                          <div className="mb-4 space-y-3">
+                            <select
+                              defaultValue={""}
+                              onChange={(e) => handleAddAsignaturaCursante(e.target.value)}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                              disabled={loadingAsignaturas}
+                            >
+                              <option value="" disabled>+ Agregar asignatura en curso...</option>
+                              {asignaturas.map((asig) => (
+                                <option key={asig._id} value={asig.nombre}>{asig.nombre}</option>
+                              ))}
+                            </select>
+
+                            <div className="flex gap-2">
+                              <button
+                                onClick={handleSelectAllCursantes}
+                                className="text-xs px-3 py-1.5 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors font-medium"
+                              >
+                                Seleccionar Todas
+                              </button>
+                              <button
+                                onClick={handleDeselectAllCursantes}
+                                className="text-xs px-3 py-1.5 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition-colors font-medium"
+                              >
+                                Deseleccionar Todas
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {(isEditingPerfil ? tempPerfilData.asignaturasCursantes : perfilData.asignaturasCursantes).map((asig, index) => (
+                            <div key={index} className="group relative bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all duration-300 hover:border-purple-200">
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
+                                    <BookOpen className="w-5 h-5" />
+                                  </div>
+                                  <div>
+                                    <h3 className="font-semibold text-gray-900">{asig}</h3>
+                                    <p className="text-xs text-gray-500">En curso</p>
+                                  </div>
+                                </div>
+                                {isEditingPerfil && (
+                                  <button onClick={() => handleRemoveAsignaturaCursante(asig)} className="text-gray-400 hover:text-red-500 transition-colors">
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
                           ))}
-                        </select>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={handleSelectAllIntereses}
-                            className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition-colors font-medium"
-                          >
-                            Todas
-                          </button>
-                          <button
-                            onClick={handleDeselectAllIntereses}
-                            className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors font-medium"
-                          >
-                            Ninguna
-                          </button>
+                          {(isEditingPerfil ? tempPerfilData.asignaturasCursantes : perfilData.asignaturasCursantes).length === 0 && (
+                            <div className="col-span-2 text-center py-8 border-2 border-dashed border-gray-200 rounded-xl">
+                              <p className="text-gray-500">No tienes asignaturas registradas</p>
+                            </div>
+                          )}
                         </div>
                       </div>
-                    )}
-                    <div className="flex flex-wrap gap-2">
-                      {(isEditingPerfil ? tempPerfilData.asignaturasInteres : perfilData.asignaturasInteres).map((asig, index) => (
-                        <span key={index} className="px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg text-sm font-medium border border-yellow-100 flex items-center gap-1">
-                          {asig}
-                          {isEditingPerfil && (
-                            <button onClick={() => handleRemoveAsignaturaInteres(asig)} className="hover:text-yellow-900 ml-1"><X className="w-3 h-3" /></button>
+                    </div>
+
+                    {/* Intereses y Métodos */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                          <Zap className="w-5 h-5 text-yellow-500" />
+                          Intereses
+                        </h3>
+                        {isEditingPerfil && (
+                          <div className="mb-3">
+                            <select
+                              defaultValue={""}
+                              onChange={(e) => handleAddAsignaturaInteres(e.target.value)}
+                              className="w-full px-3 py-2 mb-2 text-sm border border-gray-300 rounded-lg"
+                            >
+                              <option value="" disabled>+ Agregar interés...</option>
+                              {asignaturas.map((asig) => (
+                                <option key={asig._id} value={asig.nombre}>{asig.nombre}</option>
+                              ))}
+                            </select>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={handleSelectAllIntereses}
+                                className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition-colors font-medium"
+                              >
+                                Todas
+                              </button>
+                              <button
+                                onClick={handleDeselectAllIntereses}
+                                className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors font-medium"
+                              >
+                                Ninguna
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        <div className="flex flex-wrap gap-2">
+                          {(isEditingPerfil ? tempPerfilData.asignaturasInteres : perfilData.asignaturasInteres).map((asig, index) => (
+                            <span key={index} className="px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg text-sm font-medium border border-yellow-100 flex items-center gap-1">
+                              {asig}
+                              {isEditingPerfil && (
+                                <button onClick={() => handleRemoveAsignaturaInteres(asig)} className="hover:text-yellow-900 ml-1"><X className="w-3 h-3" /></button>
+                              )}
+                            </span>
+                          ))}
+                          {(isEditingPerfil ? tempPerfilData.asignaturasInteres : perfilData.asignaturasInteres).length === 0 && (
+                            <p className="text-sm text-gray-400 italic">Sin intereses registrados</p>
                           )}
-                        </span>
-                      ))}
-                      {(isEditingPerfil ? tempPerfilData.asignaturasInteres : perfilData.asignaturasInteres).length === 0 && (
-                        <p className="text-sm text-gray-400 italic">Sin intereses registrados</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <BarChart3 className="w-5 h-5 text-indigo-500" />
-                      Métodos de Estudio
-                    </h3>
-                    {isEditingPerfil && (
-                      <div className="mb-4">
-                        <select
-                          defaultValue={""}
-                          onChange={(e) => {
-                            handleAddMetodoEstudio(e.target.value);
-                            e.target.value = '';
-                          }}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-                        >
-                          <option value="" disabled>+ Agregar método...</option>
-                          <option value="Manuscritos">Manuscritos</option>
-                          <option value="Documentos tipeados">Documentos tipeados</option>
-                          <option value="Resúmenes conceptuales">Resúmenes conceptuales</option>
-                          <option value="Mapas mentales">Mapas mentales</option>
-                          <option value="Diagramas y esquemas">Diagramas y esquemas</option>
-                          <option value="Resolución de ejercicios">Resolución de ejercicios</option>
-                          <option value="Flashcards">Flashcards</option>
-                          <option value="Formularios">Formularios</option>
-                          <option value="Presentaciones">Presentaciones</option>
-                          <option value="Ninguno">Ninguno</option>
-                          <option value="Otros">Otros</option>
-                        </select>
+                        </div>
                       </div>
-                    )}
-                    <div className="flex flex-wrap gap-2">
-                      {(isEditingPerfil ? tempPerfilData.metodosEstudiosPreferidos : perfilData.metodosEstudiosPreferidos).map((metodo, index) => (
-                        <span key={index} className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium border border-indigo-100 flex items-center gap-1">
-                          {metodo}
-                          {isEditingPerfil && (
-                            <button onClick={() => handleRemoveMetodoEstudio(metodo)} className="hover:text-indigo-900 ml-1">
-                              <X className="w-3 h-3" />
-                            </button>
+
+                      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                          <BarChart3 className="w-5 h-5 text-indigo-500" />
+                          Métodos de Estudio
+                        </h3>
+                        {isEditingPerfil && (
+                          <div className="mb-4">
+                            <select
+                              defaultValue={""}
+                              onChange={(e) => {
+                                handleAddMetodoEstudio(e.target.value);
+                                e.target.value = '';
+                              }}
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                            >
+                              <option value="" disabled>+ Agregar método...</option>
+                              <option value="Manuscritos">Manuscritos</option>
+                              <option value="Documentos tipeados">Documentos tipeados</option>
+                              <option value="Resúmenes conceptuales">Resúmenes conceptuales</option>
+                              <option value="Mapas mentales">Mapas mentales</option>
+                              <option value="Diagramas y esquemas">Diagramas y esquemas</option>
+                              <option value="Resolución de ejercicios">Resolución de ejercicios</option>
+                              <option value="Flashcards">Flashcards</option>
+                              <option value="Formularios">Formularios</option>
+                              <option value="Presentaciones">Presentaciones</option>
+                              <option value="Ninguno">Ninguno</option>
+                              <option value="Otros">Otros</option>
+                            </select>
+                          </div>
+                        )}
+                        <div className="flex flex-wrap gap-2">
+                          {(isEditingPerfil ? tempPerfilData.metodosEstudiosPreferidos : perfilData.metodosEstudiosPreferidos).map((metodo, index) => (
+                            <span key={index} className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium border border-indigo-100 flex items-center gap-1">
+                              {metodo}
+                              {isEditingPerfil && (
+                                <button onClick={() => handleRemoveMetodoEstudio(metodo)} className="hover:text-indigo-900 ml-1">
+                                  <X className="w-3 h-3" />
+                                </button>
+                              )}
+                            </span>
+                          ))}
+                          {(isEditingPerfil ? tempPerfilData.metodosEstudiosPreferidos : perfilData.metodosEstudiosPreferidos).length === 0 && (
+                            <p className="text-sm text-gray-400 italic">Sin métodos registrados</p>
                           )}
-                        </span>
-                      ))}
-                      {(isEditingPerfil ? tempPerfilData.metodosEstudiosPreferidos : perfilData.metodosEstudiosPreferidos).length === 0 && (
-                        <p className="text-sm text-gray-400 italic">Sin métodos registrados</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Informe Curricular */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                  <div className="p-6 border-b border-gray-50 flex justify-between items-center">
-                    <div>
-                      <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <TrendingUp className="w-5 h-5 text-green-500" />
-                        Informe Curricular
-                      </h2>
-                      <p className="text-sm text-gray-500">
-                        {isEditingPerfil
-                          ? 'Edita la complejidad o agrega evaluaciones de tus asignaturas'
-                          : 'Rendimiento académico de tus asignaturas cursantes'
-                        }
-                      </p>
-                    </div>
-                    {!isEditingPerfil ? (
-                      <button
-                        onClick={handleEditPerfil}
-                        className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
-                      >
-                        <Edit2 className="w-5 h-5" />
-                      </button>
-                    ) : (
-                      <div className="flex gap-2">
-                        <button onClick={handleSavePerfil} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all"><Save className="w-5 h-5" /></button>
-                        <button onClick={handleCancelPerfilEdit} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"><X className="w-5 h-5" /></button>
+                        </div>
                       </div>
-                    )}
-                  </div>
+                    </div>
 
-                  <div className="p-6">
-                    <InformeCurricularEditor
-                      informeCurricular={isEditingPerfil ? tempPerfilData.informeCurricular : perfilData.informeCurricular}
-                      asignaturasCursantes={isEditingPerfil ? tempPerfilData.asignaturasCursantes : perfilData.asignaturasCursantes}
-                      onUpdate={handleUpdateInformeCurricular}
-                      isEditing={isEditingPerfil}
-                    />
-                  </div>
-                </div>
+                    {/* Informe Curricular */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                      <div className="p-6 border-b border-gray-50 flex justify-between items-center">
+                        <div>
+                          <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <TrendingUp className="w-5 h-5 text-green-500" />
+                            Informe Curricular
+                          </h2>
+                          <p className="text-sm text-gray-500">
+                            {isEditingPerfil
+                              ? 'Edita la complejidad o agrega evaluaciones de tus asignaturas'
+                              : 'Rendimiento académico de tus asignaturas cursantes'
+                            }
+                          </p>
+                        </div>
+                        {!isEditingPerfil ? (
+                          <button
+                            onClick={handleEditPerfil}
+                            className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
+                          >
+                            <Edit2 className="w-5 h-5" />
+                          </button>
+                        ) : (
+                          <div className="flex gap-2">
+                            <button onClick={handleSavePerfil} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all"><Save className="w-5 h-5" /></button>
+                            <button onClick={handleCancelPerfilEdit} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"><X className="w-5 h-5" /></button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-6">
+                        <InformeCurricularEditor
+                          informeCurricular={isEditingPerfil ? tempPerfilData.informeCurricular : perfilData.informeCurricular}
+                          asignaturasCursantes={isEditingPerfil ? tempPerfilData.asignaturasCursantes : perfilData.asignaturasCursantes}
+                          onUpdate={handleUpdateInformeCurricular}
+                          isEditing={isEditingPerfil}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 

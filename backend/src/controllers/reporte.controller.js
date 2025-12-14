@@ -3,7 +3,8 @@ import {
     obtenerMisReportesService,
     getAllReportesPendientesPorFechaService,
     actualizarEstadoReporteService,
-    obtenerCantidadReportesPendientesService
+    obtenerCantidadReportesPendientesService,
+    obtenerReportesService
 } from '../services/reporte.service.js';
 import { reporteQueryValidation, reporteCreateValidation, reporteUpdateValidation, consultaReportesValidation } from '../validations/reporte.validation.js';
 import { handleSuccess, handleErrorClient, handleErrorServer } from '../handlers/responseHandlers.js';
@@ -83,3 +84,18 @@ export async function obtenerCantidadReportesPendientes(req, res) {
         handleErrorServer(res, 500, "Error interno del servidor", error.message);
     }
 }
+
+export async function obtenerReportes(req, res) {
+    try {
+        const [reportes, errorReportes] = await obtenerReportesService();
+
+        if (!reportes || reportes.length === 0) return handleSuccess(res, 200, "No hay reportes", "");
+
+        if (errorReportes) return handleErrorServer(res, 400, "Error al obtener los reportes", errorReportes);
+
+        return handleSuccess(res, 200, "Reportes obtenidos con éxito", reportes);
+    } catch (error) {
+        handleErrorServer(res, 500, "Error interno del servidor", error.message);
+    }
+}
+

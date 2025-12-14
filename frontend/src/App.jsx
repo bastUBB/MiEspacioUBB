@@ -16,15 +16,20 @@ import GeneralLayout from './layouts/generalLayout.jsx'
 
 // Páginas
 import InicioPerfilAcademicoEstudiante from './pages/estudiante/perfilAcademicoEstudiante.jsx'
-// import InicioPerfilAcademicoDocente from './pages/docente/perfilAcademicoDocente.jsx'
-// import InicioPerfilAcademicoAyudante from './pages/ayudante/perfilAcademicoAyudante.jsx'
+import InicioPerfilAcademicoDocente from './pages/docente/perfilAcademicoDocente.jsx'
+import InicioPerfilAcademicoAyudante from './pages/ayudante/perfilAcademicoAyudante.jsx'
 
-import Home from './pages/Home.jsx'
+import Home from './pages/estudiante/HomeEstudiante.jsx'
 import HomeAdmin from './pages/admin/HomeAdmin.jsx'
+import HomeDocente from './pages/docente/HomeDocente.jsx'
+import HomeAyudante from './pages/ayudante/HomeAyudante.jsx'
 
 import Profile from './pages/Profile.jsx'
 import GestionUsuarios from './pages/admin/GestionUsuarios.jsx'
 import GestionApuntes from './pages/admin/GestionApuntes.jsx'
+import GestionAsignaturas from './pages/admin/GestionAsignaturas.jsx'
+import GestionReportes from './pages/admin/GestionReportes.jsx'
+import EstadisticasAdmin from './pages/admin/EstadisticasAdmin.jsx'
 import ExplorarApuntes from './pages/ExplorarApuntes.jsx'
 import MisAportes from './pages/MisAportes.jsx'
 import MisApuntes from './pages/MisApuntes.jsx'
@@ -32,13 +37,12 @@ import Estadisticas from './pages/Estadisticas.jsx'
 import DetalleApunte from './pages/DetalleApunte.jsx'
 import ExploradorEncuestas from './pages/ExploradorEncuestas.jsx'
 import MisEncuestas from './pages/admin/MisEncuestas.jsx'
-import CrearEncuesta from './pages/admin/CrearEncuesta.jsx'
 
 import { Toaster } from 'react-hot-toast'
 import { UserContextProvider } from './context/userContextProvider.jsx'
 import { SocketProvider } from './context/SocketContext.jsx'
 import { RoleProtectedRoute, UnauthorizedPage } from './components/roleProtectedRoute.jsx'
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
 
 const API_URL = import.meta.env.VITE_BASE_URL;
 // console.log("API URL:", API_URL);
@@ -98,13 +102,15 @@ function App() {
               </ProtectedRoute>
             } />
 
-            {/* Rutas generales */}
-            <Route path="/" element={
-              <GeneralLayout />
-            }>
-              <Route index element={<Bienvenida />} />
-              {/* aqui agregar y ver bien cual dejaré como rutas generales */}
-            </Route>
+            {/* Redirigir raíz al dashboard (maneja autenticación y rol) */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+            {/* Página de bienvenida (todos los roles autenticados) */}
+            <Route path="/bienvenida" element={
+              <ProtectedRoute>
+                <Bienvenida />
+              </ProtectedRoute>
+            } />
 
             {/* Rutas admin*/}
             <Route path="/admin" element={
@@ -115,9 +121,11 @@ function App() {
               <Route index element={<HomeAdmin />} />
               <Route path="home" element={<HomeAdmin />} />
               <Route path="encuestas" element={<MisEncuestas />} />
-              <Route path="encuestas/crear" element={<CrearEncuesta />} />
               <Route path="usuarios" element={<GestionUsuarios />} />
               <Route path="apuntes" element={<GestionApuntes />} />
+              <Route path="asignaturas" element={<GestionAsignaturas />} />
+              <Route path="reportes" element={<GestionReportes />} />
+              <Route path="estadisticas" element={<EstadisticasAdmin />} />
             </Route>
 
             {/* Rutas docente*/}
@@ -126,12 +134,12 @@ function App() {
                 <DocenteLayout />
               </RoleProtectedRoute>
             }>
-              {/* <Route index element={<InicioPerfilAcademicoDocente />} /> */}
-
-              <Route path="home" element={<Home />} />
+              <Route index element={<InicioPerfilAcademicoDocente />} />
+              <Route path="perfil-academico" element={<InicioPerfilAcademicoDocente />} />
+              <Route path="home" element={<HomeDocente />} />
               <Route path="profile" element={<Profile />} />
               <Route path="explorar" element={<ExplorarApuntes />} />
-              <Route path="mis-apuntes" element={<MisApuntes />} />
+              <Route path="mis-aportes" element={<MisApuntes />} />
               <Route path="estadisticas" element={<Estadisticas />} />
               <Route path="encuestas" element={<ExploradorEncuestas />} />
               <Route path="apunte/:id" element={<DetalleApunte />} />
@@ -143,12 +151,12 @@ function App() {
                 <AyudanteLayout />
               </RoleProtectedRoute>
             }>
-              {/* <Route index element={<InicioPerfilAcademicoAyudante />} /> */}
-
-              <Route path="home" element={<Home />} />
+              <Route index element={<InicioPerfilAcademicoAyudante />} />
+              <Route path="perfil-academico" element={<InicioPerfilAcademicoAyudante />} />
+              <Route path="home" element={<HomeAyudante />} />
               <Route path="profile" element={<Profile />} />
               <Route path="explorar" element={<ExplorarApuntes />} />
-              <Route path="mis-apuntes" element={<MisApuntes />} />
+              <Route path="mis-aportes" element={<MisApuntes />} />
               <Route path="estadisticas" element={<Estadisticas />} />
               <Route path="encuestas" element={<ExploradorEncuestas />} />
               <Route path="apunte/:id" element={<DetalleApunte />} />

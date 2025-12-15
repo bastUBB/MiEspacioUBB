@@ -5,7 +5,8 @@ import {
     obtenerEncuestaPorIdService,
     actualizarEncuestaService,
     eliminarEncuestaService,
-    obtenerMisEncuestasService
+    obtenerMisEncuestasService,
+    obtenerEncuestasPorRutService
 } from '../services/encuesta.service.js';
 import {
     encuestaCreateValidation,
@@ -119,6 +120,22 @@ export async function obtenerMisEncuestas(req, res) {
         if (errorQuery) return handleErrorClient(res, 400, "Error de validación en Query", errorQuery.message);
 
         const [encuestas, errorEncuestas] = await obtenerMisEncuestasService(valueQuery.perfilAcademicoID);
+
+        if (errorEncuestas) return handleErrorServer(res, 400, "Error al obtener las encuestas", errorEncuestas);
+
+        return handleSuccess(res, 200, "Encuestas obtenidas con éxito", encuestas);
+    } catch (error) {
+        handleErrorServer(res, 500, "Error interno del servidor", error.message);
+    }
+}
+
+export async function obtenerEncuestasPorRut(req, res) {
+    try {
+        const { rutAutor } = req.query;
+
+        if (!rutAutor) return handleErrorClient(res, 400, "Error de validación", "El rut del autor es obligatorio");
+
+        const [encuestas, errorEncuestas] = await obtenerEncuestasPorRutService(rutAutor);
 
         if (errorEncuestas) return handleErrorServer(res, 400, "Error al obtener las encuestas", errorEncuestas);
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, ArrowLeft, Eye, X, Loader2, Download, ExternalLink, User, Calendar, BookOpen, Tag, BarChart3, MessageSquare, Star, HelpCircle, AlertTriangle, RefreshCw } from 'lucide-react';
+import { FileText, ArrowLeft, Eye, X, Loader2, Download, ExternalLink, User, Calendar, BookOpen, Tag, BarChart3, MessageSquare, Star, HelpCircle, AlertTriangle, RefreshCw, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import TablaGestion from '@components/tablaGestion.jsx';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -20,6 +20,12 @@ function GestionApuntes() {
     const [motivoRevision, setMotivoRevision] = useState('');
     const [nuevoEstado, setNuevoEstado] = useState('');
     const [procesandoRevision, setProcesandoRevision] = useState(false);
+
+    // Estado para modal de confirmación de eliminación
+    const [modalConfirmacion, setModalConfirmacion] = useState({ isOpen: false, apunte: null, procesando: false });
+
+    // Estado para filtro por estado
+    const [filtroEstado, setFiltroEstado] = useState('Todos');
 
     useEffect(() => {
         cargarApuntes();
@@ -81,23 +87,35 @@ function GestionApuntes() {
         }
     };
 
-    const eliminarApunte = async (apunte) => {
-        if (!confirm(`¿Estás seguro de eliminar el apunte "${apunte.nombre}"? Esta acción es permanente.`)) {
-            return;
-        }
+    const abrirModalConfirmacion = (apunte) => {
+        setModalConfirmacion({ isOpen: true, apunte, procesando: false });
+    };
+
+    const cerrarModalConfirmacion = () => {
+        setModalConfirmacion({ isOpen: false, apunte: null, procesando: false });
+    };
+
+    const confirmarEliminacion = async () => {
+        const apunte = modalConfirmacion.apunte;
+        if (!apunte) return;
+
+        setModalConfirmacion(prev => ({ ...prev, procesando: true }));
 
         try {
             const response = await axios.delete(`/api/apuntes/detail?apunteID=${apunte.id}`);
 
             if (response?.data?.status === 'Success') {
-                toast.success('Apunte eliminado');
+                toast.success('Apunte eliminado correctamente');
+                cerrarModalConfirmacion();
                 cargarApuntes();
             } else {
                 toast.error(response?.data?.details || 'Error al eliminar el apunte');
+                setModalConfirmacion(prev => ({ ...prev, procesando: false }));
             }
         } catch (error) {
             console.error('Error eliminando apunte:', error);
             toast.error('Error al eliminar el apunte');
+            setModalConfirmacion(prev => ({ ...prev, procesando: false }));
         }
     };
 
@@ -265,13 +283,51 @@ function GestionApuntes() {
                         </div>
                     </div>
 
+                    {/* Filtros por Estado */}
+                    <div className="mb-6 bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-gray-200 shadow-sm">
+                        <div className="flex flex-wrap gap-2">
+                            {[
+                                { key: 'Todos', label: 'Todos', icon: FileText },
+                                { key: 'Activo', label: 'Activo', icon: CheckCircle },
+                                { key: 'Bajo Revisión', label: 'Bajo Revisión', icon: AlertTriangle },
+                                { key: 'Suspendido', label: 'Suspendido', icon: XCircle }
+                            ].map(({ key, label, icon: Icon }) => {
+                                const count = key === 'Todos'
+                                    ? apuntes.length
+                                    : apuntes.filter(a => a.estado === key).length;
+                                const isActive = filtroEstado === key;
+
+                                const colorClasses = {
+                                    'Todos': isActive ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-700 hover:bg-blue-100',
+                                    'Activo': isActive ? 'bg-green-600 text-white' : 'bg-green-50 text-green-700 hover:bg-green-100',
+                                    'Bajo Revisión': isActive ? 'bg-orange-500 text-white' : 'bg-orange-50 text-orange-700 hover:bg-orange-100',
+                                    'Suspendido': isActive ? 'bg-red-600 text-white' : 'bg-red-50 text-red-700 hover:bg-red-100'
+                                };
+
+                                return (
+                                    <button
+                                        key={key}
+                                        onClick={() => setFiltroEstado(key)}
+                                        className={`px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 flex items-center gap-2 ${colorClasses[key]}`}
+                                    >
+                                        <Icon className="w-4 h-4" />
+                                        {label}
+                                        <span className={`px-2 py-0.5 rounded-full text-xs ${isActive ? 'bg-white/20' : 'bg-black/10'}`}>
+                                            {count}
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
                     {/* Tabla */}
                     <TablaGestion
-                        data={apuntes}
+                        data={filtroEstado === 'Todos' ? apuntes : apuntes.filter(a => a.estado === filtroEstado)}
                         columns={columns}
                         title="Apuntes"
                         icon={<FileText className="w-5 h-5" />}
-                        onDelete={eliminarApunte}
+                        onDelete={abrirModalConfirmacion}
                         showCreateButton={false}
                         searchPlaceholder="Buscar por nombre, asignatura, autor..."
                         emptyMessage="No hay apuntes registrados"
@@ -550,8 +606,89 @@ function GestionApuntes() {
                             </div>
                         </div>
                     )}
-                </div>
-            </div>
+
+                    {/* Modal Confirmación de Eliminación */}
+                    {modalConfirmacion.isOpen && (
+                        <div className="fixed inset-0 z-50 overflow-y-auto animate-in fade-in duration-200" aria-labelledby="modal-confirmacion" role="dialog" aria-modal="true">
+                            <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md transition-all" onClick={cerrarModalConfirmacion}></div>
+
+                            <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
+                                <div className="relative w-full max-w-md transform overflow-hidden rounded-3xl bg-white shadow-2xl transition-all" onClick={(e) => e.stopPropagation()}>
+                                    {/* Header con gradiente de advertencia */}
+                                    <div className="relative bg-gradient-to-br from-red-50 via-orange-50 to-amber-50 px-8 py-6 border-b border-red-100">
+                                        <div className="flex items-center gap-4">
+                                            <div className="p-3 bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl shadow-lg">
+                                                <AlertTriangle className="w-7 h-7 text-white" />
+                                            </div>
+                                            <div>
+                                                <h2 className="text-xl font-bold text-gray-900">
+                                                    Confirmar Eliminación
+                                                </h2>
+                                                <p className="text-sm text-gray-600 mt-0.5">Esta acción no se puede deshacer</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Contenido */}
+                                    <div className="p-8">
+                                        <div className="bg-red-50 border border-red-200 rounded-2xl p-5 mb-6">
+                                            <p className="text-gray-700 text-center">
+                                                ¿Estás seguro de que deseas eliminar el apunte
+                                            </p>
+                                            <p className="text-lg font-bold text-gray-900 text-center mt-2">
+                                                "{modalConfirmacion.apunte?.nombre}"
+                                            </p>
+                                            <p className="text-sm text-red-600 text-center mt-3 font-medium">
+                                                Se eliminará permanentemente del sistema
+                                            </p>
+                                        </div>
+
+                                        {/* Info del apunte */}
+                                        <div className="bg-gray-50 rounded-xl p-4 mb-6 space-y-2">
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">Autor:</span>
+                                                <span className="font-medium text-gray-900">{modalConfirmacion.apunte?.autor}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">Asignatura:</span>
+                                                <span className="font-medium text-gray-900">{modalConfirmacion.apunte?.asignatura}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Botones */}
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={cerrarModalConfirmacion}
+                                                disabled={modalConfirmacion.procesando}
+                                                className="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-xl transition-colors font-medium disabled:opacity-50"
+                                            >
+                                                Cancelar
+                                            </button>
+                                            <button
+                                                onClick={confirmarEliminacion}
+                                                disabled={modalConfirmacion.procesando}
+                                                className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-3 px-6 rounded-xl hover:from-red-600 hover:to-red-700 transition-all flex items-center justify-center gap-2 font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {modalConfirmacion.procesando ? (
+                                                    <>
+                                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                        Eliminando...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Trash2 className="w-5 h-5" />
+                                                        Eliminar
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div >
+            </div >
         </>
     );
 }

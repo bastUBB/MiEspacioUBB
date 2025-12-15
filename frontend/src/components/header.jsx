@@ -36,20 +36,30 @@ const Header = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Handlers de navegación
-  const role = user?.role || 'estudiante';
+  // Detectar la sección actual desde la URL para mantener navegación consistente
+  // Esto permite que el admin navegue correctamente en secciones de otros roles
+  const getCurrentSection = () => {
+    const path = location.pathname;
+    if (path.startsWith('/estudiante')) return 'estudiante';
+    if (path.startsWith('/docente')) return 'docente';
+    if (path.startsWith('/ayudante')) return 'ayudante';
+    if (path.startsWith('/admin')) return 'admin';
+    return user?.role || 'estudiante';
+  };
+  const currentSection = getCurrentSection();
 
-  const handleHomeClick = () => navigate(`/${role}/home`);
-  const handleProfileClick = () => navigate(`/${role}/profile`);
+  // Handlers de navegación usando la sección actual
+  const handleHomeClick = () => navigate(`/${currentSection}/home`);
+  const handleProfileClick = () => navigate(`/${currentSection}/profile`);
   const handleExplorarClick = () => {
     setShowExplorarMenu(false);
-    navigate(`/${role}/explorar`);
+    navigate(`/${currentSection}/explorar`);
   };
-  const handleMisAportesClick = () => navigate(`/${role}/mis-aportes`);
-  const handleEstadisticasClick = () => navigate(`/${role}/estadisticas`);
+  const handleMisAportesClick = () => navigate(`/${currentSection}/mis-aportes`);
+  const handleEstadisticasClick = () => navigate(`/${currentSection}/estadisticas`);
   const handleEncuestasClick = () => {
     setShowExplorarMenu(false);
-    navigate(`/${role}/encuestas`);
+    navigate(`/${currentSection}/encuestas`);
   };
 
   const handleLogout = () => {
@@ -106,7 +116,7 @@ const Header = () => {
           <nav className="hidden md:flex items-center space-x-8">
             <button
               onClick={handleHomeClick}
-              className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname.includes(`/${role}/home`)
+              className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname.includes(`/${currentSection}/home`)
                 ? 'text-purple-600 font-semibold'
                 : 'text-gray-600 hover:text-purple-600 font-medium'
                 }`}
@@ -119,7 +129,7 @@ const Header = () => {
             <div className="relative" ref={explorarMenuRef}>
               <button
                 onClick={() => setShowExplorarMenu(!showExplorarMenu)}
-                className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname.includes(`/${role}/explorar`) || location.pathname.includes(`/${role}/encuestas`)
+                className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname.includes(`/${currentSection}/explorar`) || location.pathname.includes(`/${currentSection}/encuestas`)
                   ? 'text-purple-600 font-semibold'
                   : 'text-gray-600 hover:text-purple-600 font-medium'
                   }`}
@@ -152,7 +162,7 @@ const Header = () => {
 
             <button
               onClick={handleMisAportesClick}
-              className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname.includes(`/${role}/mis-aportes`)
+              className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname.includes(`/${currentSection}/mis-aportes`)
                 ? 'text-purple-600 font-semibold'
                 : 'text-gray-600 hover:text-purple-600 font-medium'
                 }`}
@@ -162,7 +172,7 @@ const Header = () => {
             </button>
             <button
               onClick={handleEstadisticasClick}
-              className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname.includes(`/${role}/estadisticas`)
+              className={`flex items-center space-x-2 transition-all hover:scale-105 cursor-pointer ${location.pathname.includes(`/${currentSection}/estadisticas`)
                 ? 'text-purple-600 font-semibold'
                 : 'text-gray-600 hover:text-purple-600 font-medium'
                 }`}
@@ -230,7 +240,7 @@ const Header = () => {
                             onClick={() => {
                               if (notif.apunteId) {
                                 setShowNotifications(false);
-                                navigate(`/${role}/apunte/${notif.apunteId}`);
+                                navigate(`/${currentSection}/apunte/${notif.apunteId}`);
                               }
                               if (!notif.estadoLeido) {
                                 markAsRead(notif._id);
@@ -295,7 +305,7 @@ const Header = () => {
                     <p className="text-sm font-bold text-gray-900 truncate">{user?.nombreCompleto}</p>
                     <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                   </div>
-                  
+
                   <div className="py-1">
                     <button
                       onClick={() => {

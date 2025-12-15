@@ -11,7 +11,7 @@ export async function crearEncuestaService(dataEncuesta) {
     try {
         const { rutAutor: rutAutorEncuesta } = dataEncuesta;
 
-        const autorExist = await User.findOne({ rutUser: rutAutorEncuesta });
+        const autorExist = await User.findOne({ rut: rutAutorEncuesta });
 
         if (!autorExist) return [null, 'El autor de la encuesta que desea crear no existe'];
 
@@ -23,20 +23,27 @@ export async function crearEncuestaService(dataEncuesta) {
 
         await nuevaEncuesta.save();
 
+        // Agregar la encuesta al perfil académico si existe
         const perfilAutor = await perfilAcademico.findOne({ rutUser: rutAutorEncuesta });
+        if (perfilAutor) {
+            if (!perfilAutor.encuestas) {
+                perfilAutor.encuestas = [];
+            }
+            perfilAutor.encuestas.push(nuevaEncuesta._id);
+            await perfilAutor.save();
+        }
 
-        perfilAutor.encuestasCreadas.push(nuevaEncuesta._id);
-
-        await perfilAutor.save();
-
-        const [historialAutor, errorHistorialAutor] = await registrarCreateEncuestaService(rutAutorEncuesta, nuevaEncuesta._id);
-
-        if (errorHistorialAutor) return [null, errorHistorialAutor];
+        // Registrar en historial (opcional, no bloquea la creación)
+        try {
+            await registrarCreateEncuestaService(rutAutorEncuesta, nuevaEncuesta._id);
+        } catch (historialError) {
+            console.warn('Error al registrar historial de encuesta:', historialError.message);
+        }
 
         return [nuevaEncuesta, null];
     } catch (error) {
         console.error('Error al crear la encuesta:', error);
-        return [null, 'Error interno del servidor'];
+        return [null, `Error interno del servidor: ${error.message}`];
     }
 }
 
@@ -142,7 +149,7 @@ export async function obtenerMisEncuestasService(perfilAcademicoID) {
 
         if (!perfilAcademicoExist) return [null, 'Perfil académico no encontrado'];
 
-        const encuestasPerfilAcademico = perfilAcademicoExist.encuestasCreadas.sort({ createdAt: -1 });
+        const encuestasPerfilAcademico = perfilAcademicoExist.encuestas.sort({ createdAt: -1 });
 
         if (!encuestasPerfilAcademico || encuestasPerfilAcademico.length === 0) return [[], "No tienes encuestas registradas"];
 
@@ -153,4 +160,21 @@ export async function obtenerMisEncuestasService(perfilAcademicoID) {
     }
 }
 
+export async function obtenerEncuestasPorRutService(rutAutor) {
+    try {
+        // Buscar el perfil académico del usuario
+        const perfilAutor = await perfilAcademico.findOne({ rutUser: rutAutor }).populate('encuestas');
+
+        if (!perfilAutor) return [[], "Perfil académico no encontrado"];
+
+        const encuestas = perfilAutor.encuestas || [];
+
+        if (encuestas.length === 0) return [[], "No tienes encuestas registradas"];
+
+        return [encuestas, null];
+    } catch (error) {
+        console.error('Error al obtener las encuestas por rut:', error);
+        return [null, 'Error interno del servidor'];
+    }
+}
 

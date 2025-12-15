@@ -38,7 +38,7 @@ function ListaApuntes({ rutUser }) {
 
     if (apuntes.length === 0) {
         return (
-            <div className="text-center py-16 bg-white rounded-xl shadow-sm border border-gray-200">
+            <div className="text-center py-16 bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-xl shadow-sm border border-purple-100">
                 <BookOpen className="w-16 h-16 mx-auto text-gray-300 mb-4" />
                 <h3 className="text-xl font-semibold text-gray-600 mb-2">No has subido apuntes aún</h3>
                 <p className="text-gray-500">Comienza a compartir tus apuntes con la comunidad</p>
@@ -51,7 +51,7 @@ function ListaApuntes({ rutUser }) {
             {apuntes.map((apunte) => (
                 <div
                     key={apunte._id}
-                    className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all cursor-pointer"
+                    className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-xl shadow-sm border border-purple-100 p-6 hover:shadow-md transition-all cursor-pointer"
                     onClick={() => navigate(`/estudiante/apunte/${apunte._id}`)}
                 >
                     <div className="flex items-start justify-between">

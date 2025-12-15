@@ -28,7 +28,8 @@ const encuestaSchema = new mongoose.Schema({
     }
 }, {
     versionKey: false,
-    strict: true
+    strict: true,
+    timestamps: true
 });
 
 const Encuesta = mongoose.model('Encuesta', encuestaSchema);

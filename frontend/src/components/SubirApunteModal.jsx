@@ -19,6 +19,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
     authors: '',
     description: '',
     subject: '',
+    subjectCode: '',
     noteType: '',
     file: null,
   });
@@ -114,9 +115,10 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
     const { name, value } = e.target;
 
     if (name === 'name') {
-      const namePattern = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*$/;
+      // Permitir letras, números y espacios
+      const namePattern = /^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9\s]*$/;
       if (value && !namePattern.test(value)) {
-        toast.error('El nombre del apunte solo puede contener letras y espacios', {
+        toast.error('El nombre del apunte solo puede contener letras, números y espacios', {
           duration: 3000,
           icon: '⚠️'
         });
@@ -248,9 +250,10 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
       return;
     }
 
-    const etiquetaPattern = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+    // Permitir letras, números y espacios en etiquetas
+    const etiquetaPattern = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s]+$/;
     if (!etiquetaPattern.test(etiquetaTrimmed)) {
-      toast.error('La etiqueta solo puede contener letras y espacios', { duration: 3000, icon: '⚠️' });
+      toast.error('La etiqueta solo puede contener letras, números y espacios', { duration: 3000, icon: '⚠️' });
       return;
     }
 
@@ -286,23 +289,28 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
   // Fetch tag suggestions when subject CODE changes
   useEffect(() => {
     const fetchSugerencias = async () => {
-      if (formData.subjectCode && formData.subjectCode.trim()) {
-        setLoadingSugerencias(true);
-        try {
-          const response = await sugerirEtiquetasAsignaturaService(formData.subjectCode);
-          if (response.status === 'Success' && response.data) {
-            setEtiquetasSugeridas(response.data || []);
-          } else {
-            setEtiquetasSugeridas([]);
-          }
-        } catch (error) {
-          console.error('Error al cargar sugerencias:', error);
-          setEtiquetasSugeridas([]);
-        } finally {
-          setLoadingSugerencias(false);
-        }
-      } else {
+      const code = formData.subjectCode?.trim();
+
+      // Validate that code exists and is 6 digits
+      if (!code || !/^\d{6}$/.test(code)) {
         setEtiquetasSugeridas([]);
+        setLoadingSugerencias(false);
+        return;
+      }
+
+      setLoadingSugerencias(true);
+      try {
+        const response = await sugerirEtiquetasAsignaturaService(code);
+        if (response.status === 'Success' && response.data) {
+          setEtiquetasSugeridas(response.data || []);
+        } else {
+          setEtiquetasSugeridas([]);
+        }
+      } catch (error) {
+        console.error('Error al cargar sugerencias:', error);
+        setEtiquetasSugeridas([]);
+      } finally {
+        setLoadingSugerencias(false);
       }
     };
 
@@ -337,11 +345,13 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
       authors: '',
       description: '',
       subject: '',
+      subjectCode: '',
       noteType: '',
       file: null,
     });
     setEtiquetas([]);
     setCurrentEtiqueta('');
+    setEtiquetasSugeridas([]);
   };
 
   const handleSubmit = async (e) => {
@@ -359,9 +369,10 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
       return;
     }
 
-    const namePattern = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/;
+    // Permitir letras, números y espacios en nombre
+    const namePattern = /^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9\s]+$/;
     if (!namePattern.test(formData.name.trim())) {
-      toast.error('El nombre del apunte solo puede contener letras y espacios', { duration: 3000, icon: '⚠️' });
+      toast.error('El nombre del apunte solo puede contener letras, números y espacios', { duration: 3000, icon: '⚠️' });
       return;
     }
 
@@ -446,7 +457,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
       if (response.status === 'Success') {
         // Save tags to the subject for future suggestions
         try {
-          await agregarEtiquetasAsignaturaService(formData.subject, etiquetas.map(e => e.toLowerCase().trim()));
+          await agregarEtiquetasAsignaturaService(formData.subjectCode, etiquetas.map(e => e.toLowerCase().trim()));
         } catch (tagError) {
           console.error('Error al guardar etiquetas en la asignatura:', tagError);
           // Don't show error to user as the upload was successful
@@ -564,7 +575,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
                       placeholder="Ej: Resumen de Cálculo Integral"
                     />
                     <p className="text-xs text-gray-500 mt-1.5 ml-1">
-                      Solo letras y espacios • 3-50 caracteres
+                      Letras, números y espacios • 3-50 caracteres
                     </p>
                   </div>
 
@@ -753,7 +764,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
                         {etiquetas.map((etiqueta, index) => (
                           <div
                             key={index}
-                            className="group bg-gradient-to-r from-violet-500 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
+                            className="group bg-gradient-to-r from-violet-500 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-200"
                           >
                             <Tag size={14} />
                             <span>{etiqueta}</span>
@@ -770,7 +781,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
                     )}
 
                     <p className="text-xs text-gray-500 mt-2 ml-1">
-                      {etiquetas.length}/5 etiquetas • 3-30 caracteres por etiqueta
+                      {etiquetas.length}/5 etiquetas • Letras, números y espacios • 3-30 caracteres
                     </p>
 
                     {/* Sugerencias de etiquetas */}
@@ -795,7 +806,7 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
                                 disabled={etiquetas.includes(etiqueta.toLowerCase())}
                                 className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-200 flex-shrink-0 ${etiquetas.includes(etiqueta.toLowerCase())
                                   ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                                  : 'bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100 hover:border-violet-300 hover:scale-105'
+                                  : 'bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100 hover:border-violet-300'
                                   }`}
                               >
                                 {etiqueta}

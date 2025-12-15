@@ -313,7 +313,7 @@ function MetricCard({ IconComponent, title, value, color, live }) {
 
 function ChartCard({ title, children }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-xl shadow-sm border border-purple-100 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
       {children}
     </div>
@@ -322,7 +322,7 @@ function ChartCard({ title, children }) {
 
 function HighlightCard({ title, IconComponent, children }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-xl shadow-sm border border-purple-100 p-6">
       <div className="flex items-center gap-2 mb-4">
         <IconComponent className="w-5 h-5 text-purple-600" />
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>

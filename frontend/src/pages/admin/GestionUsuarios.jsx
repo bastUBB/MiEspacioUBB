@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, ArrowLeft, Eye, FileText, Save, X, GraduationCap, HelpCircle, Star, ExternalLink } from 'lucide-react';
+import { Users, ArrowLeft, Eye, FileText, Save, X, GraduationCap, HelpCircle, Star, ExternalLink, Trash2, AlertTriangle } from 'lucide-react';
 import TablaGestion from '@components/tablaGestion.jsx';
 import axios from 'axios';
 import { getHistorialUsuarioService } from '../../services/historial.service.js';
@@ -17,6 +17,7 @@ function GestionUsuarios() {
     const [modalFormulario, setModalFormulario] = useState({ isOpen: false, modoEdicion: false });
     const [modalPerfil, setModalPerfil] = useState({ isOpen: false, perfil: null, loading: false });
     const [modalHistorial, setModalHistorial] = useState({ isOpen: false, historial: null, loading: false });
+    const [modalConfirmacion, setModalConfirmacion] = useState({ isOpen: false, usuario: null, procesando: false });
 
     const [procesando, setProcesando] = useState(false);
 
@@ -26,7 +27,7 @@ function GestionUsuarios() {
         nombreCompleto: '',
         email: '',
         password: '',
-        rol: 'estudiante'
+        role: 'estudiante'
     });
 
     useEffect(() => {
@@ -72,7 +73,7 @@ function GestionUsuarios() {
             nombreCompleto: '',
             email: '',
             password: '',
-            rol: 'estudiante'
+            role: 'estudiante'
         });
     };
 
@@ -84,7 +85,7 @@ function GestionUsuarios() {
             nombreCompleto: '',
             email: '',
             password: '',
-            rol: '' // Empty indicates "keep current"
+            role: '' // Empty indicates "keep current"
         });
     };
 
@@ -96,7 +97,7 @@ function GestionUsuarios() {
     const guardarUsuario = async () => {
         // Validaciones para Creación
         if (!modalFormulario.modoEdicion) {
-            if (!formData.rut || !formData.nombreCompleto || !formData.email || !formData.rol || !formData.password) {
+            if (!formData.rut || !formData.nombreCompleto || !formData.email || !formData.role || !formData.password) {
                 toast.error('Completa todos los campos requeridos para crear un usuario');
                 return;
             }
@@ -116,7 +117,7 @@ function GestionUsuarios() {
                 if (formData.nombreCompleto) body.nombreCompleto = formData.nombreCompleto;
                 if (formData.email) body.email = formData.email;
                 if (formData.password) body.password = formData.password;
-                if (formData.rol) body.rol = formData.rol;
+                if (formData.role) body.role = formData.role;
 
                 if (Object.keys(body).length === 0) {
                     toast.info('No se han realizado cambios');
@@ -144,23 +145,35 @@ function GestionUsuarios() {
         }
     };
 
-    const eliminarUsuario = async (usuario) => {
-        if (!confirm(`¿Estás seguro de eliminar al usuario "${usuario.nombre}"? Esta acción es permanente.`)) {
-            return;
-        }
+    const abrirModalConfirmacion = (usuario) => {
+        setModalConfirmacion({ isOpen: true, usuario, procesando: false });
+    };
+
+    const cerrarModalConfirmacion = () => {
+        setModalConfirmacion({ isOpen: false, usuario: null, procesando: false });
+    };
+
+    const confirmarEliminacion = async () => {
+        const usuario = modalConfirmacion.usuario;
+        if (!usuario) return;
+
+        setModalConfirmacion(prev => ({ ...prev, procesando: true }));
 
         try {
             const response = await axios.delete(`/api/users/detail?rut=${usuario.rut}`);
 
             if (response?.data?.status === 'Success') {
-                toast.success('Usuario eliminado');
+                toast.success('Usuario eliminado correctamente');
+                cerrarModalConfirmacion();
                 cargarUsuarios();
             } else {
                 toast.error(response?.data?.details || 'Error al eliminar el usuario');
+                setModalConfirmacion(prev => ({ ...prev, procesando: false }));
             }
         } catch (error) {
             console.error('Error eliminando usuario:', error);
             toast.error('Error al eliminar el usuario');
+            setModalConfirmacion(prev => ({ ...prev, procesando: false }));
         }
     };
 
@@ -175,8 +188,8 @@ function GestionUsuarios() {
             if (response?.data) {
                 setModalPerfil({ isOpen: true, perfil: response.data, loading: false });
             } else {
+                // Usuario sin perfil - no es un error, solo mostramos el modal vacío
                 setModalPerfil({ isOpen: true, perfil: null, loading: false });
-                toast.error('Usuario sin perfil académico');
             }
         } catch (error) {
             console.error('Error cargando perfil:', error);
@@ -200,8 +213,8 @@ function GestionUsuarios() {
             if (response?.data) {
                 setModalHistorial({ isOpen: true, historial: response.data, loading: false });
             } else {
+                // Usuario sin historial - no es un error, solo mostramos el modal vacío
                 setModalHistorial({ isOpen: true, historial: null, loading: false });
-                toast.error('Usuario sin historial');
             }
         } catch (error) {
             console.error('Error cargando historial:', error);
@@ -226,7 +239,7 @@ function GestionUsuarios() {
             align: 'center',
             render: (item) => {
                 // Usar el rol directamente de _raw para evitar problemas de mapeo
-                const rol = item._raw?.rol || item.rol || 'estudiante';
+                const rol = item._raw?.role || item.rol || 'estudiante';
                 return (
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${rol === 'admin' ? 'bg-red-100 text-red-800' :
                         rol === 'docente' ? 'bg-blue-100 text-blue-800' :
@@ -317,7 +330,7 @@ function GestionUsuarios() {
                         title="Usuarios"
                         icon={<Users className="w-5 h-5" />}
                         onEdit={abrirModalEditar}
-                        onDelete={eliminarUsuario}
+                        onDelete={abrirModalConfirmacion}
                         onCreate={abrirModalCrear}
                         createButtonText="Nuevo Usuario"
                         showCreateButton={true}
@@ -390,9 +403,9 @@ function GestionUsuarios() {
                                                         Rol {modalFormulario.modoEdicion ? '(Opcional)' : '*'}
                                                     </label>
                                                     <select
-                                                        value={formData.rol}
-                                                        onChange={(e) => setFormData(prev => ({ ...prev, rol: e.target.value }))}
-                                                        disabled={procesando || (modalFormulario.modoEdicion && editingUser?.rol === 'admin')}
+                                                        value={formData.role}
+                                                        onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+                                                        disabled={procesando || (modalFormulario.modoEdicion && editingUser?._raw?.role === 'admin')}
                                                         className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none appearance-none cursor-pointer disabled:bg-gray-100 disabled:text-gray-500"
                                                         style={{
                                                             backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
@@ -402,13 +415,13 @@ function GestionUsuarios() {
                                                             paddingRight: '2.5rem'
                                                         }}
                                                     >
-                                                        {modalFormulario.modoEdicion && <option value="">Mantener actual ({editingUser?.rol})</option>}
+                                                        {modalFormulario.modoEdicion && <option value="">Mantener actual ({editingUser?._raw?.role})</option>}
                                                         <option value="estudiante">Estudiante</option>
                                                         <option value="ayudante">Ayudante</option>
                                                         <option value="docente">Docente</option>
                                                         <option value="admin">Administrador</option>
                                                     </select>
-                                                    {modalFormulario.modoEdicion && editingUser?.rol === 'admin' && (
+                                                    {modalFormulario.modoEdicion && editingUser?._raw?.role === 'admin' && (
                                                         <p className="text-xs text-red-500 mt-1.5">No se puede cambiar el rol de un administrador.</p>
                                                     )}
                                                 </div>
@@ -742,6 +755,87 @@ function GestionUsuarios() {
                                         >
                                             Cerrar
                                         </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Modal Confirmación de Eliminación */}
+                    {modalConfirmacion.isOpen && (
+                        <div className="fixed inset-0 z-50 overflow-y-auto animate-in fade-in duration-200" aria-labelledby="modal-confirmacion" role="dialog" aria-modal="true">
+                            <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md transition-all" onClick={cerrarModalConfirmacion}></div>
+
+                            <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
+                                <div className="relative w-full max-w-md transform overflow-hidden rounded-3xl bg-white shadow-2xl transition-all" onClick={(e) => e.stopPropagation()}>
+                                    {/* Header con gradiente de advertencia */}
+                                    <div className="relative bg-gradient-to-br from-red-50 via-orange-50 to-amber-50 px-8 py-6 border-b border-red-100">
+                                        <div className="flex items-center gap-4">
+                                            <div className="p-3 bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl shadow-lg">
+                                                <AlertTriangle className="w-7 h-7 text-white" />
+                                            </div>
+                                            <div>
+                                                <h2 className="text-xl font-bold text-gray-900">
+                                                    Confirmar Eliminación
+                                                </h2>
+                                                <p className="text-sm text-gray-600 mt-0.5">Esta acción no se puede deshacer</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Contenido */}
+                                    <div className="p-8">
+                                        <div className="bg-red-50 border border-red-200 rounded-2xl p-5 mb-6">
+                                            <p className="text-gray-700 text-center">
+                                                ¿Estás seguro de que deseas eliminar al usuario
+                                            </p>
+                                            <p className="text-lg font-bold text-gray-900 text-center mt-2">
+                                                "{modalConfirmacion.usuario?.nombre}"
+                                            </p>
+                                            <p className="text-sm text-red-600 text-center mt-3 font-medium">
+                                                Se eliminarán todos sus datos permanentemente
+                                            </p>
+                                        </div>
+
+                                        {/* Info del usuario */}
+                                        <div className="bg-gray-50 rounded-xl p-4 mb-6 space-y-2">
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">RUT:</span>
+                                                <span className="font-medium text-gray-900">{modalConfirmacion.usuario?.rut}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">Email:</span>
+                                                <span className="font-medium text-gray-900 truncate ml-4">{modalConfirmacion.usuario?.email}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Botones */}
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={cerrarModalConfirmacion}
+                                                disabled={modalConfirmacion.procesando}
+                                                className="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-xl transition-colors font-medium disabled:opacity-50"
+                                            >
+                                                Cancelar
+                                            </button>
+                                            <button
+                                                onClick={confirmarEliminacion}
+                                                disabled={modalConfirmacion.procesando}
+                                                className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-3 px-6 rounded-xl hover:from-red-600 hover:to-red-700 transition-all flex items-center justify-center gap-2 font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {modalConfirmacion.procesando ? (
+                                                    <>
+                                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                        Eliminando...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Trash2 className="w-5 h-5" />
+                                                        Eliminar
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

@@ -19,6 +19,7 @@ import {
     notificacionNuevoComentarioApunteService, notificacionRespuestaComentarioService,
     notificacionNuevaValoracionApunteService
 } from "./notificacion.service.js";
+import { emitToAdmins } from '../config/configSocket.js';
 
 export async function uploadApunteService(file, body) {
     try {
@@ -625,6 +626,9 @@ export async function realizarValoracionApunteService(apunteID, rutUserValoracio
     }
 }
 
+// Umbral configurable de reportes para poner apunte en revisión automática
+const UMBRAL_REPORTES_AUTO_REVISION = 3;
+
 export async function verificarReportesApunteService(apunteID, rutUsuarioReporte) {
     try {
         const apunteExist = await Apunte.findById(apunteID);
@@ -633,11 +637,42 @@ export async function verificarReportesApunteService(apunteID, rutUsuarioReporte
 
         const cantidadReportesApunte = apunteExist.reportes.length;
 
-        if (cantidadReportesApunte >= 4) {
+        // Si alcanza el umbral y aún no está en revisión
+        if (cantidadReportesApunte >= UMBRAL_REPORTES_AUTO_REVISION && apunteExist.estado !== 'Bajo Revisión') {
+            const estadoAnterior = apunteExist.estado;
             apunteExist.estado = 'Bajo Revisión';
+
+            // Crear reporte automático del sistema
+            const reporteAutomatico = new Reporte({
+                rutUsuarioReportado: apunteExist.rutAutorSubida,
+                rutUsuarioReporte: 'SISTEMA',
+                motivo: `Apunte con más de ${UMBRAL_REPORTES_AUTO_REVISION} reportes`,
+                descripcion: `Este apunte ha acumulado ${cantidadReportesApunte} reportes de usuarios. Se ha puesto automáticamente en estado "Bajo Revisión" para que un administrador evalúe la situación.`,
+                fecha: obtenerDiaActual(),
+                estado: 'Pendiente',
+                apunteId: apunteExist._id
+            });
+
+            await reporteAutomatico.save();
+            apunteExist.reportes.push(reporteAutomatico._id);
             await apunteExist.save();
+
+            // Emitir evento socket a todos los admins conectados
+            emitToAdmins('admin:apunte-bajo-revision', {
+                apunteId: apunteExist._id,
+                nombreApunte: apunteExist.nombre,
+                cantidadReportes: cantidadReportesApunte,
+                estadoAnterior,
+                nuevoEstado: 'Bajo Revisión',
+                mensaje: `El apunte "${apunteExist.nombre}" ha sido puesto en revisión automática por acumular ${cantidadReportesApunte} reportes.`
+            });
+
+            console.log(`[AUTO-REVISIÓN] Apunte "${apunteExist.nombre}" puesto en revisión por ${cantidadReportesApunte} reportes.`);
+
+            return [{ apunte: apunteExist, reporteAutomatico, cambioEstado: true }, null];
         }
-        return [apunteExist, null];
+
+        return [{ apunte: apunteExist, cambioEstado: false }, null];
     } catch (error) {
         console.error('Error al verificar los reportes del apunte:', error);
         return [null, 'Error interno del servidor'];

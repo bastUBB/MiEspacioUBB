@@ -70,6 +70,9 @@ function DetalleApunte() {
   const [motivoRevision, setMotivoRevision] = useState('');
   const [procesandoRevision, setProcesandoRevision] = useState(false);
 
+  // Estado para modal de perfil del autor
+  const [isAuthorModalOpen, setIsAuthorModalOpen] = useState(false);
+
   useEffect(() => {
     // Validar que el ID existe y no está undefined
     if (!id || id === 'undefined') {
@@ -308,14 +311,14 @@ function DetalleApunte() {
       if (response.status === 'Success') {
         setUserRating(0);
         setHoverRating(0);
-        
+
         if (response.data && response.data.valoracion) {
           setApunte(prev => ({
             ...prev,
             valoracion: response.data.valoracion
           }));
         }
-        
+
         toast.success('Valoración eliminada exitosamente');
       } else {
         toast.error(response.message || 'Error al eliminar valoración');
@@ -468,9 +471,7 @@ function DetalleApunte() {
     navigate('/login');
   };
 
-  const handleNavigateToProfile = (rut) => {
-    navigate(`${basePath}/profile/${rut}`);
-  };
+
 
   const handleComentario = async () => {
     if (!comentario.trim()) {
@@ -763,7 +764,7 @@ function DetalleApunte() {
           <div className="lg:col-span-2 space-y-6">
 
             {/* Descripción y Contenido */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl shadow-sm border border-purple-100 overflow-hidden">
               <div className="p-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Descripción</h2>
                 <p className="text-gray-700 leading-relaxed text-base mb-6">
@@ -802,163 +803,163 @@ function DetalleApunte() {
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Área de Lectura del Documento */}
-              <div className="border-t border-gray-100 bg-gray-50 p-8">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-purple-600" />
-                    Vista Previa del Documento
-                  </h3>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-gray-500">{formatBytes(apunte.archivo.tamano)}</span>
+            {/* Área de Lectura del Documento */}
+            <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl shadow-sm border border-purple-100 overflow-hidden p-8">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-purple-600" />
+                  Vista Previa del Documento
+                </h3>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-gray-500">{formatBytes(apunte.archivo.tamano)}</span>
+                  <button
+                    onClick={handleDownload}
+                    className="p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all shadow-sm hover:shadow-md group"
+                    title="Descargar PDF"
+                  >
+                    <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  </button>
+                  <button
+                    onClick={handleShare}
+                    className="p-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all group"
+                    title="Compartir"
+                  >
+                    <Share2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  </button>
+                  {/* Botón cambiar estado para docente/ayudante */}
+                  {(user?.role === 'docente' || user?.role === 'ayudante') && (
                     <button
-                      onClick={handleDownload}
-                      className="p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all shadow-sm hover:shadow-md group"
-                      title="Descargar PDF"
+                      onClick={() => setIsReviewModalOpen(true)}
+                      className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all group"
+                      title="Cambiar Estado del Apunte"
                     >
-                      <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                      <AlertTriangle className="w-4 h-4 group-hover:scale-110 transition-transform" />
                     </button>
-                    <button
-                      onClick={handleShare}
-                      className="p-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all group"
-                      title="Compartir"
-                    >
-                      <Share2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                    </button>
-                    {/* Botón cambiar estado para docente/ayudante */}
-                    {(user?.role === 'docente' || user?.role === 'ayudante') && (
-                      <button
-                        onClick={() => setIsReviewModalOpen(true)}
-                        className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all group"
-                        title="Cambiar Estado del Apunte"
-                      >
-                        <AlertTriangle className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                      </button>
-                    )}
+                  )}
+                </div>
+              </div>
+
+              {/* Visor de PDF */}
+              <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200">
+                {loadingPdf && (
+                  <div className="flex flex-col items-center justify-center p-12">
+                    <Loader2 className="w-12 h-12 text-purple-600 animate-spin mb-4" />
+                    <p className="text-gray-600">Cargando documento PDF...</p>
                   </div>
-                </div>
+                )}
 
-                {/* Visor de PDF */}
-                <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200">
-                  {loadingPdf && (
-                    <div className="flex flex-col items-center justify-center p-12">
-                      <Loader2 className="w-12 h-12 text-purple-600 animate-spin mb-4" />
-                      <p className="text-gray-600">Cargando documento PDF...</p>
-                    </div>
-                  )}
+                {pdfError && !loadingPdf && (
+                  <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-gray-200 rounded-xl">
+                    <FileText className="w-16 h-16 text-red-300 mx-auto mb-4" />
+                    <p className="text-red-600 mb-2 font-medium">Error al cargar el documento</p>
+                    <p className="text-sm text-gray-500">{pdfError}</p>
+                    <button
+                      onClick={loadPdfUrl}
+                      className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                    >
+                      Reintentar
+                    </button>
+                  </div>
+                )}
 
-                  {pdfError && !loadingPdf && (
-                    <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-gray-200 rounded-xl">
-                      <FileText className="w-16 h-16 text-red-300 mx-auto mb-4" />
-                      <p className="text-red-600 mb-2 font-medium">Error al cargar el documento</p>
-                      <p className="text-sm text-gray-500">{pdfError}</p>
-                      <button
-                        onClick={loadPdfUrl}
-                        className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                      >
-                        Reintentar
-                      </button>
-                    </div>
-                  )}
-
-                  {!loadingPdf && !pdfError && pdfUrl && (
-                    <>
-                      <div className="flex items-center justify-center bg-gray-100 p-4 overflow-x-auto">
-                        <Document
-                          file={pdfUrl}
-                          onLoadSuccess={onDocumentLoadSuccess}
-                          onLoadError={onDocumentLoadError}
-                          loading={
-                            <div className="flex flex-col items-center justify-center p-12">
-                              <Loader2 className="w-8 h-8 text-purple-600 animate-spin mb-3" />
-                              <span className="text-gray-600">Cargando PDF...</span>
-                            </div>
-                          }
-                          error={
-                            <div className="text-center p-8">
-                              <FileText className="w-12 h-12 text-red-300 mx-auto mb-3" />
-                              <p className="text-red-600 font-medium mb-2">Error al cargar el PDF</p>
-                              <p className="text-sm text-gray-500">Verifica que el archivo existe y es un PDF válido</p>
-                            </div>
-                          }
-                        >
-                          <Page
-                            pageNumber={pageNumber}
-                            width={Math.min(window.innerWidth * 0.55, 750)}
-                            renderTextLayer={false}
-                            renderAnnotationLayer={false}
-                            loading={
-                              <div className="flex items-center justify-center p-12">
-                                <Loader2 className="w-6 h-6 text-purple-600 animate-spin" />
-                              </div>
-                            }
-                          />
-                        </Document>
-                      </div>
-
-                      {/* Controles de navegación del PDF */}
-                      {numPages && numPages > 1 && (
-                        <div className="flex items-center justify-between bg-gray-50 px-6 py-4 border-t border-gray-200">
-                          <button
-                            onClick={previousPage}
-                            disabled={pageNumber <= 1}
-                            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                          >
-                            <ChevronLeft className="w-4 h-4" />
-                            Anterior
-                          </button>
-
-                          <div className="flex items-center gap-2 text-sm">
-                            <span className="text-gray-600">Página</span>
-                            <input
-                              type="number"
-                              min="1"
-                              max={numPages}
-                              value={pageNumber}
-                              onChange={(e) => {
-                                const page = parseInt(e.target.value);
-                                if (page >= 1 && page <= numPages) {
-                                  setPageNumber(page);
-                                }
-                              }}
-                              className="w-16 px-2 py-1 text-center border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                            />
-                            <span className="text-gray-600">de {numPages}</span>
+                {!loadingPdf && !pdfError && pdfUrl && (
+                  <>
+                    <div className="flex items-center justify-center bg-gray-100 p-4 overflow-x-auto">
+                      <Document
+                        file={pdfUrl}
+                        onLoadSuccess={onDocumentLoadSuccess}
+                        onLoadError={onDocumentLoadError}
+                        loading={
+                          <div className="flex flex-col items-center justify-center p-12">
+                            <Loader2 className="w-8 h-8 text-purple-600 animate-spin mb-3" />
+                            <span className="text-gray-600">Cargando PDF...</span>
                           </div>
-
-                          <button
-                            onClick={nextPage}
-                            disabled={pageNumber >= numPages}
-                            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                          >
-                            Siguiente
-                            <ChevronRight className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )}
-
-                      <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
-                        <p className="text-sm text-gray-500 text-center">
-                          {apunte.archivo.nombreOriginal}
-                        </p>
-                      </div>
-                    </>
-                  )}
-
-                  {!loadingPdf && !pdfError && !pdfUrl && (
-                    <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-gray-200 rounded-xl">
-                      <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-600 mb-2">No se pudo cargar la vista previa</p>
-                      <p className="text-sm text-gray-400">{apunte.archivo.nombreOriginal}</p>
+                        }
+                        error={
+                          <div className="text-center p-8">
+                            <FileText className="w-12 h-12 text-red-300 mx-auto mb-3" />
+                            <p className="text-red-600 font-medium mb-2">Error al cargar el PDF</p>
+                            <p className="text-sm text-gray-500">Verifica que el archivo existe y es un PDF válido</p>
+                          </div>
+                        }
+                      >
+                        <Page
+                          pageNumber={pageNumber}
+                          width={Math.min(window.innerWidth * 0.55, 750)}
+                          renderTextLayer={false}
+                          renderAnnotationLayer={false}
+                          loading={
+                            <div className="flex items-center justify-center p-12">
+                              <Loader2 className="w-6 h-6 text-purple-600 animate-spin" />
+                            </div>
+                          }
+                        />
+                      </Document>
                     </div>
-                  )}
-                </div>
+
+                    {/* Controles de navegación del PDF */}
+                    {numPages && numPages > 1 && (
+                      <div className="flex items-center justify-between bg-gray-50 px-6 py-4 border-t border-gray-200">
+                        <button
+                          onClick={previousPage}
+                          disabled={pageNumber <= 1}
+                          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                          Anterior
+                        </button>
+
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-gray-600">Página</span>
+                          <input
+                            type="number"
+                            min="1"
+                            max={numPages}
+                            value={pageNumber}
+                            onChange={(e) => {
+                              const page = parseInt(e.target.value);
+                              if (page >= 1 && page <= numPages) {
+                                setPageNumber(page);
+                              }
+                            }}
+                            className="w-16 px-2 py-1 text-center border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          />
+                          <span className="text-gray-600">de {numPages}</span>
+                        </div>
+
+                        <button
+                          onClick={nextPage}
+                          disabled={pageNumber >= numPages}
+                          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                          Siguiente
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
+                      <p className="text-sm text-gray-500 text-center">
+                        {apunte.archivo.nombreOriginal}
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {!loadingPdf && !pdfError && !pdfUrl && (
+                  <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-gray-200 rounded-xl">
+                    <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-600 mb-2">No se pudo cargar la vista previa</p>
+                    <p className="text-sm text-gray-400">{apunte.archivo.nombreOriginal}</p>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Sección de Comentarios */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl shadow-sm border border-purple-100 overflow-hidden">
               <div className="p-6 border-b border-gray-50">
                 <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                   <MessageSquare className="w-5 h-5 text-purple-600" />
@@ -1168,7 +1169,7 @@ function DetalleApunte() {
           < div className="sticky top-8 space-y-6" >
 
             {/* Sistema de Valoración */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl shadow-sm border border-purple-100 p-6">
               <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 flex items-center gap-2">
                 <Star className="w-4 h-4 text-yellow-500" />
                 Valoración
@@ -1229,7 +1230,7 @@ function DetalleApunte() {
             </div>
 
             {/* Estadísticas */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl shadow-sm border border-purple-100 p-6">
               <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Estadísticas</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -1296,7 +1297,7 @@ function DetalleApunte() {
                 </div>
 
                 <button
-                  onClick={() => handleNavigateToProfile(apunte.rutAutorSubida)}
+                  onClick={() => setIsAuthorModalOpen(true)}
                   className="w-full py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all font-medium text-sm flex items-center justify-center gap-2 group"
                 >
                   Ver Perfil
@@ -1345,7 +1346,7 @@ function DetalleApunte() {
             {otrosApuntesAutor.map((apunteItem) => (
               <div
                 key={apunteItem._id}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl shadow-sm border border-purple-100 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
                 onClick={() => navigate(`${basePath}/apunte/${apunteItem._id}`)}
               >
                 <div className="h-2 bg-gradient-to-r from-purple-600 to-indigo-600"></div>
@@ -1387,7 +1388,7 @@ function DetalleApunte() {
             {apuntesRelacionados.map((apunteItem) => (
               <div
                 key={apunteItem._id}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl shadow-sm border border-purple-100 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
                 onClick={() => navigate(`${basePath}/apunte/${apunteItem._id}`)}
               >
                 <div className="h-2 bg-gradient-to-r from-indigo-600 to-purple-600"></div>
@@ -1425,105 +1426,189 @@ function DetalleApunte() {
       />
 
       {/* Modal Poner en Revisión - Solo admin/docente */}
-      {isReviewModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-revision" role="dialog" aria-modal="true">
-          <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md transition-all" onClick={() => setIsReviewModalOpen(false)}></div>
+      {
+        isReviewModalOpen && (
+          <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-revision" role="dialog" aria-modal="true">
+            <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md transition-all" onClick={() => setIsReviewModalOpen(false)}></div>
 
-          <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
-            <div className="relative w-full max-w-lg transform overflow-hidden rounded-3xl bg-white shadow-2xl transition-all" onClick={(e) => e.stopPropagation()}>
-              {/* Header */}
-              <div className="relative bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 px-8 py-6 border-b border-amber-100">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl shadow-lg">
-                        <AlertTriangle className="w-6 h-6 text-white" />
+            <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
+              <div className="relative w-full max-w-lg transform overflow-hidden rounded-3xl bg-white shadow-2xl transition-all" onClick={(e) => e.stopPropagation()}>
+                {/* Header */}
+                <div className="relative bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 px-8 py-6 border-b border-amber-100">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl shadow-lg">
+                          <AlertTriangle className="w-6 h-6 text-white" />
+                        </div>
+                        <h2 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-500 bg-clip-text text-transparent">
+                          Poner en Revisión
+                        </h2>
                       </div>
-                      <h2 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-500 bg-clip-text text-transparent">
-                        Poner en Revisión
-                      </h2>
                     </div>
+                    <button
+                      onClick={() => setIsReviewModalOpen(false)}
+                      className="ml-4 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all duration-200"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
                   </div>
+                </div>
+
+                {/* Contenido */}
+                <div className="p-8 space-y-6">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <p className="text-sm text-amber-800">
+                      <strong>Apunte:</strong> {apunte?.nombre}
+                    </p>
+                    <p className="text-sm text-amber-800 mt-1">
+                      <strong>Autor:</strong> {apunte?.autorSubida}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Motivo del cambio de estado *
+                    </label>
+                    <textarea
+                      value={motivoRevision}
+                      onChange={(e) => setMotivoRevision(e.target.value)}
+                      disabled={procesandoRevision}
+                      rows={4}
+                      className="w-full px-4 py-3 border border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none transition-all"
+                      placeholder="Describe la razón por la que se pone en revisión este apunte (mín. 10 caracteres)..."
+                    />
+                    <p className={`text-xs mt-1 ${motivoRevision.length < 10 ? 'text-gray-500' : 'text-green-600'}`}>
+                      {motivoRevision.length}/10 caracteres mínimos
+                    </p>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <button
+                      onClick={async () => {
+                        if (motivoRevision.length < 10) {
+                          toast.error('El motivo debe tener al menos 10 caracteres');
+                          return;
+                        }
+                        try {
+                          setProcesandoRevision(true);
+                          await cambiarEstadoApunteService(id, 'Bajo Revisión', motivoRevision);
+                          toast.success('Apunte puesto en revisión');
+                          setIsReviewModalOpen(false);
+                          setMotivoRevision('');
+                          loadApunte(); // Recargar apunte
+                        } catch (error) {
+                          console.error('Error al cambiar estado:', error);
+                          toast.error(error.response?.data?.details || 'Error al cambiar estado');
+                        } finally {
+                          setProcesandoRevision(false);
+                        }
+                      }}
+                      disabled={procesandoRevision || motivoRevision.length < 10}
+                      className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all font-medium shadow-lg hover:shadow-xl disabled:opacity-50"
+                    >
+                      {procesandoRevision ? 'Procesando...' : 'Confirmar'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsReviewModalOpen(false);
+                        setMotivoRevision('');
+                      }}
+                      disabled={procesandoRevision}
+                      className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-medium disabled:opacity-50"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {/* Modal de Perfil del Autor */}
+      {
+        isAuthorModalOpen && apunte?.autorInfo && (
+          <div className="fixed inset-0 z-50 overflow-y-auto animate-in fade-in duration-200" aria-labelledby="modal-autor" role="dialog" aria-modal="true">
+            <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md transition-all" onClick={() => setIsAuthorModalOpen(false)}></div>
+
+            <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
+              <div className="relative w-full max-w-md transform overflow-hidden rounded-3xl bg-white shadow-2xl transition-all animate-in zoom-in-95 duration-300" onClick={(e) => e.stopPropagation()}>
+                {/* Header con gradiente */}
+                <div className="relative bg-gradient-to-br from-purple-500 via-violet-500 to-fuchsia-500 px-6 py-8 text-center">
+                  <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20"></div>
+                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+
                   <button
-                    onClick={() => setIsReviewModalOpen(false)}
-                    className="ml-4 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all duration-200"
+                    onClick={() => setIsAuthorModalOpen(false)}
+                    className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/20 rounded-full p-2 transition-all duration-200"
+                    aria-label="Cerrar modal"
                   >
                     <X className="w-5 h-5" />
                   </button>
-                </div>
-              </div>
 
-              {/* Contenido */}
-              <div className="p-8 space-y-6">
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                  <p className="text-sm text-amber-800">
-                    <strong>Apunte:</strong> {apunte?.nombre}
-                  </p>
-                  <p className="text-sm text-amber-800 mt-1">
-                    <strong>Autor:</strong> {apunte?.autorSubida}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Motivo del cambio de estado *
-                  </label>
-                  <textarea
-                    value={motivoRevision}
-                    onChange={(e) => setMotivoRevision(e.target.value)}
-                    disabled={procesandoRevision}
-                    rows={4}
-                    className="w-full px-4 py-3 border border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none transition-all"
-                    placeholder="Describe la razón por la que se pone en revisión este apunte (mín. 10 caracteres)..."
-                  />
-                  <p className={`text-xs mt-1 ${motivoRevision.length < 10 ? 'text-gray-500' : 'text-green-600'}`}>
-                    {motivoRevision.length}/10 caracteres mínimos
-                  </p>
+                  <div className="relative z-10">
+                    <div className="w-24 h-24 bg-white rounded-2xl mx-auto mb-4 flex items-center justify-center text-purple-600 font-bold text-4xl shadow-xl">
+                      {apunte.autorInfo.nombreCompleto?.charAt(0) || 'U'}
+                    </div>
+                    <h2 className="text-2xl font-bold text-white mb-1">{apunte.autorInfo.nombreCompleto}</h2>
+                    <div className="flex items-center justify-center gap-1 text-white/90">
+                      <Star className="w-4 h-4 fill-yellow-300 text-yellow-300" />
+                      <span className="font-semibold">{apunte.autorInfo.popularidad}</span>
+                      <span className="text-white/70 text-sm">• {apunte.autorInfo.totalValoraciones} valoraciones</span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex gap-4">
+                {/* Contenido */}
+                <div className="p-6">
+                  {/* Estadísticas */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-gradient-to-br from-purple-50 to-white rounded-xl p-3 border border-purple-100 text-center">
+                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-1.5">
+                        <FileText className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div className="text-xl font-bold text-gray-900">{apunte.autorInfo.totalApuntes}</div>
+                      <div className="text-xs text-gray-500 font-medium">Apuntes</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-yellow-50 to-white rounded-xl p-3 border border-yellow-100 text-center">
+                      <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center mx-auto mb-1.5">
+                        <Star className="w-4 h-4 text-yellow-600" />
+                      </div>
+                      <div className="text-xl font-bold text-gray-900">{apunte.autorInfo.totalValoraciones}</div>
+                      <div className="text-xs text-gray-500 font-medium">Valoraciones</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-violet-50 to-white rounded-xl p-3 border border-violet-100 text-center">
+                      <div className="w-8 h-8 bg-violet-100 rounded-lg flex items-center justify-center mx-auto mb-1.5">
+                        <Eye className="w-4 h-4 text-violet-600" />
+                      </div>
+                      <div className="text-xl font-bold text-gray-900">{apunte.autorInfo.totalVisualizaciones || 0}</div>
+                      <div className="text-xs text-gray-500 font-medium">Visualizaciones</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-indigo-50 to-white rounded-xl p-3 border border-indigo-100 text-center">
+                      <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center mx-auto mb-1.5">
+                        <Download className="w-4 h-4 text-indigo-600" />
+                      </div>
+                      <div className="text-xl font-bold text-gray-900">{apunte.autorInfo.totalDescargas || 0}</div>
+                      <div className="text-xs text-gray-500 font-medium">Descargas</div>
+                    </div>
+                  </div>
+
+                  {/* Botón de cierre */}
                   <button
-                    onClick={async () => {
-                      if (motivoRevision.length < 10) {
-                        toast.error('El motivo debe tener al menos 10 caracteres');
-                        return;
-                      }
-                      try {
-                        setProcesandoRevision(true);
-                        await cambiarEstadoApunteService(id, 'Bajo Revisión', motivoRevision);
-                        toast.success('Apunte puesto en revisión');
-                        setIsReviewModalOpen(false);
-                        setMotivoRevision('');
-                        loadApunte(); // Recargar apunte
-                      } catch (error) {
-                        console.error('Error al cambiar estado:', error);
-                        toast.error(error.response?.data?.details || 'Error al cambiar estado');
-                      } finally {
-                        setProcesandoRevision(false);
-                      }
-                    }}
-                    disabled={procesandoRevision || motivoRevision.length < 10}
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all font-medium shadow-lg hover:shadow-xl disabled:opacity-50"
+                    onClick={() => setIsAuthorModalOpen(false)}
+                    className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-medium"
                   >
-                    {procesandoRevision ? 'Procesando...' : 'Confirmar'}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsReviewModalOpen(false);
-                      setMotivoRevision('');
-                    }}
-                    disabled={procesandoRevision}
-                    className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-medium disabled:opacity-50"
-                  >
-                    Cancelar
+                    Cerrar
                   </button>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 }
 

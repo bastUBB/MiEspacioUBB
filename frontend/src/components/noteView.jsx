@@ -150,7 +150,7 @@ const NoteView = ({ note, onBack }) => {
                     {/* Main Content */}
                     <div className="lg:col-span-3">
                         {/* Note Header */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+                        <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-xl shadow-sm border border-purple-100 p-6 mb-6">
                             <div className="flex items-center space-x-2 mb-4">
                                 <span className="text-sm font-medium text-purple-600 bg-purple-50 px-3 py-1 rounded-full">
                                     {note.subject}
@@ -234,8 +234,8 @@ const NoteView = ({ note, onBack }) => {
                                 <button
                                     onClick={handleBookmark}
                                     className={`flex items-center space-x-2 px-4 py-3 rounded-lg transition-colors ${isBookmarked
-                                            ? 'bg-purple-100 text-purple-700'
-                                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                                        ? 'bg-purple-100 text-purple-700'
+                                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                                         }`}
                                 >
                                     <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
@@ -250,7 +250,7 @@ const NoteView = ({ note, onBack }) => {
                         </div>
 
                         {/* Content Viewer */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 p-8">
+                        <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-xl shadow-sm border border-purple-100 mb-6 p-8">
                             <h2 className="text-xl font-semibold text-gray-900 mb-6">Contenido del Apunte</h2>
                             <div className="prose max-w-none">
                                 {formatContent(note.content)}
@@ -258,7 +258,7 @@ const NoteView = ({ note, onBack }) => {
                         </div>
 
                         {/* Comments Section */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-xl shadow-sm border border-purple-100 p-6">
                             <h2 className="text-xl font-semibold text-gray-900 mb-6">
                                 Comentarios ({comments.length})
                             </h2>
@@ -333,7 +333,7 @@ const NoteView = ({ note, onBack }) => {
                     <div className="lg:col-span-1">
                         <div className="space-y-6">
                             {/* Author's Other Notes */}
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                            <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-xl shadow-sm border border-purple-100 p-6">
                                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Otros apuntes del autor</h3>
                                 <div className="space-y-3">
                                     {[
@@ -356,7 +356,7 @@ const NoteView = ({ note, onBack }) => {
                             </div>
 
                             {/* Related Notes */}
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                            <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-xl shadow-sm border border-purple-100 p-6">
                                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Apuntes relacionados</h3>
                                 <div className="space-y-3">
                                     {[

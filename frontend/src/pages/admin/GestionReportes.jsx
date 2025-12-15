@@ -16,12 +16,8 @@ function GestionReportes() {
     const [vistaActual, setVistaActual] = useState('pendientes'); // 'pendientes' | 'todos'
 
     useEffect(() => {
-        if (vistaActual === 'pendientes') {
-            cargarReportesPendientes();
-        } else {
-            cargarTodosReportes();
-        }
-    }, [vistaActual]);
+        cargarTodosReportes();
+    }, []);
 
     const cargarReportesPendientes = async () => {
         try {
@@ -209,42 +205,63 @@ function GestionReportes() {
                         </div>
                     </div>
 
-                    {/* Toggle Buttons */}
-                    <div className="flex gap-2 mb-6">
-                        <button
-                            onClick={() => setVistaActual('pendientes')}
-                            className={`px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 flex items-center gap-2 ${vistaActual === 'pendientes'
-                                ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-200'
-                                : 'bg-white text-gray-600 border border-gray-200 hover:border-orange-300 hover:text-orange-600'
-                                }`}
-                        >
-                            <AlertTriangle className="w-4 h-4" />
-                            Pendientes
-                        </button>
-                        <button
-                            onClick={() => setVistaActual('todos')}
-                            className={`px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 flex items-center gap-2 ${vistaActual === 'todos'
-                                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-200'
-                                : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300 hover:text-blue-600'
-                                }`}
-                        >
-                            <FileText className="w-4 h-4" />
-                            Ver Todos
-                        </button>
+                    {/* Filtros por Estado */}
+                    <div className="mb-6 bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-gray-200 shadow-sm">
+                        <div className="flex flex-wrap gap-2">
+                            {[
+                                { key: 'todos', label: 'Todos', icon: FileText },
+                                { key: 'pendientes', label: 'Pendientes', icon: AlertTriangle },
+                                { key: 'resueltos', label: 'Resueltos', icon: CheckCircle }
+                            ].map(({ key, label, icon: Icon }) => {
+                                const count = key === 'todos'
+                                    ? reportes.length
+                                    : reportes.filter(r => {
+                                        if (key === 'pendientes') return r.estado === 'Pendiente';
+                                        if (key === 'resueltos') return r.estado === 'Resuelto';
+                                        return true;
+                                    }).length;
+                                const isActive = vistaActual === key;
+
+                                const colorClasses = {
+                                    'todos': isActive ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-700 hover:bg-blue-100',
+                                    'pendientes': isActive ? 'bg-orange-500 text-white' : 'bg-orange-50 text-orange-700 hover:bg-orange-100',
+                                    'resueltos': isActive ? 'bg-green-600 text-white' : 'bg-green-50 text-green-700 hover:bg-green-100'
+                                };
+
+                                return (
+                                    <button
+                                        key={key}
+                                        onClick={() => setVistaActual(key)}
+                                        className={`px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 flex items-center gap-2 ${colorClasses[key]}`}
+                                    >
+                                        <Icon className="w-4 h-4" />
+                                        {label}
+                                        <span className={`px-2 py-0.5 rounded-full text-xs ${isActive ? 'bg-white/20' : 'bg-black/10'}`}>
+                                            {count}
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
 
                     {/* Tabla de Reportes */}
                     <TablaGestion
-                        data={reportes}
+                        data={vistaActual === 'todos'
+                            ? reportes
+                            : vistaActual === 'pendientes'
+                                ? reportes.filter(r => r.estado === 'Pendiente')
+                                : reportes.filter(r => r.estado === 'Resuelto')
+                        }
                         columns={columns}
-                        title="Reportes Pendientes"
+                        title={vistaActual === 'todos' ? 'Todos los Reportes' : vistaActual === 'pendientes' ? 'Reportes Pendientes' : 'Reportes Resueltos'}
                         icon={<AlertTriangle className="w-5 h-5" />}
                         onEdit={handleEditAction}
                         onDelete={null}
                         onCreate={null}
                         showCreateButton={false}
                         searchPlaceholder="Buscar por RUT, motivo, fecha..."
-                        emptyMessage="No hay reportes pendientes"
+                        emptyMessage={`No hay reportes ${vistaActual === 'todos' ? '' : vistaActual}`}
                     />
 
                     {/* Modal Resolver Reporte */}
@@ -399,8 +416,8 @@ function GestionReportes() {
                                                     <div className="bg-white rounded-xl p-4 border border-green-100">
                                                         <div className="flex items-center gap-2 mb-2">
                                                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${modalResolver.reporte?.estado === 'Resuelto'
-                                                                    ? 'bg-green-100 text-green-700'
-                                                                    : 'bg-red-100 text-red-700'
+                                                                ? 'bg-green-100 text-green-700'
+                                                                : 'bg-red-100 text-red-700'
                                                                 }`}>
                                                                 {modalResolver.reporte?.estado}
                                                             </span>

@@ -180,7 +180,7 @@ function ExplorarApuntes({ embedded = false }) {
             <div
               key={apunte._id}
               onClick={() => navigate(`${basePath}/apunte/${apunte._id}`)}
-              className="bg-gradient-to-br from-white to-purple-50/20 rounded-xl shadow-sm hover:shadow-lg transition-all hover:scale-105 cursor-pointer overflow-hidden border border-gray-100"
+              className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-xl shadow-sm hover:shadow-lg transition-all hover:scale-105 cursor-pointer overflow-hidden border border-purple-100"
             >
               <div className="p-6">
                 <div className="flex items-start justify-between mb-3">

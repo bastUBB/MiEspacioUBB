@@ -187,6 +187,7 @@ function Home() {
 
           // Transformar datos para el componente Sidebar
           const apuntesTransformados = apuntesArray.map(apunte => ({
+            id: apunte._id,
             title: apunte.nombre,
             author: apunte.autorSubida,
             subject: apunte.asignatura,
@@ -263,6 +264,7 @@ function Home() {
     });
 
     return sortedApuntes.slice(0, 3).map(apunte => ({
+      id: apunte._id,
       title: apunte.nombre,
       rating: apunte.valoracion?.promedioValoracion || 0,
       author: apunte.autorSubida
@@ -349,6 +351,7 @@ function Home() {
               topNotes={getTopApuntes()}
               topMostViewedNotes={topMostViewedNotes}
               topSubjects={topSubjects}
+              onNoteClick={handleNoteClick}
             />
           </div>
         </div>

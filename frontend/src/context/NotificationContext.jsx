@@ -38,7 +38,7 @@ export function NotificationProvider({ children }) {
         const handleNewNotification = (notification) => {
             setNotifications(prev => [notification, ...prev]);
             setUnreadCount(prev => prev + 1);
-            
+
             // Toast personalizado sin emojis feos, más limpio
             toast(notification.mensaje, {
                 icon: '🔔',
@@ -51,6 +51,7 @@ export function NotificationProvider({ children }) {
             });
         };
 
+        // Registrar listeners
         socket.on('notification:new', handleNewNotification);
 
         return () => {
@@ -61,11 +62,11 @@ export function NotificationProvider({ children }) {
     const markAsRead = async (id) => {
         try {
             // Optimistic update
-            setNotifications(prev => prev.map(n => 
+            setNotifications(prev => prev.map(n =>
                 n._id === id ? { ...n, estadoLeido: true } : n
             ));
             setUnreadCount(prev => Math.max(0, prev - 1));
-            
+
             await actualizarEstadoLeidoService(id);
         } catch (error) {
             console.error('Error marking as read:', error);
@@ -84,10 +85,10 @@ export function NotificationProvider({ children }) {
     };
 
     return (
-        <NotificationContext.Provider value={{ 
-            notifications, 
-            unreadCount, 
-            markAsRead, 
+        <NotificationContext.Provider value={{
+            notifications,
+            unreadCount,
+            markAsRead,
             clearAll,
             fetchNotifications
         }}>

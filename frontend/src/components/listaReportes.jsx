@@ -86,7 +86,7 @@ function ListaReportes({ rutUser }) {
 
     if (reportes.length === 0) {
         return (
-            <div className="text-center py-12">
+            <div className="text-center py-12 bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-xl shadow-sm border border-purple-100">
                 <AlertCircle className="mx-auto h-12 w-12 text-gray-400" />
                 <h3 className="mt-2 text-sm font-medium text-gray-900">No has realizado reportes</h3>
                 <p className="mt-1 text-sm text-gray-500">
@@ -106,7 +106,7 @@ function ListaReportes({ rutUser }) {
                 {reportes.map((reporte) => (
                     <div
                         key={reporte._id}
-                        className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                        className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-lg border border-purple-100 p-6 hover:shadow-md transition-shadow"
                     >
                         <div className="flex items-start justify-between mb-4">
                             <div className="flex-1">
@@ -157,8 +157,8 @@ function ListaReportes({ rutUser }) {
                                             </span>
                                             {reporte.apunteId.estado && (
                                                 <span className={`text-xs px-2 py-1 rounded-full ${reporte.apunteId.estado === 'Activo'
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'bg-red-100 text-red-700'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-red-100 text-red-700'
                                                     }`}>
                                                     {reporte.apunteId.estado}
                                                 </span>

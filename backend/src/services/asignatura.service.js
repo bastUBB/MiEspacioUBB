@@ -185,11 +185,22 @@ export async function agregarEtiquetasAsignaturaService(codigoAsignatura, etique
 
 export async function sugerirEtiquetasAsignaturaService(codigoAsignatura) {
     try {
+        // First, get the asignatura to get its name
         const existingAsignatura = await Asignatura.findOne({ codigo: codigoAsignatura });
 
         if (!existingAsignatura) return [null, 'Asignatura no encontrada'];
 
-        return [existingAsignatura.etiquetasAñadidas, null];
+        // Import Apunte model dynamically to avoid circular dependencies
+        const Apunte = (await import("../models/apunte.model.js")).default;
+
+        // Find all apuntes for this subject and get unique tags
+        const apuntes = await Apunte.find({ asignatura: existingAsignatura.nombre });
+
+        // Extract all tags and get unique ones
+        const allTags = apuntes.flatMap(apunte => apunte.etiquetas || []);
+        const uniqueTags = [...new Set(allTags.map(tag => tag.toLowerCase()))];
+
+        return [uniqueTags, null];
     } catch (error) {
         console.error('Error al obtener las etiquetas de la asignatura:', error);
         return [null, 'Error interno del servidor'];

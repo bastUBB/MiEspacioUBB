@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
-import { MessageSquare, Clock, Users, CheckCircle, BarChart3 } from 'lucide-react';
+import { MessageSquare, Clock } from 'lucide-react';
 import { obtenerEncuestasUsuarioService } from '../services/encuesta.service';
-import { useNavigate } from 'react-router-dom';
 
 function ListaEncuestas({ rutUser }) {
     const [encuestas, setEncuestas] = useState([]);
     const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchEncuestas = async () => {
@@ -40,7 +38,7 @@ function ListaEncuestas({ rutUser }) {
 
     if (encuestas.length === 0) {
         return (
-            <div className="text-center py-16 bg-white rounded-xl shadow-sm border border-gray-200">
+            <div className="text-center py-16 bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-xl shadow-sm border border-purple-100">
                 <MessageSquare className="w-16 h-16 mx-auto text-gray-300 mb-4" />
                 <h3 className="text-xl font-semibold text-gray-600 mb-2">No has creado encuestas aún</h3>
                 <p className="text-gray-500">Crea encuestas para recopilar opiniones de la comunidad</p>
@@ -69,14 +67,14 @@ function ListaEncuestas({ rutUser }) {
             {encuestas.map((encuesta) => (
                 <div
                     key={encuesta._id}
-                    className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all cursor-pointer"
-                    onClick={() => navigate(`/estudiante/encuestas/${encuesta._id}`)}
+                    className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-xl shadow-sm border border-purple-100 p-6 hover:shadow-md transition-all cursor-pointer"
+                    onClick={() => window.open(encuesta.enlaceGoogleForm, '_blank')}
                 >
                     <div className="flex items-start justify-between">
                         <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                                 <MessageSquare className="w-5 h-5 text-purple-600" />
-                                <h3 className="text-lg font-bold text-gray-900">{encuesta.titulo}</h3>
+                                <h3 className="text-lg font-bold text-gray-900">{encuesta.nombreEncuesta}</h3>
                             </div>
 
                             <p className="text-sm text-gray-600 mb-4 line-clamp-2">
@@ -85,24 +83,24 @@ function ListaEncuestas({ rutUser }) {
 
                             <div className="flex items-center gap-6 text-sm text-gray-500">
                                 <div className="flex items-center gap-1">
-                                    <Users className="w-4 h-4" />
-                                    <span>{encuesta.respuestas?.length || 0} respuestas</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <CheckCircle className="w-4 h-4" />
-                                    <span>{encuesta.preguntas?.length || 0} preguntas</span>
-                                </div>
-                                <div className="flex items-center gap-1">
                                     <Clock className="w-4 h-4" />
                                     <span>
-                                        {encuesta.fechaCreacion
-                                            ? new Date(encuesta.fechaCreacion).toLocaleDateString('es-ES', {
-                                                day: 'numeric',
-                                                month: 'short',
-                                                year: 'numeric'
-                                            })
-                                            : 'Fecha desconocida'
-                                        }
+                                        {(() => {
+                                            // Intentar usar createdAt, sino extraer fecha del ObjectId
+                                            let fecha = encuesta.createdAt;
+                                            if (!fecha && encuesta._id && encuesta._id.length === 24) {
+                                                // Extraer timestamp del ObjectId (primeros 8 caracteres hex)
+                                                const timestamp = parseInt(encuesta._id.substring(0, 8), 16) * 1000;
+                                                fecha = new Date(timestamp);
+                                            }
+                                            return fecha
+                                                ? new Date(fecha).toLocaleDateString('es-ES', {
+                                                    day: 'numeric',
+                                                    month: 'short',
+                                                    year: 'numeric'
+                                                })
+                                                : 'Fecha desconocida';
+                                        })()}
                                     </span>
                                 </div>
                             </div>
@@ -110,18 +108,8 @@ function ListaEncuestas({ rutUser }) {
 
                         <div className="flex flex-col items-end gap-2 ml-4">
                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${getEstadoColor(encuesta.estado)}`}>
-                                {encuesta.estado || 'Activa'}
+                                {encuesta.estado || 'Activo'}
                             </span>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigate(`/estudiante/encuestas/${encuesta._id}/resultados`);
-                                }}
-                                className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 font-medium"
-                            >
-                                <BarChart3 className="w-4 h-4" />
-                                Ver resultados
-                            </button>
                         </div>
                     </div>
                 </div>

@@ -66,4 +66,15 @@ export function emitToUser(rut, event, data) {
     }
 }
 
+// Función para emitir evento a todos los administradores conectados
+export function emitToAdmins(event, data) {
+    if (!io) return;
+
+    for (const [socketId, userData] of usuariosActivos.entries()) {
+        if (userData.rol === 'admin') {
+            io.to(socketId).emit(event, data);
+        }
+    }
+}
+
 export { io };

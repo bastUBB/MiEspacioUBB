@@ -17,7 +17,8 @@ export async function obtenerTotalApuntesActivosService() {
 
 export async function obtenerTotalUsuariosService() {
     try {
-        const total = await User.countDocuments({ estado: 'activo' });
+        // Contar todos los usuarios que no estén baneados
+        const total = await User.countDocuments({ estado: { $ne: 'baneado' } });
         return [{ total }, null];
     } catch (error) {
         console.error('Error al obtener total de usuarios:', error);
@@ -397,16 +398,16 @@ export async function obtenerAsignaturasSinApuntesService() {
     try {
         // Obtener todas las asignaturas
         const asignaturas = await Asignatura.find({}, 'nombre codigo area');
-        
+
         // Obtener IDs de asignaturas que tienen apuntes activos
         const asignaturasConApuntes = await Apunte.distinct('asignatura', { estado: 'Activo' });
-        
+
         // Filtrar las que no están en la lista de apuntes (comparando por nombre o ID según tu modelo)
         // Nota: En tu modelo Apunte, 'asignatura' parece ser un String (nombre) según obtenerTop5AsignaturasService
         // Si es ObjectId, cambiar la lógica. Asumiré String nombre por consistencia con servicios anteriores.
-        
+
         const asignaturasSinApuntes = asignaturas.filter(asig => !asignaturasConApuntes.includes(asig.nombre));
-        
+
         return [asignaturasSinApuntes, null];
     } catch (error) {
         console.error('Error al obtener asignaturas sin apuntes:', error);
@@ -434,7 +435,7 @@ export async function obtenerUltimosReportesService() {
             .sort({ _id: -1 }) // Fallback seguro: orden de creación
             .limit(5)
             .populate('apunteId', 'nombre'); // Si apunteId es ref
-            
+
         return [reportes, null];
     } catch (error) {
         console.error('Error al obtener últimos reportes:', error);

@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-    BarChart3, 
-    Users, 
-    FileText, 
-    AlertTriangle, 
-    Activity, 
-    TrendingUp, 
-    Download, 
+import { jsPDF } from 'jspdf';
+import {
+    BarChart3,
+    Users,
+    FileText,
+    AlertTriangle,
+    Activity,
+    TrendingUp,
+    Download,
     Star,
     AlertCircle,
     FileWarning,
@@ -26,6 +27,35 @@ import {
     obtenerDistribucionTiposService,
     obtenerValoracionPromedioSistemaService
 } from '../../services/estadisticas.service';
+
+// Función para formatear fechas de forma segura
+const formatDate = (dateString) => {
+    if (!dateString) return 'Sin fecha';
+    try {
+        // Intentar parsear formato DD-MM-YYYY
+        if (typeof dateString === 'string' && dateString.includes('-')) {
+            const parts = dateString.split('-');
+            if (parts.length === 3 && parts[0].length <= 2) {
+                // Formato DD-MM-YYYY
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1;
+                const year = parseInt(parts[2], 10);
+                const date = new Date(year, month, day);
+                if (!isNaN(date.getTime())) {
+                    return date.toLocaleDateString('es-ES');
+                }
+            }
+        }
+        // Intentar parsear como fecha ISO estándar
+        const date = new Date(dateString);
+        if (!isNaN(date.getTime())) {
+            return date.toLocaleDateString('es-ES');
+        }
+        return 'Sin fecha';
+    } catch {
+        return 'Sin fecha';
+    }
+};
 
 function EstadisticasAdmin() {
     const navigate = useNavigate();
@@ -98,6 +128,120 @@ function EstadisticasAdmin() {
         navigate('/login');
     };
 
+    // Función para generar PDF
+    const generarPDF = () => {
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        let yPos = 20;
+
+        // Título
+        doc.setFontSize(20);
+        doc.setTextColor(88, 28, 135); // Purple
+        doc.text('Dashboard de Estadísticas - MiEspacioUBB', pageWidth / 2, yPos, { align: 'center' });
+        yPos += 10;
+
+        // Fecha de generación
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Generado el ${new Date().toLocaleString('es-ES')}`, pageWidth / 2, yPos, { align: 'center' });
+        yPos += 15;
+
+        // KPIs principales
+        doc.setFontSize(14);
+        doc.setTextColor(30, 30, 30);
+        doc.text('Métricas Principales', 14, yPos);
+        yPos += 8;
+
+        doc.setFontSize(11);
+        doc.setTextColor(60, 60, 60);
+        doc.text(`• Usuarios Totales: ${stats.totalUsuarios}`, 20, yPos);
+        yPos += 6;
+        doc.text(`• Apuntes Activos: ${stats.totalApuntes}`, 20, yPos);
+        yPos += 6;
+        doc.text(`• Reportes Pendientes: ${stats.reportesPendientes}`, 20, yPos);
+        yPos += 6;
+        doc.text(`• Usuarios Online: ${stats.usuariosActivos}`, 20, yPos);
+        yPos += 6;
+        doc.text(`• Valoración Promedio: ${stats.valoracionPromedio?.toFixed(1) || '0.0'} / 5`, 20, yPos);
+        yPos += 12;
+
+        // Top Asignaturas
+        if (stats.topAsignaturas.length > 0) {
+            doc.setFontSize(14);
+            doc.setTextColor(30, 30, 30);
+            doc.text('Asignaturas Más Populares', 14, yPos);
+            yPos += 8;
+
+            doc.setFontSize(10);
+            doc.setTextColor(60, 60, 60);
+            stats.topAsignaturas.forEach((asig, idx) => {
+                doc.text(`${idx + 1}. ${asig.nombre}: ${asig.cantidad} apuntes`, 20, yPos);
+                yPos += 5;
+            });
+            yPos += 7;
+        }
+
+        // Top Contribuidores
+        if (stats.topContribuidores.length > 0) {
+            doc.setFontSize(14);
+            doc.setTextColor(30, 30, 30);
+            doc.text('Top Contribuidores', 14, yPos);
+            yPos += 8;
+
+            doc.setFontSize(10);
+            doc.setTextColor(60, 60, 60);
+            stats.topContribuidores.forEach((user, idx) => {
+                doc.text(`${idx + 1}. ${user.nombre} - ${user.cantidadApuntes} apuntes`, 20, yPos);
+                yPos += 5;
+            });
+            yPos += 7;
+        }
+
+        // Distribución de tipos
+        if (stats.distribucionTipos.length > 0) {
+            doc.setFontSize(14);
+            doc.setTextColor(30, 30, 30);
+            doc.text('Distribución por Tipo de Archivo', 14, yPos);
+            yPos += 8;
+
+            doc.setFontSize(10);
+            doc.setTextColor(60, 60, 60);
+            stats.distribucionTipos.forEach(tipo => {
+                const porcentaje = ((tipo.cantidad / stats.totalApuntes) * 100).toFixed(1);
+                doc.text(`• ${tipo.tipo}: ${tipo.cantidad} (${porcentaje}%)`, 20, yPos);
+                yPos += 5;
+            });
+            yPos += 7;
+        }
+
+        // Asignaturas sin contenido (si hay)
+        if (stats.asignaturasSinApuntes.length > 0) {
+            // Nueva página si es necesario
+            if (yPos > 250) {
+                doc.addPage();
+                yPos = 20;
+            }
+
+            doc.setFontSize(14);
+            doc.setTextColor(180, 80, 0); // Orange
+            doc.text(`Asignaturas Sin Contenido (${stats.asignaturasSinApuntes.length})`, 14, yPos);
+            yPos += 8;
+
+            doc.setFontSize(9);
+            doc.setTextColor(60, 60, 60);
+            stats.asignaturasSinApuntes.slice(0, 15).forEach(asig => {
+                doc.text(`• ${asig.codigo} - ${asig.nombre}`, 20, yPos);
+                yPos += 4;
+            });
+            if (stats.asignaturasSinApuntes.length > 15) {
+                doc.text(`... y ${stats.asignaturasSinApuntes.length - 15} más`, 20, yPos);
+            }
+        }
+
+        // Descargar
+        doc.save(`estadisticas_miespacioubb_${new Date().toISOString().split('T')[0]}.pdf`);
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -116,7 +260,7 @@ function EstadisticasAdmin() {
                 <div className="max-w-7xl mx-auto">
                     {/* Header */}
                     <div className="flex items-center mb-8">
-                        <button 
+                        <button
                             onClick={() => navigate('/admin')}
                             className="mr-4 p-2 rounded-full hover:bg-gray-200 transition-colors"
                         >
@@ -126,32 +270,39 @@ function EstadisticasAdmin() {
                             <h1 className="text-3xl font-bold text-gray-900">Dashboard de Estadísticas</h1>
                             <p className="text-gray-600">Visión general del rendimiento y salud de la plataforma</p>
                         </div>
+                        <button
+                            onClick={generarPDF}
+                            className="ml-auto flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-sky-400 text-white rounded-xl hover:from-blue-600 hover:to-sky-500 transition-all font-medium shadow-lg hover:shadow-xl"
+                        >
+                            <Download className="w-5 h-5" />
+                            Exportar PDF
+                        </button>
                     </div>
 
                     {/* KPI Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <KPICard 
-                            title="Usuarios Totales" 
-                            value={stats.totalUsuarios} 
+                        <KPICard
+                            title="Usuarios Totales"
+                            value={stats.totalUsuarios}
                             icon={<Users className="w-8 h-8 text-blue-600" />}
                             bg="bg-blue-100"
                         />
-                        <KPICard 
-                            title="Apuntes Activos" 
-                            value={stats.totalApuntes} 
+                        <KPICard
+                            title="Apuntes Activos"
+                            value={stats.totalApuntes}
                             icon={<FileText className="w-8 h-8 text-green-600" />}
                             bg="bg-green-100"
                         />
-                        <KPICard 
-                            title="Reportes Pendientes" 
-                            value={stats.reportesPendientes} 
+                        <KPICard
+                            title="Reportes Pendientes"
+                            value={stats.reportesPendientes}
                             icon={<AlertTriangle className="w-8 h-8 text-red-600" />}
                             bg="bg-red-100"
                             alert={stats.reportesPendientes > 0}
                         />
-                        <KPICard 
-                            title="Usuarios Online" 
-                            value={stats.usuariosActivos} 
+                        <KPICard
+                            title="Usuarios Online"
+                            value={stats.usuariosActivos}
                             icon={<Activity className="w-8 h-8 text-purple-600" />}
                             bg="bg-purple-100"
                             subtext="En tiempo real"
@@ -161,7 +312,7 @@ function EstadisticasAdmin() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Main Content - Left Column (2/3) */}
                         <div className="lg:col-span-2 space-y-8">
-                            
+
                             {/* Top Asignaturas */}
                             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                                 <div className="flex items-center justify-between mb-6">
@@ -237,7 +388,7 @@ function EstadisticasAdmin() {
 
                         {/* Sidebar - Right Column (1/3) */}
                         <div className="space-y-8">
-                            
+
                             {/* Últimos Reportes */}
                             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                                 <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
@@ -252,7 +403,7 @@ function EstadisticasAdmin() {
                                                     {reporte.motivo}
                                                 </span>
                                                 <span className="text-xs text-gray-500">
-                                                    {new Date(reporte.fecha).toLocaleDateString()}
+                                                    {formatDate(reporte.fecha)}
                                                 </span>
                                             </div>
                                             <p className="text-sm text-gray-800 mt-2 line-clamp-2">
@@ -267,7 +418,7 @@ function EstadisticasAdmin() {
                                         <p className="text-center text-gray-500 py-4">No hay reportes recientes.</p>
                                     )}
                                 </div>
-                                <button 
+                                <button
                                     onClick={() => navigate('/admin/reportes')}
                                     className="w-full mt-4 text-sm text-blue-600 hover:text-blue-800 font-medium"
                                 >
@@ -285,11 +436,10 @@ function EstadisticasAdmin() {
                                     {stats.topContribuidores.map((user, idx) => (
                                         <div key={idx} className="flex items-center justify-between">
                                             <div className="flex items-center">
-                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                                                    idx === 0 ? 'bg-yellow-100 text-yellow-700' : 
-                                                    idx === 1 ? 'bg-gray-100 text-gray-700' : 
-                                                    'bg-orange-50 text-orange-700'
-                                                }`}>
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${idx === 0 ? 'bg-yellow-100 text-yellow-700' :
+                                                    idx === 1 ? 'bg-gray-100 text-gray-700' :
+                                                        'bg-orange-50 text-orange-700'
+                                                    }`}>
                                                     {idx + 1}
                                                 </div>
                                                 <div className="ml-3">
@@ -322,8 +472,8 @@ function EstadisticasAdmin() {
                                                 <span className="text-gray-500">{tipo.cantidad}</span>
                                             </div>
                                             <div className="w-full bg-gray-200 rounded-full h-2">
-                                                <div 
-                                                    className="bg-blue-600 h-2 rounded-full" 
+                                                <div
+                                                    className="bg-blue-600 h-2 rounded-full"
                                                     style={{ width: `${(tipo.cantidad / stats.totalApuntes) * 100}%` }}
                                                 ></div>
                                             </div>

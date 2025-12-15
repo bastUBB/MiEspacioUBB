@@ -69,7 +69,7 @@ const Bienvenida = () => {
             </div>
 
             {/* Stats */}
-            <div className="group relative pt-12 p-8 border-2 border-purple-200 rounded-xl bg-white shadow-md">
+            {/* <div className="group relative pt-12 p-8 border-2 border-purple-200 rounded-xl bg-white shadow-md">
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl opacity-5"></div>
               <div className="relative grid grid-cols-3 gap-6">
                 <div className="space-y-2">
@@ -85,7 +85,7 @@ const Bienvenida = () => {
                   <p className="text-gray-600">Descargas mensuales</p>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

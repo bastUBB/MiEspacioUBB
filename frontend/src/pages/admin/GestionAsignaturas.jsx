@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, ArrowLeft, Plus, X, HelpCircle, Search, ChevronDown } from 'lucide-react';
+import { BookOpen, ArrowLeft, Plus, X, HelpCircle, Search, ChevronDown, Trash2, AlertTriangle } from 'lucide-react';
 import TablaGestion from '@components/tablaGestion.jsx';
 import {
     getAllAsignaturasService,
@@ -35,6 +35,9 @@ function GestionAsignaturas() {
     const [modoEdicion, setModoEdicion] = useState(false);
     const [, setAsignaturaActual] = useState(null);
     const [procesando, setProcesando] = useState(false);
+
+    // Estado para modal de confirmación de eliminación
+    const [modalConfirmacion, setModalConfirmacion] = useState({ isOpen: false, asignatura: null, procesando: false });
 
     // Form state
     const [formData, setFormData] = useState({
@@ -244,23 +247,35 @@ function GestionAsignaturas() {
         }
     };
 
-    const eliminarAsignatura = async (asignatura) => {
-        if (!confirm(`¿Estás seguro de eliminar la asignatura "${asignatura.nombre}"?`)) {
-            return;
-        }
+    const abrirModalConfirmacion = (asignatura) => {
+        setModalConfirmacion({ isOpen: true, asignatura, procesando: false });
+    };
+
+    const cerrarModalConfirmacion = () => {
+        setModalConfirmacion({ isOpen: false, asignatura: null, procesando: false });
+    };
+
+    const confirmarEliminacion = async () => {
+        const asignatura = modalConfirmacion.asignatura;
+        if (!asignatura) return;
+
+        setModalConfirmacion(prev => ({ ...prev, procesando: true }));
 
         try {
             const response = await deleteAsignaturaService(asignatura.codigo);
 
             if (response?.status === 'Success') {
-                toast.success('Asignatura eliminada');
+                toast.success('Asignatura eliminada correctamente');
+                cerrarModalConfirmacion();
                 cargarAsignaturas();
             } else {
                 toast.error(response?.details || 'Error al eliminar la asignatura');
+                setModalConfirmacion(prev => ({ ...prev, procesando: false }));
             }
         } catch (error) {
             console.error('Error eliminando asignatura:', error);
             toast.error('Error al eliminar la asignatura');
+            setModalConfirmacion(prev => ({ ...prev, procesando: false }));
         }
     };
 
@@ -326,7 +341,7 @@ function GestionAsignaturas() {
                         title="Asignaturas"
                         icon={<BookOpen className="w-5 h-5" />}
                         onEdit={abrirModalEditar}
-                        onDelete={eliminarAsignatura}
+                        onDelete={abrirModalConfirmacion}
                         onCreate={abrirModalCrear}
                         createButtonText="Nueva Asignatura"
                         showCreateButton={true}
@@ -590,6 +605,87 @@ function GestionAsignaturas() {
                                                 className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-medium disabled:opacity-50"
                                             >
                                                 Cancelar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Modal Confirmación de Eliminación */}
+                    {modalConfirmacion.isOpen && (
+                        <div className="fixed inset-0 z-50 overflow-y-auto animate-in fade-in duration-200" aria-labelledby="modal-confirmacion" role="dialog" aria-modal="true">
+                            <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md transition-all" onClick={cerrarModalConfirmacion}></div>
+
+                            <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
+                                <div className="relative w-full max-w-md transform overflow-hidden rounded-3xl bg-white shadow-2xl transition-all" onClick={(e) => e.stopPropagation()}>
+                                    {/* Header con gradiente de advertencia */}
+                                    <div className="relative bg-gradient-to-br from-red-50 via-orange-50 to-amber-50 px-8 py-6 border-b border-red-100">
+                                        <div className="flex items-center gap-4">
+                                            <div className="p-3 bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl shadow-lg">
+                                                <AlertTriangle className="w-7 h-7 text-white" />
+                                            </div>
+                                            <div>
+                                                <h2 className="text-xl font-bold text-gray-900">
+                                                    Confirmar Eliminación
+                                                </h2>
+                                                <p className="text-sm text-gray-600 mt-0.5">Esta acción no se puede deshacer</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Contenido */}
+                                    <div className="p-8">
+                                        <div className="bg-red-50 border border-red-200 rounded-2xl p-5 mb-6">
+                                            <p className="text-gray-700 text-center">
+                                                ¿Estás seguro de que deseas eliminar la asignatura
+                                            </p>
+                                            <p className="text-lg font-bold text-gray-900 text-center mt-2">
+                                                "{modalConfirmacion.asignatura?.nombre}"
+                                            </p>
+                                            <p className="text-sm text-red-600 text-center mt-3 font-medium">
+                                                Esta acción eliminará todos los datos asociados
+                                            </p>
+                                        </div>
+
+                                        {/* Info de la asignatura */}
+                                        <div className="bg-gray-50 rounded-xl p-4 mb-6 space-y-2">
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">Código:</span>
+                                                <span className="font-medium text-gray-900">{modalConfirmacion.asignatura?.codigo}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">Semestre:</span>
+                                                <span className="font-medium text-gray-900">{modalConfirmacion.asignatura?.semestre}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Botones */}
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={cerrarModalConfirmacion}
+                                                disabled={modalConfirmacion.procesando}
+                                                className="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-xl transition-colors font-medium disabled:opacity-50"
+                                            >
+                                                Cancelar
+                                            </button>
+                                            <button
+                                                onClick={confirmarEliminacion}
+                                                disabled={modalConfirmacion.procesando}
+                                                className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-3 px-6 rounded-xl hover:from-red-600 hover:to-red-700 transition-all flex items-center justify-center gap-2 font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {modalConfirmacion.procesando ? (
+                                                    <>
+                                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                        Eliminando...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Trash2 className="w-5 h-5" />
+                                                        Eliminar
+                                                    </>
+                                                )}
                                             </button>
                                         </div>
                                     </div>

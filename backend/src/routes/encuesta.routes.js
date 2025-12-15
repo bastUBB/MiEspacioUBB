@@ -7,7 +7,8 @@ import {
     obtenerTodasEncuestasActivas,
     obtenerTodasEncuestas,
     obtenerEncuestaPorId,
-    obtenerMisEncuestas
+    obtenerMisEncuestas,
+    obtenerEncuestasPorRut
 } from "../controllers/encuesta.controller.js";
 
 const router = Router();
@@ -20,7 +21,9 @@ router
     .get("/all-encuestas", authorizeRoles("admin"), obtenerTodasEncuestas)
     .get("/detail", authorizeRoles("admin", "docente", "ayudante", "estudiante"), obtenerEncuestaPorId)
     .get("/mis-encuestas", authorizeRoles("admin", "docente", "ayudante", "estudiante"), obtenerMisEncuestas)
+    .get("/por-rut", authorizeRoles("admin", "docente", "ayudante", "estudiante"), obtenerEncuestasPorRut)
     .put("/detail", authorizeRoles("admin"), actualizarEncuesta)
     .delete("/detail", authorizeRoles("admin"), eliminarEncuesta)
 
 export default router;
+

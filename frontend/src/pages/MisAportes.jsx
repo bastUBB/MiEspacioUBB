@@ -44,8 +44,8 @@ function MisAportes() {
                 </div>
 
                 {/* Tabs */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-hidden">
-                    <div className="flex border-b border-gray-200">
+                <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-xl shadow-sm border border-purple-100 mb-6 overflow-hidden">
+                    <div className="flex border-b border-purple-100">
                         {tabs.map((tab) => {
                             const Icon = tab.icon;
                             return (

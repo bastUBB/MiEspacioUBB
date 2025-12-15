@@ -98,7 +98,7 @@ export default function SubirEncuestaModal({ isOpen, onClose, onEncuestaCreated 
                 nombreEncuesta: formData.nombreEncuesta.trim(),
                 descripcion: formData.descripcion.trim(),
                 enlaceGoogleForm: formData.enlaceGoogleForm.trim(),
-                rutUsuario: user.rut
+                rutAutor: user.rut
             };
 
             const response = await crearEncuesta(encuestaData);

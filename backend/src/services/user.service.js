@@ -16,7 +16,7 @@ export async function createUserService(dataUser) {
 
         const hashedPassword = await hashPassword(dataUser.password);
 
-        const newUser = new User({ ...dataUser, password: hashedPassword });
+        const newUser = new User({ ...dataUser, password: hashedPassword, isVerified: true });
 
         if (!newUser) return [null, 'Error al crear el usuario'];
 

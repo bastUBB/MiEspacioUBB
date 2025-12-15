@@ -7,15 +7,15 @@ const TarjetaEncuesta = ({ encuesta, onEdit, onDelete, isAdmin = false }) => {
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-gray-200 hover:border-purple-300">
+        <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-lg shadow-sm hover:shadow-lg transition-all duration-300 p-6 border border-purple-100 hover:border-purple-300">
             {/* Header con estado */}
             <div className="flex justify-between items-start mb-3">
                 <h3 className="text-xl font-bold text-gray-800 flex-1">
                     {encuesta.nombreEncuesta}
                 </h3>
                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${encuesta.estado === 'Activo'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-gray-100 text-gray-700'
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-gray-100 text-gray-700'
                     }`}>
                     {encuesta.estado}
                 </span>

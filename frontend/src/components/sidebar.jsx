@@ -1,6 +1,6 @@
 import { TrendingUp, Award, Users, FileText, Star, Trophy, Eye, BookOpen } from 'lucide-react';
 
-const Sidebar = ({ topContributors, topNotes, topMostViewedNotes = [], topSubjects = [] }) => {
+const Sidebar = ({ topContributors, topNotes, topMostViewedNotes = [], topSubjects = [], onNoteClick }) => {
   return (
     <div className="space-y-6">
       {/* Top Contributors */}
@@ -40,8 +40,12 @@ const Sidebar = ({ topContributors, topNotes, topMostViewedNotes = [], topSubjec
         <div className="space-y-3">
           {topNotes.length > 0 ? (
             topNotes.map((note, index) => (
-              <div key={index} className="border-l-4 border-purple-200 pl-3">
-                <p className="text-sm font-medium text-gray-900 truncate">{note.title}</p>
+              <div
+                key={index}
+                className="border-l-4 border-purple-200 cursor-pointer hover:bg-purple-100/50 -ml-3 pl-6 py-2 rounded-r-lg transition-colors"
+                onClick={() => onNoteClick && onNoteClick(note)}
+              >
+                <p className="text-sm font-medium text-gray-900 truncate hover:text-purple-600">{note.title}</p>
                 <div className="flex items-center justify-between mt-1">
                   <p className="text-xs text-gray-500">por {note.author}</p>
                   <div className="flex items-center space-x-1">
@@ -67,8 +71,12 @@ const Sidebar = ({ topContributors, topNotes, topMostViewedNotes = [], topSubjec
         <div className="space-y-3">
           {topMostViewedNotes.length > 0 ? (
             topMostViewedNotes.map((note, index) => (
-              <div key={index} className="border-l-4 border-blue-200 pl-3">
-                <p className="text-sm font-medium text-gray-900 truncate">{note.title}</p>
+              <div
+                key={index}
+                className="border-l-4 border-blue-200 cursor-pointer hover:bg-blue-100/50 -ml-3 pl-6 py-2 rounded-r-lg transition-colors"
+                onClick={() => onNoteClick && onNoteClick(note)}
+              >
+                <p className="text-sm font-medium text-gray-900 truncate hover:text-blue-600">{note.title}</p>
                 <div className="flex items-center justify-between mt-1">
                   <p className="text-xs text-gray-500">{note.subject}</p>
                   <div className="flex items-center space-x-1">

@@ -197,9 +197,9 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
         return;
       }
 
-      const maxSize = 10 * 1024 * 1024;
+      const maxSize = 30 * 1024 * 1024;
       if (file.size > maxSize) {
-        toast.error(`El archivo "${file.name}" excede el tamaño máximo de 10MB`, { duration: 5000, icon: '⚠️' });
+        toast.error(`El archivo "${file.name}" excede el tamaño máximo de 30MB`, { duration: 5000, icon: '⚠️' });
         return;
       }
 
@@ -279,7 +279,6 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
 
     setEtiquetas(prev => [...prev, etiquetaTrimmed]);
     setCurrentEtiqueta('');
-    toast.success(`Etiqueta "${etiquetaTrimmed}" agregada`, { duration: 2000, icon: '✅' });
   };
 
   const eliminarEtiqueta = (etiquetaAEliminar) => {
@@ -329,7 +328,6 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
     }
 
     setEtiquetas(prev => [...prev, etiqueta]);
-    toast.success(`Etiqueta "${etiqueta}" agregada`, { duration: 2000, icon: '✅' });
   };
 
   const handleKeyPressEtiqueta = (e) => {
@@ -416,9 +414,9 @@ export default function SubirApunteModal({ isOpen, onClose, onApunteCreated }) {
       return;
     }
 
-    const maxSize = 10 * 1024 * 1024;
+    const maxSize = 30 * 1024 * 1024;
     if (formData.file.size > maxSize) {
-      toast.error('El archivo excede el tamaño máximo de 10MB', { duration: 4000, icon: '📦' });
+      toast.error('El archivo excede el tamaño máximo de 30MB', { duration: 4000, icon: '📦' });
       return;
     }
 

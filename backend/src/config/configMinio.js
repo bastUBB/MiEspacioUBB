@@ -72,7 +72,7 @@ export const BUCKETS = {
 };
 
 export const FILE_CONFIG = {
-  MAX_FILE_SIZE: 20 * 1024 * 1024, // 20MB
+  MAX_FILE_SIZE: 30 * 1024 * 1024, // 30MB
 
   SIGNED_URL_EXPIRY: parseInt(SIGNED_URL_EXPIRY) || 3600, // 1 hora por defecto
 

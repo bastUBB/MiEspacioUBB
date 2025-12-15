@@ -7,7 +7,7 @@ const bucketAsignatura = {
     "Introduccion a la Programacion": "APUNTES_INTRO_PROG",
     "Calculo Diferencial": "APUNTES_CALC_DIF",
     "Quimica General": "APUNTES_QUIM",
-    "Estructuras Discretas para Cs. de la Comp.": "APUNTES_ESTR_DISC",
+    "Estructuras Discretas para Cs. de la Computacion": "APUNTES_ESTR_DISC",
     "Programacion Orientada a Objeto": "APUNTES_POO",
     "Calculo Integral": "APUNTES_CALC_INT",
     "Algebra Lineal": "APUNTES_ALG_LIN",
@@ -49,7 +49,7 @@ const bucketAsignatura = {
 };
 
 export function asignarBucket(nombreAsignatura) {
-    try {        
+    try {
         const normalizado = nombreAsignatura.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
         if (!normalizado) return [null, `Asignatura no reconocida: ${nombreAsignatura}`];

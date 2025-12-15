@@ -34,8 +34,18 @@ export async function crearApunteService(apunteData, file) {
     }
 }
 
-// TODO: Ver mas adelante
-// export async function updateApunteService(apunteData) {}
+export async function updateApunteService(apunteID, updateData) {
+    try {
+        const response = await axios.put('/api/apuntes/detail', updateData, {
+            params: { apunteID }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al actualizar apunte:", error);
+        throw error;
+    }
+}
 
 // TODO: Ver mas adelante
 // export async function deleteApunteService(apunteID) {}

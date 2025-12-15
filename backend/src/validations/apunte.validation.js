@@ -126,15 +126,15 @@ export const apunteCreateValidation = joi.object({
         .required()
         .trim()
         .min(3)
-        .max(50)
+        .max(70)
         .strict()
-        .pattern(/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/)
+        .pattern(/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s.]+$/)
         .messages({
             'string.empty': 'El nombre de la asignatura no puede estar vacío',
             'string.base': 'El nombre de la asignatura debe ser de tipo string',
             'string.min': 'El nombre de la asignatura debe tener al menos 3 caracteres',
-            'string.max': 'El nombre de la asignatura no puede tener más de 50 caracteres',
-            'string.pattern.base': 'El nombre de la asignatura solo puede contener letras y espacios',
+            'string.max': 'El nombre de la asignatura no puede tener más de 70 caracteres',
+            'string.pattern.base': 'El nombre de la asignatura solo puede contener letras, espacios y puntos',
             'any.required': 'El nombre de la asignatura es obligatorio',
         }),
     fechaSubida: joi.string()
@@ -226,14 +226,14 @@ export const apunteUpdateValidation = joi.object({
         }),
     asignatura: joi.string()
         .min(3)
-        .max(50)
+        .max(70)
         .strict()
-        .pattern(/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/)
+        .pattern(/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s.]+$/)
         .messages({
             'string.base': 'El nombre de la asignatura debe ser de tipo string',
             'string.min': 'El nombre de la asignatura debe tener al menos 3 caracteres',
-            'string.max': 'El nombre de la asignatura no puede tener más de 50 caracteres',
-            'string.pattern.base': 'El nombre de la asignatura solo puede contener letras y espacios',
+            'string.max': 'El nombre de la asignatura no puede tener más de 70 caracteres',
+            'string.pattern.base': 'El nombre de la asignatura solo puede contener letras, espacios y puntos',
         }),
     fechaSubida: joi.string()
         .strict()

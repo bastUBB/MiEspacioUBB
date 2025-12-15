@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast';
 import {
   BookOpen, Download, Star, Eye, Calendar, Tag, User, MessageSquare,
   ThumbsUp, Share2, Bookmark, Clock, Award, TrendingUp, Send,
-  ChevronRight, FileText, Heart, MoreVertical, Flag, Users, Loader2, ChevronLeft, AlertTriangle, X
+  ChevronRight, FileText, Heart, MoreVertical, Flag, Users, Loader2, ChevronLeft, AlertTriangle, X, Pencil, Plus, Save
 } from 'lucide-react';
 import Header from '../components/header';
 import ReportModal from '../components/ReportModal';
@@ -27,7 +27,8 @@ import {
   crearRespuestaComentarioApunteService,
   registrarDescargaApunteService,
   cambiarEstadoApunteService,
-  eliminarValoracionApunteService
+  eliminarValoracionApunteService,
+  updateApunteService
 } from '../services/apunte.service';
 import { getRoleBasePath } from '../helpers/roleBasePath.helper';
 
@@ -72,6 +73,13 @@ function DetalleApunte() {
 
   // Estado para modal de perfil del autor
   const [isAuthorModalOpen, setIsAuthorModalOpen] = useState(false);
+
+  // Estados para edición del autor
+  const [isEditing, setIsEditing] = useState(false);
+  const [editDescripcion, setEditDescripcion] = useState('');
+  const [editEtiquetas, setEditEtiquetas] = useState([]);
+  const [newEtiqueta, setNewEtiqueta] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
 
   useEffect(() => {
     // Validar que el ID existe y no está undefined
@@ -665,6 +673,78 @@ function DetalleApunte() {
   };
 
 
+  // Funciones para edición del autor
+  const handleStartEdit = () => {
+    setEditDescripcion(apunte.descripcion || '');
+    setEditEtiquetas([...(apunte.etiquetas || [])]);
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditDescripcion('');
+    setEditEtiquetas([]);
+    setNewEtiqueta('');
+  };
+
+  const handleAddEtiqueta = () => {
+    const etiquetaTrimmed = newEtiqueta.trim().toLowerCase();
+    if (!etiquetaTrimmed) return;
+    if (etiquetaTrimmed.length < 3 || etiquetaTrimmed.length > 30) {
+      toast.error('La etiqueta debe tener entre 3 y 30 caracteres');
+      return;
+    }
+    if (editEtiquetas.includes(etiquetaTrimmed)) {
+      toast.error('Esta etiqueta ya existe');
+      return;
+    }
+    if (editEtiquetas.length >= 5) {
+      toast.error('Máximo 5 etiquetas permitidas');
+      return;
+    }
+    setEditEtiquetas([...editEtiquetas, etiquetaTrimmed]);
+    setNewEtiqueta('');
+  };
+
+  const handleRemoveEtiqueta = (etiquetaToRemove) => {
+    setEditEtiquetas(editEtiquetas.filter(e => e !== etiquetaToRemove));
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editDescripcion.trim() || editDescripcion.trim().length < 5 || editDescripcion.trim().length > 200) {
+      toast.error('La descripción debe tener entre 5 y 200 caracteres');
+      return;
+    }
+    if (editEtiquetas.length === 0 || editEtiquetas.length > 5) {
+      toast.error('Debes tener entre 1 y 5 etiquetas');
+      return;
+    }
+
+    setSavingEdit(true);
+    try {
+      const response = await updateApunteService(id, {
+        descripcion: editDescripcion.trim(),
+        etiquetas: editEtiquetas
+      });
+
+      if (response.status === 'Success') {
+        setApunte(prev => ({
+          ...prev,
+          descripcion: editDescripcion.trim(),
+          etiquetas: editEtiquetas
+        }));
+        setIsEditing(false);
+        toast.success('Apunte actualizado correctamente');
+      } else {
+        toast.error(response.message || 'Error al actualizar el apunte');
+      }
+    } catch (error) {
+      console.error('Error al actualizar apunte:', error);
+      toast.error(error.response?.data?.message || 'Error al actualizar el apunte');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
 
   const formatBytes = (bytes) => {
     if (bytes === 0) return '0 Bytes';
@@ -766,42 +846,143 @@ function DetalleApunte() {
             {/* Descripción y Contenido */}
             <div className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-2xl shadow-sm border border-purple-100 overflow-hidden">
               <div className="p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Descripción</h2>
-                <p className="text-gray-700 leading-relaxed text-base mb-6">
-                  {apunte.descripcion}
-                </p>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-gray-900">Descripción</h2>
+                  {/* Botón de editar solo visible para el autor */}
+                  {user && user.rut === apunte.rutAutorSubida && !isEditing && (
+                    <button
+                      onClick={handleStartEdit}
+                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-purple-600 bg-purple-100 hover:bg-purple-200 rounded-lg transition-colors"
+                    >
+                      <Pencil className="w-4 h-4" />
+                      Editar
+                    </button>
+                  )}
+                </div>
 
-                {/* Autores */}
-                {apunte.autores && apunte.autores.length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                      <Users className="w-4 h-4" />
-                      Autores del Contenido
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {apunte.autores.map((autor, index) => (
-                        <span key={index} className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium border border-indigo-100">
-                          {autor}
-                        </span>
-                      ))}
+                {/* Modo visualización */}
+                {!isEditing ? (
+                  <>
+                    <p className="text-gray-700 leading-relaxed text-base mb-6">
+                      {apunte.descripcion}
+                    </p>
+
+                    {/* Autores */}
+                    {apunte.autores && apunte.autores.length > 0 && (
+                      <div className="mb-6">
+                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                          <Users className="w-4 h-4" />
+                          Autores del Contenido
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                          {apunte.autores.map((autor, index) => (
+                            <span key={index} className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium border border-indigo-100">
+                              {autor}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Etiquetas */}
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <Tag className="w-4 h-4" />
+                        Etiquetas
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {apunte.etiquetas.map((etiqueta, index) => (
+                          <span key={index} className="px-4 py-2 bg-purple-50 text-purple-700 rounded-full text-sm font-medium border border-purple-100 hover:bg-purple-100 transition-colors cursor-pointer">
+                            #{etiqueta}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  /* Modo edición */
+                  <div className="space-y-6">
+                    {/* Editar descripción */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+                      <textarea
+                        value={editDescripcion}
+                        onChange={(e) => setEditDescripcion(e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                        rows={4}
+                        maxLength={200}
+                        placeholder="Describe el contenido del apunte..."
+                      />
+                      <p className={`text-xs mt-1 ${editDescripcion.length > 180 ? 'text-orange-600' : 'text-gray-500'}`}>
+                        {editDescripcion.length}/200 caracteres
+                      </p>
+                    </div>
+
+                    {/* Editar etiquetas */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Etiquetas</label>
+                      <div className="flex gap-2 mb-3">
+                        <input
+                          type="text"
+                          value={newEtiqueta}
+                          onChange={(e) => setNewEtiqueta(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddEtiqueta())}
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          placeholder="Nueva etiqueta"
+                          maxLength={30}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddEtiqueta}
+                          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Agregar
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {editEtiquetas.map((etiqueta, index) => (
+                          <span key={index} className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-sm font-medium flex items-center gap-2">
+                            #{etiqueta}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveEtiqueta(etiqueta)}
+                              className="hover:bg-purple-200 rounded-full p-0.5 transition-colors"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">{editEtiquetas.length}/5 etiquetas</p>
+                    </div>
+
+                    {/* Botones de acción */}
+                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                      <button
+                        type="button"
+                        onClick={handleCancelEdit}
+                        className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                        disabled={savingEdit}
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSaveEdit}
+                        disabled={savingEdit}
+                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                      >
+                        {savingEdit ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Save className="w-4 h-4" />
+                        )}
+                        Guardar cambios
+                      </button>
                     </div>
                   </div>
                 )}
-
-                {/* Etiquetas */}
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <Tag className="w-4 h-4" />
-                    Etiquetas
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {apunte.etiquetas.map((etiqueta, index) => (
-                      <span key={index} className="px-4 py-2 bg-purple-50 text-purple-700 rounded-full text-sm font-medium border border-purple-100 hover:bg-purple-100 transition-colors cursor-pointer">
-                        #{etiqueta}
-                      </span>
-                    ))}
-                  </div>
-                </div>
               </div>
             </div>
 

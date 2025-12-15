@@ -179,6 +179,7 @@ function HomeAyudante() {
                     const apuntesArray = Array.isArray(response.data) ? response.data : [];
 
                     const apuntesTransformados = apuntesArray.map(apunte => ({
+                        _id: apunte._id,
                         title: apunte.nombre,
                         author: apunte.autorSubida,
                         subject: apunte.asignatura,
@@ -254,6 +255,7 @@ function HomeAyudante() {
         });
 
         return sortedApuntes.slice(0, 3).map(apunte => ({
+            _id: apunte._id,
             title: apunte.nombre,
             rating: apunte.valoracion?.promedioValoracion || 0,
             author: apunte.autorSubida
@@ -335,6 +337,7 @@ function HomeAyudante() {
                             topNotes={getTopApuntes()}
                             topMostViewedNotes={topMostViewedNotes}
                             topSubjects={topSubjects}
+                            onNoteClick={handleNoteClick}
                         />
                     </div>
                 </div>

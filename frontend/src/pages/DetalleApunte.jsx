@@ -1458,32 +1458,12 @@ function DetalleApunte() {
                     <div className="mb-1">
                       <h4 className="font-bold text-gray-900">{apunte.autorInfo.nombreCompleto}</h4>
                     </div>
-                    <div className="flex items-center gap-1 mb-2">
+                    <div className="flex items-center gap-1">
                       <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-bold text-gray-900">{apunte.autorInfo.popularidad}</span>
-                      <span className="text-xs text-gray-500">({apunte.autorInfo.totalValoraciones} valoraciones)</span>
+                      <span className="text-sm font-bold text-gray-900">{Math.round(apunte.autorInfo.popularidad * 100) / 100}</span>
                     </div>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-purple-100">
-                    <div className="text-2xl font-bold text-purple-600">{apunte.autorInfo.totalApuntes}</div>
-                    <div className="text-xs text-gray-600">Apuntes subidos</div>
-                  </div>
-                  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-purple-100">
-                    <div className="text-2xl font-bold text-purple-600">{apunte.autorInfo.totalValoraciones}</div>
-                    <div className="text-xs text-gray-600">Valoraciones</div>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setIsAuthorModalOpen(true)}
-                  className="w-full py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all font-medium text-sm flex items-center justify-center gap-2 group"
-                >
-                  Ver Perfil
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </button>
               </div>
             </div>
 
@@ -1736,7 +1716,7 @@ function DetalleApunte() {
                     <h2 className="text-2xl font-bold text-white mb-1">{apunte.autorInfo.nombreCompleto}</h2>
                     <div className="flex items-center justify-center gap-1 text-white/90">
                       <Star className="w-4 h-4 fill-yellow-300 text-yellow-300" />
-                      <span className="font-semibold">{apunte.autorInfo.popularidad}</span>
+                      <span className="font-semibold">{Math.round(apunte.autorInfo.popularidad * 100) / 100}</span>
                       <span className="text-white/70 text-sm">• {apunte.autorInfo.totalValoraciones} valoraciones</span>
                     </div>
                   </div>

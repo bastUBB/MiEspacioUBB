@@ -178,6 +178,7 @@ function HomeDocente() {
                     const apuntesArray = Array.isArray(response.data) ? response.data : [];
 
                     const apuntesTransformados = apuntesArray.map(apunte => ({
+                        _id: apunte._id,
                         title: apunte.nombre,
                         author: apunte.autorSubida,
                         subject: apunte.asignatura,
@@ -253,6 +254,7 @@ function HomeDocente() {
         });
 
         return sortedApuntes.slice(0, 3).map(apunte => ({
+            _id: apunte._id,
             title: apunte.nombre,
             rating: apunte.valoracion?.promedioValoracion || 0,
             author: apunte.autorSubida
@@ -267,7 +269,16 @@ function HomeDocente() {
         setIsEncuestaModalOpen(true);
     };
 
+    const handleNoteClick = (note) => {
+        const apunteId = note.id || note._id;
 
+        if (!apunteId) {
+            toast.error('Error: ID de apunte no encontrado');
+            return;
+        }
+
+        navigate(`/docente/apunte/${apunteId}`);
+    };
 
     const handleModalClose = () => {
         setIsModalOpen(false);
@@ -323,6 +334,7 @@ function HomeDocente() {
                             topNotes={getTopApuntes()}
                             topMostViewedNotes={topMostViewedNotes}
                             topSubjects={topSubjects}
+                            onNoteClick={handleNoteClick}
                         />
                     </div>
                 </div>

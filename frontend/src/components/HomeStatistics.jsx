@@ -173,7 +173,7 @@ function HomeStatistics() {
                             Popularidad
                         </span>
                     </div>
-                    <p className="text-2xl font-bold text-gray-900">{stats.popularidad}</p>
+                    <p className="text-2xl font-bold text-gray-900">{Math.round(stats.popularidad * 100) / 100}</p>
                     <p className="text-xs text-gray-500">Puntos</p>
                 </div>
             </div>

@@ -399,7 +399,7 @@ export async function registrarCreateEncuestaService(rutUser, encuestaID) {
 
         if (historialUsuario) {
             const nuevaAccion = {
-                tipoAccion: `El usuario ${userExist.nombreCompleto} ha creado la encuesta ${encuestaExist.nombre}.`,
+                tipoAccion: `El usuario ${userExist.nombreCompleto} ha creado la encuesta ${encuestaExist.nombreEncuesta}.`,
                 fechaAccion: fechaActual
             };
 
@@ -413,7 +413,7 @@ export async function registrarCreateEncuestaService(rutUser, encuestaID) {
         const nuevoHistorial = new HistorialUsuario({
             rutUser: rutUser,
             acciones: [{
-                tipoAccion: `El usuario ${userExist.nombreCompleto} ha creado la encuesta ${encuestaExist.nombre}.`,
+                tipoAccion: `El usuario ${userExist.nombreCompleto} ha creado la encuesta ${encuestaExist.nombreEncuesta}.`,
                 fechaAccion: fechaActual
             }]
         });
@@ -441,7 +441,7 @@ export async function registrarUpdateEncuestaService(rutUser, encuestaID) {
 
         if (historialUsuario) {
             const nuevaAccion = {
-                tipoAccion: `El usuario ${userExist.nombreCompleto} ha actualizado la encuesta ${encuestaExist.nombre}.`,
+                tipoAccion: `El usuario ${userExist.nombreCompleto} ha actualizado la encuesta ${encuestaExist.nombreEncuesta}.`,
                 fechaAccion: fechaActual
             };
 
@@ -455,7 +455,7 @@ export async function registrarUpdateEncuestaService(rutUser, encuestaID) {
         const nuevoHistorial = new HistorialUsuario({
             rutUser: rutUser,
             acciones: [{
-                tipoAccion: `El usuario ${userExist.nombreCompleto} ha actualizado la encuesta ${encuestaExist.nombre}.`,
+                tipoAccion: `El usuario ${userExist.nombreCompleto} ha actualizado la encuesta ${encuestaExist.nombreEncuesta}.`,
                 fechaAccion: fechaActual
             }]
         });
@@ -483,7 +483,7 @@ export async function registrarDeleteEncuestaService(rutUser, encuestaID) {
 
         if (historialUsuario) {
             const nuevaAccion = {
-                tipoAccion: `El usuario ${userExist.nombreCompleto} ha eliminado la encuesta ${encuestaExist.nombre}.`,
+                tipoAccion: `El usuario ${userExist.nombreCompleto} ha eliminado la encuesta ${encuestaExist.nombreEncuesta}.`,
                 fechaAccion: fechaActual
             };
 
@@ -497,7 +497,7 @@ export async function registrarDeleteEncuestaService(rutUser, encuestaID) {
         const nuevoHistorial = new HistorialUsuario({
             rutUser: rutUser,
             acciones: [{
-                tipoAccion: `El usuario ${userExist.nombreCompleto} ha eliminado la encuesta ${encuestaExist.nombre}.`,
+                tipoAccion: `El usuario ${userExist.nombreCompleto} ha eliminado la encuesta ${encuestaExist.nombreEncuesta}.`,
                 fechaAccion: fechaActual
             }]
         });

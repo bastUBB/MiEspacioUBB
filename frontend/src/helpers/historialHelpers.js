@@ -1,6 +1,7 @@
 import {
     User, Mail, BookOpen, Activity, Award, GraduationCap, BarChart3
 } from 'lucide-react';
+import { parseCustomDate } from './dateFormatter.helper';
 
 /**
  * Categoriza una acción basándose en su tipo
@@ -51,7 +52,13 @@ export const getActionStyle = (category) => {
  * @returns {string} - Tiempo relativo formateado con hora
  */
 export const formatRelativeTime = (dateString) => {
-    const date = new Date(dateString);
+    const date = parseCustomDate(dateString);
+
+    // Si la fecha es inválida, retornar un mensaje amigable
+    if (!date || isNaN(date.getTime())) {
+        return 'Fecha no disponible';
+    }
+
     const now = new Date();
     const diffMs = now - date;
     const diffMins = Math.floor(diffMs / 60000);
@@ -98,7 +105,14 @@ export const groupHistoryByPeriod = (acciones) => {
     };
 
     acciones.forEach(accion => {
-        const actionDate = new Date(accion.fechaAccion);
+        const actionDate = parseCustomDate(accion.fechaAccion);
+
+        // Si la fecha es inválida, ponerla en "earlier"
+        if (!actionDate || isNaN(actionDate.getTime())) {
+            groups.earlier.push(accion);
+            return;
+        }
+
         const actionDay = new Date(actionDate.getFullYear(), actionDate.getMonth(), actionDate.getDate());
 
         if (actionDay.getTime() === today.getTime()) {

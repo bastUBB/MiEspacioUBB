@@ -1,12 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { BookOpen, Star, Eye, Calendar, Download, Edit2, Trash2 } from 'lucide-react';
 import { obtenerMisApuntesByRutService } from '../services/apunte.service';
 import { useNavigate } from 'react-router-dom';
+import { UserContext } from '../context/userContextProvider';
+import { getRoleBasePath } from '../helpers/roleBasePath.helper';
 
 function ListaApuntes({ rutUser }) {
     const [apuntes, setApuntes] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const { user } = useContext(UserContext);
+    const basePath = getRoleBasePath(user?.role);
 
     useEffect(() => {
         const fetchApuntes = async () => {
@@ -52,7 +56,7 @@ function ListaApuntes({ rutUser }) {
                 <div
                     key={apunte._id}
                     className="bg-gradient-to-r from-purple-50 via-violet-50 to-indigo-50 rounded-xl shadow-sm border border-purple-100 p-6 hover:shadow-md transition-all cursor-pointer"
-                    onClick={() => navigate(`/estudiante/apunte/${apunte._id}`)}
+                    onClick={() => navigate(`${basePath}/apunte/${apunte._id}`)}
                 >
                     <div className="flex items-start justify-between">
                         <div className="flex-1">

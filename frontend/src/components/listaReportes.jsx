@@ -1,12 +1,16 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useContext } from 'react';
 import { AlertCircle, Calendar, FileText, CheckCircle, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { obtenerMisReportesService } from '../services/reporte.service';
+import { UserContext } from '../context/userContextProvider';
+import { getRoleBasePath } from '../helpers/roleBasePath.helper';
 
 function ListaReportes({ rutUser }) {
     const navigate = useNavigate();
     const [reportes, setReportes] = useState([]);
     const [loading, setLoading] = useState(true);
+    const { user } = useContext(UserContext);
+    const basePath = getRoleBasePath(user?.role);
 
     const cargarReportes = useCallback(async () => {
         try {
@@ -50,7 +54,7 @@ function ListaReportes({ rutUser }) {
 
     const handleNavigateToApunte = (apunteId) => {
         if (apunteId) {
-            navigate(`/estudiante/apunte/${apunteId}`);
+            navigate(`${basePath}/apunte/${apunteId}`);
         }
     };
 

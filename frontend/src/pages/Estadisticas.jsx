@@ -173,7 +173,7 @@ export default function Estadisticas() {
           </ChartCard>
         </div>
 
-        {/* Crecimiento Mensual */}
+        {/* Crecimiento Mensual - TEMPORALMENTE OCULTO
         <ChartCard title="Crecimiento Mensual de Contenido (Últimos 6 Meses)">
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={crecimiento}>
@@ -186,10 +186,10 @@ export default function Estadisticas() {
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
+        */}
 
-        {/* Highlights Row */}
+        {/* Highlights Row - TEMPORALMENTE OCULTO
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-          {/* Apuntes Populares Semana */}
           <HighlightCard
             title="Populares Esta Semana"
             IconComponent={Flame}
@@ -208,7 +208,6 @@ export default function Estadisticas() {
             )}
           </HighlightCard>
 
-          {/* Top Contribuidores */}
           <HighlightCard
             title="Top Contribuidores"
             IconComponent={Trophy}
@@ -227,7 +226,6 @@ export default function Estadisticas() {
             )}
           </HighlightCard>
 
-          {/* Apunte Más Descargado */}
           <HighlightCard
             title="Apunte Legendario"
             IconComponent={Star}
@@ -252,6 +250,7 @@ export default function Estadisticas() {
             )}
           </HighlightCard>
         </div>
+        */}
       </div>
     </div>
   );

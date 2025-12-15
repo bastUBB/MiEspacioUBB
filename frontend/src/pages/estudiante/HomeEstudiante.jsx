@@ -13,6 +13,7 @@ import SubirEncuestaModal from '../../components/SubirEncuestaModal';
 import { obtenerApuntesMasValoradosService, obtenerApuntesMasVisualizadosService, obtenerAsignaturasConMasApuntesService } from '../../services/apunte.service';
 import { obtenerMisApuntesByRutService } from '../../services/apunte.service';
 import { numeroApuntesUserService, obtenerMayoresContribuidoresService } from '../../services/perfilAcademico.service';
+import { getRoleBasePath } from '../../helpers/roleBasePath.helper';
 
 function Home() {
   const { user, loading: userLoading } = useContext(UserContext);
@@ -287,7 +288,8 @@ function Home() {
       return;
     }
 
-    navigate(`/estudiante/apunte/${apunteId}`);
+    const basePath = getRoleBasePath(user?.role);
+    navigate(`${basePath}/apunte/${apunteId}`);
   };
 
   const handleModalClose = () => {
